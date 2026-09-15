@@ -1,0 +1,15 @@
+function(Abytek_ApplyTempGeneratedFile TempFile TargetFile)
+    file(READ "${TempFile}" Content)
+    
+    set(NeedToCopy YES)
+    if(EXISTS "${TargetFile}")
+        file(READ "${TargetFile}" LastContent)
+        if("${Content}" STREQUAL "${LastContent}")
+            set(NeedToCopy NO)
+        endif()
+    endif()
+
+    if(${NeedToCopy})
+        file(WRITE "${TargetFile}" "${Content}")
+    endif()
+endfunction()

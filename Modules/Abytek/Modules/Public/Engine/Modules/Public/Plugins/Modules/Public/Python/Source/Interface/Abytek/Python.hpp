@@ -1,0 +1,15 @@
+#pragma once
+
+#include "Abytek/Python.prerequisites.pch.hpp"
+#include "Abytek/PythonBinder.hpp"
+#include "Abytek/SharedPyObject.hpp"
+#include "Abytek/PyString.hpp"
+#include "Abytek/PyInt.hpp"
+#include "Abytek/PyFloat.hpp"
+#include "Abytek/PyComplex.hpp"
+#include "Abytek/PyBool.hpp"
+#include "Abytek/PyModule.hpp"
+#include "Abytek/PyRun.hpp"
+#include "Abytek/PyFunction.hpp"
+#include "Abytek/PyTuple.hpp"
+#include "Abytek/PyList.hpp"

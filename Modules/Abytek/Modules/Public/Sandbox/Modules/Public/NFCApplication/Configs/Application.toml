@@ -1,0 +1,4 @@
+
+[Abytek.PersistentLevel]
+Types = [ "Abytek::F_DemoLevel" ]
+Paths = [ "@Abytek.Sandbox.NFCApplication:/DemoLevel::DemoLevel" ]

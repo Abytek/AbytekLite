@@ -1,0 +1,4 @@
+
+[Abytek.PersistentLevel]
+Types = [ "Abytek::F_SimpleSRPSampleLevel" ]
+Paths = [ "@Abytek.Sandbox.NFCSamples.SimpleSRP::Assets:/.IgnoreSVC/SimpleSRPSampleLevel::F_SimpleSRPSampleLevel" ]

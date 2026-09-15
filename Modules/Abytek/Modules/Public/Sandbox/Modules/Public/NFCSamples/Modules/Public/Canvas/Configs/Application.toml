@@ -1,0 +1,4 @@
+
+[Abytek.PersistentLevel]
+Types = [ "Abytek::F_CanvasSampleLevel" ]
+Paths = [ "@Abytek.Sandbox.NFCSamples.Canvas::Assets:/.IgnoreSVC/CanvasSampleLevel::F_CanvasSampleLevel" ]

@@ -1,0 +1,4 @@
+
+[Abytek.PersistentLevel]
+Types = [ "Abytek::F_CameraSampleLevel" ]
+Paths = [ "@Abytek.Sandbox.NFCSamples.Camera::Assets:/.IgnoreSVC/CameraSampleLevel::F_CameraSampleLevel" ]

@@ -1,0 +1,73 @@
+#pragma once
+
+#include "Abytek/Base.Math.prerequisites.pch.hpp"
+
+#include "Abytek/Functions/Abs.hpp"
+#include "Abytek/Functions/ACos.hpp"
+#include "Abytek/Functions/ACosh.hpp"
+#include "Abytek/Functions/ASin.hpp"
+#include "Abytek/Functions/ASinh.hpp"
+#include "Abytek/Functions/ATan.hpp"
+#include "Abytek/Functions/ATan2.hpp"
+#include "Abytek/Functions/ATanh.hpp"
+#include "Abytek/Functions/Ceil.hpp"
+#include "Abytek/Functions/Cos.hpp"
+#include "Abytek/Functions/Cosh.hpp"
+#include "Abytek/Functions/Exponential.hpp"
+#include "Abytek/Functions/Floor.hpp"
+#include "Abytek/Functions/Log2.hpp"
+#include "Abytek/Functions/Log10.hpp"
+#include "Abytek/Functions/LogE.hpp"
+#include "Abytek/Functions/Lerp.hpp"
+#include "Abytek/Functions/Max.hpp"
+#include "Abytek/Functions/Min.hpp"
+#include "Abytek/Functions/Pow.hpp"
+#include "Abytek/Functions/Round.hpp"
+#include "Abytek/Functions/RoundToInt.hpp"
+#include "Abytek/Functions/Saturate.hpp"
+#include "Abytek/Functions/Sign.hpp"
+#include "Abytek/Functions/Sin.hpp"
+#include "Abytek/Functions/Sinh.hpp"
+#include "Abytek/Functions/Square.hpp"
+#include "Abytek/Functions/SquareRoot.hpp"
+#include "Abytek/Functions/Tan.hpp"
+#include "Abytek/Functions/Tanh.hpp"
+#include "Abytek/Functions/TruncToInt.hpp"
+
+#include "Abytek/Functions/Data.hpp"
+
+#include "Abytek/Functions/Dot.hpp"
+#include "Abytek/Functions/Cross.hpp"
+#include "Abytek/Functions/Length.hpp"
+#include "Abytek/Functions/Normalize.hpp"
+
+#include "Abytek/Functions/MatrixIdentity.hpp"
+#include "Abytek/Functions/MatrixInverse.hpp"
+#include "Abytek/Functions/MatrixTranspose.hpp"
+#include "Abytek/Functions/MatrixDeterminant.hpp"
+#include "Abytek/Functions/MatrixCoFactor.hpp"
+
+#include "Abytek/Functions/QuaternionConjugate.hpp"
+#include "Abytek/Functions/QuaternionIdentity.hpp"
+#include "Abytek/Functions/QuaternionInverse.hpp"
+
+#include "Abytek/Functions/AffineToLinear.hpp"
+#include "Abytek/Functions/LinearToAffine.hpp"
+
+#include "Abytek/Functions/MakeTranslationMatrix.hpp"
+#include "Abytek/Functions/MakeScaleMatrix.hpp"
+#include "Abytek/Functions/MakeRotationMatrix.hpp"
+
+#include "Abytek/Functions/MakeDirection4.hpp"
+#include "Abytek/Functions/MakePosition4.hpp"
+
+#include "Abytek/Functions/AxisAngleToQuaternion.hpp"
+#include "Abytek/Functions/AxisAndAngle.hpp"
+#include "Abytek/Functions/EulerAnglesToQuaternion.hpp"
+#include "Abytek/Functions/QuaternionToEulerAngles.hpp"
+
+#include "Abytek/Functions/MatrixToQuaternion.hpp"
+#include "Abytek/Functions/QuaternionToMatrix.hpp"
+
+#include "Abytek/Functions/QuaternionLookAt.hpp"
+#include "Abytek/Functions/SLerp.hpp"
