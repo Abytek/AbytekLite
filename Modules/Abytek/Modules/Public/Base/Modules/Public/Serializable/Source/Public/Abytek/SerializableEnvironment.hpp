@@ -27,7 +27,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(F_SerializableEnvironment)
+        ABYTEK_END_REFLECTOR(F_SerializableEnvironment);
         
     private:
         TW<A_Object> _Owner;

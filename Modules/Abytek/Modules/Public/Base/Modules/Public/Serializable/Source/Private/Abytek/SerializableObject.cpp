@@ -30,6 +30,9 @@ namespace Abytek
         if (_Name)
         {
             _Environment->_RegisterObject(ABYTEK_WTHIS());
+#ifdef ABYTEK_DEBUG_INFO
+            A_Object::SetDebugName(_Name);
+#endif
         }
         if (!HasSerializableFlags(E_SerializableObjectFlag::CDO))
         {

@@ -1,7 +1,8 @@
 ﻿#include "Abytek/RHIConstantDataManager.hpp"
 #include "Abytek/RHIContext.hpp"
-#include "Abytek/RHIPassUtilities.hpp"
+#include "Abytek/RHISubmissionUtilities.hpp"
 #include "Abytek/RHIProcess.hpp"
+#include "Abytek/RHITransientUploadBuffer.hpp"
 
 
 namespace Abytek
@@ -20,35 +21,34 @@ namespace Abytek
         return RACreateAndBuildShared<A_RHIResourceView>(BuildParams);
     }
     void F_RHIConstantDataRange::Upload(
-        I_RHISubmissionItemContainer& SubmissionItemContainer,
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
         const F_RHIBufferDataView& BufferDataView,
         const F_DebugName& DebugName
     ) const
     {
         ABYTEK_ENGINE_RHI_ASSERT(BufferDataView.size() <= GetSizeInBytes()) << "Buffer data view is too big";
-        H_RHIPassUtilities::UploadBuffer(
+#ifdef ABYTEK_DEBUG_INFO
+        F_DebugName ActualDebugName = DebugName;
+        if (!ActualDebugName)
+        {
+            ActualDebugName = ToText("ConstantData(")
+                + ABYTEK_TEXT("PageIndex = ")
+                + ToText(Page->GetIndex())
+                + ABYTEK_TEXT(", BeginOffsetInBytes = ")
+                + ToText(BeginOffsetInBytes)
+                + ABYTEK_TEXT(", EndOffsetInBytes = ")
+                + ToText(EndOffsetInBytes)
+                + ABYTEK_TEXT(")");
+        }
+#endif
+        H_RHISubmissionUtilities::UploadBuffer(
             SubmissionItemContainer,
             BufferDataView,
             GetBuffer(),
-            BeginOffsetInBytes,
-            DebugName
-        );
-    }
-    void F_RHIConstantDataRange::Upload(
-        I_RHISubmissionItemContainer& CPUSubmissionItemContainer,
-        I_RHISubmissionItemContainer& GPUSubmissionItemContainer,
-        const F_RHIBufferDataView& BufferDataView,
-        const F_DebugName& DebugName
-    ) const
-    {
-        ABYTEK_ENGINE_RHI_ASSERT(BufferDataView.size() <= GetSizeInBytes()) << "Buffer data view is too big";
-        H_RHIPassUtilities::UploadBuffer(
-            CPUSubmissionItemContainer,
-            GPUSubmissionItemContainer,
-            BufferDataView,
-            GetBuffer(),
-            BeginOffsetInBytes,
-            DebugName
+            BeginOffsetInBytes
+#ifdef ABYTEK_DEBUG_INFO
+            , ActualDebugName
+#endif
         );
     }
     F_RHIConstantDataRangeProxy F_RHIConstantDataRange::ConvertToProxy() const
@@ -67,15 +67,16 @@ namespace Abytek
     void F_RHIConstantDataPage::Build(const F_RHIConstantDataPageBuildParams& BuildParams)
     {
         A_RHIContextChild::Build(BuildParams);
+        _Index = BuildParams.Index;
         _SizeInBytes = BuildParams.SizeInBytes;
          
         F_RHIBufferBuildParams BufferBuildParams;
         BufferBuildParams.Context = GetContext();
-        BufferBuildParams.AccessCapabilities = F_RHIResourceAccess::MakeCBV();
+        BufferBuildParams.AccessCapabilities = F_RHIResourceAccess::MakeCBVCapabilities();
         BufferBuildParams.BufferAspect.SizeInBytes = _SizeInBytes;
         _Buffer = RACreateAndBuildShared<A_RHIResource>(BufferBuildParams);
 #ifdef ABYTEK_DEBUG_INFO
-        _Buffer->SetDebugName(ABYTEK_DEBUG_NAME("RHIConstantDataPage"));
+        _Buffer->SetDebugName(GetDebugName());
 #endif
         
         _Distributor.Extends(_SizeInBytes);
@@ -86,6 +87,7 @@ namespace Abytek
         
         _Distributor = {};
         _SizeInBytes = 0;
+        _Index = 0;
         A_RHIContextChild::Release();
     }
 
@@ -151,9 +153,13 @@ namespace Abytek
         );
         F_RHIConstantDataPageBuildParams PageBuildParams;
         PageBuildParams.Context = GetContext();
+        PageBuildParams.Index = SectionData.Pages.size();
         PageBuildParams.SizeInBytes = ActualSizeInBytes;
-        SectionData.Pages.push_back(
-            RACreateAndBuildShared<F_RHIConstantDataPage>(PageBuildParams)  
-        );
+        auto Page = RACreateShared<F_RHIConstantDataPage>();
+#ifdef ABYTEK_DEBUG_INFO
+        Page->SetDebugName(ABYTEK_TEXT("Abytek::RHIConstantDataPages[") + ToText(PageBuildParams.Index) + ABYTEK_TEXT("]"));
+#endif
+        Page->Build(PageBuildParams);
+        SectionData.Pages.push_back(Page);
     }
 }

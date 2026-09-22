@@ -20,15 +20,25 @@ namespace Abytek
     void A_RHIReadbackBufferPass::Build(const F_RHIReadbackBufferPassBuildParams& BuildParams)
     {
         A_RHIPass::Build(BuildParams);
+        ABYTEK_ENGINE_RHI_ASSERT(BuildParams.Buffer) << "Invalid buffer";
+        ABYTEK_ENGINE_RHI_ASSERT(FlagHas(BuildParams.Buffer->GetArchetype(), E_RHIResourceArchetype::BUFFER)) << "Requires buffer archetype";
+        ABYTEK_ENGINE_RHI_ASSERT(
+            FlagHas(
+                BuildParams.Buffer->GetAccessCapabilities().GPU,
+                E_RHIResourceGPUAccess::COPY_SOURCE
+            )
+        ) << "Requires copy source access";
+        ABYTEK_ENGINE_RHI_ASSERT(BuildParams.OffsetInBytes <= BuildParams.Buffer->GetBufferAspect().SizeInBytes) << "Invalid offset in bytes";
+        Sz ActualSizeInBytes = BuildParams.SizeInBytes;
+        if (ActualSizeInBytes == 0)
+        {
+            ActualSizeInBytes = BuildParams.Buffer->GetBufferAspect().SizeInBytes - BuildParams.OffsetInBytes;
+        }
+        ABYTEK_ENGINE_RHI_ASSERT((BuildParams.OffsetInBytes + ActualSizeInBytes) <= BuildParams.Buffer->GetBufferAspect().SizeInBytes) << "Invalid size in bytes";
         _Buffer = BuildParams.Buffer;
-        _SizeInBytes = BuildParams.SizeInBytes;
+        _SizeInBytes = ActualSizeInBytes;
         _OffsetInBytes = BuildParams.OffsetInBytes;
         _Callback = BuildParams.Callback;
-            
-        if (_SizeInBytes == 0)
-        {
-            _SizeInBytes = _Buffer->GetBufferAspect().SizeInBytes;
-        }
             
         ABYTEK_ENGINE_RHI_ASSERT(_Callback) << "Invalid readback buffer callback";
     }   
@@ -46,12 +56,8 @@ namespace Abytek
         return RACreateAndBuildShared<A_RHIReadbackBufferPassProxy>(ABYTEK_WTHIS());
     }
 
-    B8 A_RHIReadbackBufferPass::CanDetachCopyPass()
+    F_RHIReadbackBufferCallback A_RHIReadbackBufferPass::MoveCallback()
     {
-        return false;
-    }
-    void A_RHIReadbackBufferPass::DetachCopyPass(I_RHISubmissionItemContainer& SubmissionItemContainer)
-    {
-        ABYTEK_LOG_FATAL() << "Not supported";
+        return ABYTEK_MOVE(_Callback);
     }
 }

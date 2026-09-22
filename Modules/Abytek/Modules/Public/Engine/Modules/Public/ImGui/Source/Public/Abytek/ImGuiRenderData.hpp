@@ -48,7 +48,7 @@ namespace Abytek
         virtual E_DirectX12RHIExecutionRangeType GetExecutionRangeType() override;
         
     public:
-        virtual E_RHIPassClass GetPassClass() override;
+        virtual E_RHIPassClass GetPassClass() const override;
     };
     
     class ABYTEK_ENGINE_IMGUI_API F_DirectX12ImGuiPassProxy : public A_RHIPassProxy, public A_DirectX12RHIPassProxyExtension

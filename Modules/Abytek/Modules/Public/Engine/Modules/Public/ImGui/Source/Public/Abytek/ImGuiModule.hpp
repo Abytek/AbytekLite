@@ -10,7 +10,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_ApplicationModule)
-        ABYTEK_END_REFLECTOR(F_ImGuiModule)
+        ABYTEK_END_REFLECTOR(F_ImGuiModule);
         
     public:
         ABYTEK_DECLARE_STATIC_APPLICATION_MODULE(F_ImGuiModule);

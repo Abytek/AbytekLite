@@ -49,7 +49,7 @@ namespace Abytek
         }
     };
 
-    struct A_GlobalRenderBinding
+    struct F_GlobalRenderBinding
     {
         using F_Metadata_BuildCommandsAndCompilationSet = TF_Function<
             F_FeedbackStatus(
@@ -62,7 +62,7 @@ namespace Abytek
         >;
         static F_Name GetMetadataElementName_BuildCommandsAndCompilationSet()
         {
-            return ABYTEK_NAME("Abytek::A_GlobalRenderBinding::BuildCommandsAndCompilationSet");
+            return ABYTEK_NAME("Abytek::F_GlobalRenderBinding::BuildCommandsAndCompilationSet");
         }
         
         ABYTEK_BEGIN_REFLECTOR();
@@ -76,7 +76,9 @@ namespace Abytek
                     )
                 );
             }
-        ABYTEK_END_REFLECTOR(A_GlobalRenderBinding);
+        ABYTEK_END_REFLECTOR(F_GlobalRenderBinding);
+        
+        using F_PermutationDomain = F_DefaultPermutationDomain;
         
         F_RHITemplateHashCode TemplateHashCode = INVALID_RHI_TEMPLATE_HASH_CODE;
         F_RHITemplateHashCode PermutationHashCode = 0;
@@ -104,7 +106,7 @@ namespace Abytek
             PermutationHashCode = 0;
             TemplateRuntime.Reset();
         }
-        friend B8 operator == (const A_GlobalRenderBinding& A, const A_GlobalRenderBinding& B) noexcept
+        friend B8 operator == (const F_GlobalRenderBinding& A, const F_GlobalRenderBinding& B) noexcept
         {
             return (
                 (A.TemplateHashCode == B.TemplateHashCode)    
@@ -112,7 +114,7 @@ namespace Abytek
                 && (A.TemplateRuntime == B.TemplateRuntime)    
             );
         }
-        friend B8 operator != (const A_GlobalRenderBinding& A, const A_GlobalRenderBinding& B) noexcept
+        friend B8 operator != (const F_GlobalRenderBinding& A, const F_GlobalRenderBinding& B) noexcept
         {
             return (
                 (A.TemplateHashCode != B.TemplateHashCode)    
@@ -121,18 +123,14 @@ namespace Abytek
             );
         }
     };
-    
-    template<class __F_Binding>
-    struct TF_GlobalRenderBinding : A_GlobalRenderBinding
-    {
-        using F_Binding = __F_Binding;
-        using F_PermutationDomain = F_DefaultPermutationDomain;
-    };
 }
 
-#define ABYTEK_DECLARE_GLOBAL_RENDER_BINDING(Name) \
-            ABYTEK_BEGIN_REFLECTOR(Abytek::A_GlobalRenderBinding) \
+#define ABYTEK_GLOBAL_RENDER_BINDING(Name, ...) \
+            ABYTEK_BEGIN_REFLECTOR(Abytek::F_GlobalRenderBinding) \
             ABYTEK_END_REFLECTOR(Name) \
+            { \
+                ABYTEK_REFLECT_CANONICAL(__VA_ARGS__); \
+            }; \
              \
             using F_DynamicPermutationVector = typename F_PermutationDomain::F_DynamicVector; \
             using F_DefaultStaticPermutationVector = typename F_PermutationDomain::F_DefaultStaticVector; \
@@ -142,7 +140,7 @@ namespace Abytek
             static constexpr Abytek::F_RHITemplateHashCode GetTemplateHashCode(Abytek::F_RHITemplateHashCode InPermutationHashCode = DefaultPermutationHashCode) \
             { \
                 Abytek::F_RHITemplateHashCode UseDefinedHashCode = 0; \
-                UseDefinedHashCode = Abytek::HashCombineU64(UseDefinedHashCode, Abytek::TypeHashCode<F_Binding>); \
+                UseDefinedHashCode = Abytek::HashCombineU64(UseDefinedHashCode, Abytek::TypeHashCode<Name>); \
                 UseDefinedHashCode = Abytek::HashCombineU64(UseDefinedHashCode, InPermutationHashCode); \
                 return Abytek::H_RenderCore::GenerateTemplateHashCode<F_GlobalRenderPack>(UseDefinedHashCode); \
             } \
@@ -289,14 +287,17 @@ namespace Abytek
                         B8 ShouldCompile = Abytek::Internal::GlobalRenderBinding::EnableInternalDebugger; \
                         if (TemplateMap->HasTemplate(*Config.CustomHashCode)) \
                         { \
-                            auto Template = TemplateMap->GetTemplate(*Config.CustomHashCode).FastCast<Abytek::A_RHIBindGroupTemplate>(); \
-                            if (Template->GetConfig() != static_cast<const Abytek::F_RHIBindGroupTemplateConfig&>(Config)) \
+                            Abytek::TW<Abytek::A_RHIBindGroupTemplate> Template; \
+                            if (TemplateMap->GetTemplate(*Config.CustomHashCode).TryDynamicCast<Abytek::A_RHIBindGroupTemplate>(Template)) \
                             { \
-                                ShouldCompile = true; \
-                            } \
-                            if (Template->GetCompileConfig() != static_cast<const Abytek::F_RHIBindGroupTemplateCompileConfig&>(Config)) \
-                            { \
-                                ShouldCompile = true; \
+                                if (Template->GetConfig() != static_cast<const Abytek::F_RHIBindGroupTemplateConfig&>(Config)) \
+                                { \
+                                    ShouldCompile = true; \
+                                } \
+                                if (Template->GetCompileConfig() != static_cast<const Abytek::F_RHIBindGroupTemplateCompileConfig&>(Config)) \
+                                { \
+                                    ShouldCompile = true; \
+                                } \
                             } \
                         } \
                         else \
@@ -345,6 +346,3 @@ namespace Abytek
                     return Abytek::F_FeedbackStatus::MakeSucceeded(); \
                 } \
             )
-
-#define ABYTEK_DEFINE_GLOBAL_RENDER_BINDING(...) \
-            ABYTEK_REFLECT(__VA_ARGS__)

@@ -19,21 +19,4 @@ namespace Abytek
         }
         return F_FeedbackStatus::MakeFailed();
     }
-    inline F_FeedbackStatus operator >> (F_ArchiveReadOnlyView& View, F_DebugName& Value) noexcept
-    {
-        E_DebugNameMode Mode;
-        ABYTEK_FEEDBACK_STATUS_CHECK(View >> Mode);
-        if (Mode == E_DebugNameMode::NONE)
-        {
-            Value = {};
-            return F_FeedbackStatus::MakeSucceeded();
-        }
-        F_Text Text;
-        if (View >> Text)
-        {
-            Value = Text;
-            return F_FeedbackStatus::MakeSucceeded();
-        }
-        return F_FeedbackStatus::MakeSucceeded();
-    }
 }

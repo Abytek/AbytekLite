@@ -10,7 +10,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(F_Level)
-        ABYTEK_END_REFLECTOR(F_DemoLevel)
+        ABYTEK_END_REFLECTOR(F_DemoLevel);
         
     public:
         F_DemoLevel(const F_SerializableObjectInitParams& InitParams);

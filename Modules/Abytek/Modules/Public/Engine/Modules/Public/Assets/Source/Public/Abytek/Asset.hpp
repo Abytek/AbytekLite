@@ -27,7 +27,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(A_Asset)
+        ABYTEK_END_REFLECTOR(A_Asset);
 
     private:
         F_Text _AbsolutePath;

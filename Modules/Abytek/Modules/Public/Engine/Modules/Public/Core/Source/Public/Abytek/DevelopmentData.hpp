@@ -88,7 +88,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(F_DevelopmentDataInstance)
+        ABYTEK_END_REFLECTOR(F_DevelopmentDataInstance);
 
     private:
         TW<F_DevelopmentData> _Owner;
@@ -205,7 +205,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(F_DevelopmentData)
+        ABYTEK_END_REFLECTOR(F_DevelopmentData);
 
     private:
         F_Text _ProjectPath;

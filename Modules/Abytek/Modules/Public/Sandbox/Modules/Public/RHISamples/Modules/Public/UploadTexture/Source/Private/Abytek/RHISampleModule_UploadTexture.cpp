@@ -31,7 +31,7 @@ namespace Abytek
             []
             {
                 auto RHIContext = H_RHI::GetMainContext();
-                auto RHIProcess = H_RHI::GetMainProcess();
+                auto RHIProcess = H_RHI::GetMainSubmissionQueue();
                 
                 static constexpr E_RHIFormat Format = E_RHIFormat::R32_UINT;
                 U32 Width = 3;
@@ -60,7 +60,7 @@ namespace Abytek
                 }
                 TF_RHIImage Image(ImageRaw);
                 
-                H_RHIPassUtilities::UploadTexture(
+                H_RHISubmissionUtilities::UploadTexture(
                     SubmissionList,
                     Image,
                     Texture,

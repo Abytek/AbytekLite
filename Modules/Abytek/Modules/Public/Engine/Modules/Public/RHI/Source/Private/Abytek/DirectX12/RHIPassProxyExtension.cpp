@@ -22,17 +22,17 @@ namespace Abytek
             auto ProcessData_PassExtension = PassExtension->GetProcessData_PassExtension();
             _ResourceBarrierProxies_Before = ProcessData_PassExtension->D3D12ResourceBarrierProxies_Before;
             _ResourceBarrierProxies_After = ProcessData_PassExtension->D3D12ResourceBarrierProxies_After;
-#ifdef ABYTEK_ENGINE_RHI_ENABLE_PROFILER
-            _ProfilerEventStatesToBegin = ProcessData_PassExtension->ProfilerEventStatesToBegin;
-            _ProfilerEventStatesToEnd = ProcessData_PassExtension->ProfilerEventStatesToEnd;
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
+            _CaptureEventStatesToBegin = ProcessData_PassExtension->CaptureEventStatesToBegin;
+            _CaptureEventStatesToEnd = ProcessData_PassExtension->CaptureEventStatesToEnd;
 #endif
         }
     }
     void A_DirectX12RHIPassProxyExtension::Release()
     {
-#ifdef ABYTEK_ENGINE_RHI_ENABLE_PROFILER
-        _ProfilerEventStatesToEnd = {};
-        _ProfilerEventStatesToBegin = {};
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
+        _CaptureEventStatesToEnd = {};
+        _CaptureEventStatesToBegin = {};
 #endif
         _ResourceBarrierProxies_After = {};
         _ResourceBarrierProxies_Before = {};

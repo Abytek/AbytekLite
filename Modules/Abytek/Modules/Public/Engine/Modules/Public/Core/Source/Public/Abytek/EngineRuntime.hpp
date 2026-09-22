@@ -25,7 +25,7 @@ namespace Abytek
         ABYTEK_DECLARE_OBJECT_SINGLETON_CRT(F_EngineRuntime);
 
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(F_EngineRuntime)
+        ABYTEK_END_REFLECTOR(F_EngineRuntime);
         
     public:
         static F_Text GetConfigFileName();

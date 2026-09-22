@@ -9,7 +9,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(F_Resource)
-        ABYTEK_END_REFLECTOR(F_RootResource)
+        ABYTEK_END_REFLECTOR(F_RootResource);
 
     private:
         TW<F_ResourceManager> _OverridedManager;

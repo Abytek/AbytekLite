@@ -25,7 +25,7 @@ namespace Abytek
     {
         struct F_DescriptorBinding
         {
-            F_DirectX12RHIDescriptorRange DescriptorRange;
+            F_DirectX12RHIDescriptorAllocationProxy DescriptorRange;
         };
         struct F_UniformDataBinding
         {

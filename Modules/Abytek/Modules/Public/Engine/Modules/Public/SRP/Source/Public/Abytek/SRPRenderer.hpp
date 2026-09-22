@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "Abytek/Engine.SRP.prerequisites.hpp"
-#include "Abytek/RenderBase/Renderer.hpp"
+#include "Abytek/Renderer/Renderer.hpp"
 
 
 namespace Abytek
@@ -11,12 +11,18 @@ namespace Abytek
     private:
         
     public:
-
+        
     public:
-        F_SRPRenderer(const TW_Valid<F_WorldRenderResource>& WorldRenderResource, const F_RendererBuildParams& BuildParams);
-        ~F_SRPRenderer() override;
+        ABYTEK_RENDER_OBJECT_CREATABLE(F_SRPRenderer, A_Renderer);
+        
+    public:
+        void Init(
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, 
+            const F_RendererBuildParams& BuildParams
+        ) override;
+        void Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
         
     protected:
-        void OnRender() override;
+        void OnRender(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
     };
 }

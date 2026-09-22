@@ -29,7 +29,7 @@ namespace Abytek
         {
             return IsValid();
         }
-        F_DirectX12RHIDescriptorRange ConvertToRange() const noexcept;
+        F_DirectX12RHIDescriptorAllocationProxy ConvertToRange() const noexcept;
     };
 }
 #endif

@@ -16,20 +16,18 @@
 #include "Abytek/ActorComponents/InputComponent.hpp"
 #include "Abytek/ActorComponents/InputComponentManager.hpp"
 
-#include "Abytek/RenderBase/RenderManager.hpp"
-#include "Abytek/RenderBase/RenderPath.hpp"
-#include "Abytek/RenderBase/RenderView.hpp"
-#include "Abytek/RenderBase/RenderSceneUpdateRange.hpp"
-#include "Abytek/RenderBase/RenderScenePostUpdateRange.hpp"
+#include "Abytek/Renderer/RendererManager.hpp"
+#include "Abytek/Renderer/RenderPath.hpp"
+#include "Abytek/Renderer/RenderView.hpp"
+#include "Abytek/Renderer/RenderSceneUpdateRange.hpp"
+#include "Abytek/Renderer/RenderScenePostUpdateRange.hpp"
 
-#include "Abytek/Geometries/Render/RenderGeometryManager.hpp"
+#include "Abytek/Renderer/GPUData/GPUDataStorage.hpp"
 
-#include "Abytek/GPUData/Render/GPUDataComponentStorage.hpp"
-#include "Abytek/GPUData/GlobalGPUDataComponent.hpp"
-#include "Abytek/GPUData/GlobalGPUDataPack.hpp"
-
-#include "Abytek/GPUData/Components/GPUDataTransform.hpp"
-#include "Abytek/GPUData/Components/GPUDataInverseTransposeTransform.hpp"
+#include "Abytek/Renderer/RenderPrimitive/Components/Component_Transform.hpp"
+#include "Abytek/Renderer/RenderPrimitive/Components/Component_InverseTransposeTransform.hpp"
+#include "Abytek/Renderer/RenderPrimitive/Components/Component_MeshHandle.hpp"
+#include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveManager.hpp"
 
 #include "Abytek/Assets/Texture.hpp"
 #include "Abytek/Assets/StaticMesh.hpp"
@@ -86,19 +84,16 @@ namespace Abytek
         RegisterStaticType<F_InputComponent>();
         RegisterStaticType<F_InputComponentManager>();
         
-        RegisterStaticType<F_RenderManager>();
+        RegisterStaticType<F_RendererManager>();
         RegisterStaticType<A_RenderPath>();
         RegisterStaticType<F_RenderViewUniformDataBinding>();
         RegisterStaticType<RenderGeometry::F_GlobalSRVBinding>();
         RegisterStaticType<RenderGeometry::F_GlobalUAVBinding>();
 
-        RegisterStaticType<GPUData::F_GlobalSRVBinding>();
-        RegisterStaticType<GPUData::F_GlobalUAVBinding>();
-        RegisterStaticType<I_GlobalGPUDataComponent>();
-        RegisterStaticType<F_GlobalGPUDataPack>();
-        
-        RegisterStaticType<F_GPUDataTransform>();
-        RegisterStaticType<F_GPUDataInverseTransposeTransform>();
+        RegisterStaticType<RenderPrimitive::F_Component_Transform>();
+        RegisterStaticType<RenderPrimitive::F_Component_InverseTransposeTransform>();
+        RegisterStaticType<RenderPrimitive::F_Component_MeshHandle>();
+        RegisterStaticType<RenderPrimitive::F_DemoPipeline>();
         
         RegisterStaticType<F_Texture>();
         RegisterStaticType<F_TextureSetting>();

@@ -18,7 +18,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(F_ProgramUnit)
-        ABYTEK_END_REFLECTOR(F_Module)
+        ABYTEK_END_REFLECTOR(F_Module);
         
     private:
         

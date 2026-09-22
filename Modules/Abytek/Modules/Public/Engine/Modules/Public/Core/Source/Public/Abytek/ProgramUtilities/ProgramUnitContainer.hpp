@@ -40,7 +40,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(F_ProgramUnitContainer)
+        ABYTEK_END_REFLECTOR(F_ProgramUnitContainer);
         
     private:
         F_Name _Name;

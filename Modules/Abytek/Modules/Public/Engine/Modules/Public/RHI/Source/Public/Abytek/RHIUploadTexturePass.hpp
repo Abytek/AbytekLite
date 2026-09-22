@@ -45,7 +45,7 @@ namespace Abytek
         virtual void Release() override;
         
     public:
-        virtual E_RHIPassClass GetPassClass() override
+        virtual E_RHIPassClass GetPassClass() const override
         {
             return E_RHIPassClass::BLIT;
         }
@@ -55,6 +55,6 @@ namespace Abytek
         
     public:
         virtual B8 CanDetachCopyPass();
-        virtual void DetachCopyPass(I_RHISubmissionItemContainer& SubmissionItemContainer);
+        virtual void DetachCopyPass(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
     };
 }

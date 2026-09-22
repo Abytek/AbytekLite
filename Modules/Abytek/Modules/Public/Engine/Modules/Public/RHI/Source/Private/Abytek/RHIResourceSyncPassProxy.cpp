@@ -19,7 +19,7 @@ namespace Abytek
     ABYTEK_RA_END_OBJECT()
     void A_RHIResourceSyncPassProxy::Build(const TW_Valid<A_RHIResourceSyncPass>& Pass)
     {
-        A_RHIPassProxy::Build(Pass);
+        BuildPassProxy(Pass);
         _ResourceProxy = Pass->GetResource()->GetProxy().FastCast<A_RHIResourceProxy>();
         _Access = Pass->GetAccess();
     }   

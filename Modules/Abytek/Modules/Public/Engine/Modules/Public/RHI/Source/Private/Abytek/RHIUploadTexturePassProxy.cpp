@@ -19,7 +19,7 @@ namespace Abytek
     ABYTEK_RA_END_OBJECT()
     void A_RHIUploadTexturePassProxy::Build(const TW_Valid<A_RHIUploadTexturePass>& Pass)
     {
-        A_RHIPassProxy::Build(Pass);
+        BuildPassProxy(Pass);
         _TextureDataView = Pass->GetTextureDataView();;
         _TextureProxy = Pass->GetTexture()->GetProxy().FastCast<A_RHIResourceProxy>();
     }   

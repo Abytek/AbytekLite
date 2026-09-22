@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Abytek/Engine.NFC.prerequisites.hpp"
-#include "Abytek/RenderBase/WorldContextRenderProxy.hpp"
+#include "Abytek/Renderer/WorldContextRenderProxy.hpp"
 
 
 namespace Abytek

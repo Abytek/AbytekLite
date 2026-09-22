@@ -1,5 +1,5 @@
 #include "Abytek/DirectX12/RHIProcess.hpp"
-#include "Abytek/RHIPassUtilities.hpp"
+#include "Abytek/RHISubmissionUtilities.hpp"
 #include "Abytek/RHISubmissionList.hpp"
 #include "Abytek/DirectX12/RHIPlacedResourceManagerProxy.hpp"
 #include "Abytek/DirectX12/RHIBindGroupProxy.hpp"
@@ -21,6 +21,7 @@
 #include "Abytek/DirectX12/RHIResourceSyncPass.hpp"
 #include "Abytek/DirectX12/RHIEventStack.hpp"
 #include "Abytek/RHITransientUploadBufferManager.hpp"
+#include "Abytek/DirectX12/RHIViewportPresentation.hpp"
 
 
 #ifdef ABYTEK_ENGINE_RHI_ENABLE_DIRECTX12
@@ -80,38 +81,34 @@ namespace Abytek
             H_TaskUtilities::Switch();
         }
         
-        // Preprocess
+        // Early analyze (for the required data of Postprocessing phase)
+        {
+            _EarlyAnalyze();
+            H_TaskUtilities::Switch();
+        }
+        
+        // Postprocess
         {
             // Push front 
             {
-                auto UploadSubmissionList = GetUploadSubmissionList();
-                auto UploadCopySubmissionList = GetUploadCopySubmissionList();
-                
-                if (IsFirstFlush())
-                {
-                    AddFrontSubmissionList(UploadCopySubmissionList);
-                    AddFrontSubmissionList(UploadSubmissionList);
-                }
-                
                 // Upload
                 {
-                    _UploadResources(*UploadSubmissionList, *UploadCopySubmissionList);
+                    auto SubmissionList = RACreateAndBuildShared<A_RHISubmissionList>(ABYTEK_WTHIS());
+#ifdef ABYTEK_DEBUG_INFO
+                    SubmissionList->SetDebugName(ABYTEK_DEBUG_NAME("Abytek::RHIUpload"));   
+#endif
+                    _UploadResources(SubmissionList);
                     H_TaskUtilities::Switch();
-                    _UploadConstantData(*UploadSubmissionList, *UploadCopySubmissionList);
+                    _UploadConstantData(SubmissionList);
                     H_TaskUtilities::Switch();
+                    AddFrontSubmissionList(SubmissionList);
                 }
             }
             
             // Push back
             {
-                auto ReadbackSubmissionList = GetReadbackSubmissionList();
-                auto ReadbackCopySubmissionList = GetReadbackCopySubmissionList();
-                
                 if (FlagHas(Flags, E_RHIProcessFlushFlag::EXECUTE))
                 {
-                    AddBackSubmissionItem(ReadbackCopySubmissionList);
-                    AddBackSubmissionItem(ReadbackSubmissionList);
-                    
                     _ResourceStaticTransitions();
                     H_TaskUtilities::Switch();
                     _AddBackBufferTransitions();
@@ -122,7 +119,7 @@ namespace Abytek
         
         // sectioned compile
         {
-            _EarlyAnalyze();
+            _MainAnalyze();
             H_TaskUtilities::Switch();
             
             _GatherSubresourceBindings();
@@ -153,45 +150,107 @@ namespace Abytek
             H_TaskUtilities::Switch();
             _CalculateSubresourceD3D12States();
             H_TaskUtilities::Switch();
-            _GatherPrologueStateDependencies();
-            H_TaskUtilities::Switch();
-            _GatherReverseStateJoinDependencies();
-            H_TaskUtilities::Switch();
-            _GatherWriteDependencies();
-            H_TaskUtilities::Switch();
+            
+            /*
+             *  Setup non-aliasing subresource dependencies:
+             *  - A subresource has the following D3D12 states:
+             *      + Last d3d12 state from the last process: d3d12 state X 
+             *      + [Compile section 0]
+             *          + Pass 1: d3d12 state A
+             *          + Pass 2: d3d12 state A
+             *          + Pass 3: d3d12 state B
+             *          + Pass 4: d3d12 state B
+             *          + Pass 5: d3d12 state B
+             *      + [Compile section 1]
+             *          + Pass 6: d3d12 state B
+             *          + Pass 7: d3d12 state C
+             *          + Pass 8: d3d12 state C
+             *          + Pass 9: d3d12 state C
+             *          + Pass 10: d3d12 state D
+             *          + Pass 11: d3d12 state D
+             *  - For each compile section:
+             *      + Set up dependencies for D3D12 state transitions.
+             *          A state transition must be synchronized at the pass where the
+             *             transition occurs.
+             *          => Every continuous range of passes using the same subresources in the same d3d12 state must be synchronized at its end. 
+             *             These are called state-joint passes.
+             *          => This introduces the concept of reverse state-joint dependencies:
+             *             an earlier pass depends on a later state-joint pass.
+             *          => Since future compile sections are not available at this point,
+             *             reverse state-joint dependencies must be limited to the current compile section.
+             *          => In compile section 0:
+             *              + Pass 2 depends on Pass 1 due to reverse state-joint dependency.
+             *              + Pass 5 depends on Pass 3, 4 due to reverse state-joint dependency.
+             *          If d3d12 state transitions only occur at state-joint passes, we will miss some kinds of state transitions:
+             *              + From the last d3d12 state to the prologue d3d12 state
+             *              + From the last d3d12 state of the previous section to the prologue d3d12 of current section
+             *          => Need prologue state dependencies: 
+             *              + The first pass that accesses a subresource in every compile section broadcasts the required d3d12 state transitions before executing its commands.
+             *              => We must sync on those prologue passes.
+             *              => In compile section 0:
+             *                  + Pass 2 depends on Pass 1 due to prologue state dependency.
+             *      + Cross-section prologue state dependencies:
+             *          Ensure that pass batches produced by different compile sections are executed in sequential order.
+             *          In every continuous range of passes using the same subresources in the same d3d12 state: 
+             *              + The last pass in the range is always a synchronization point.
+             *              => Therefore, to synchronize a prologue pass with the entire range, we just need to add a dependency on the last pass.
+             */
+            {
+                _GatherPrologueStateDependencies();
+                H_TaskUtilities::Switch();
+                _GatherReverseStateJoinDependencies();
+                H_TaskUtilities::Switch();
+                _GatherWriteDependencies();
+                H_TaskUtilities::Switch();
+            }
+            
+            // Resolve non-aliasing pass dependencies using the subresource tracking data above
+            // We cannot account aliasing as dependencies here because we need the info of non-aliasing pass dependencies for allocating auto-placed resource allocations.
             _ResolvePassDependencies_WithoutAliasing();
             H_TaskUtilities::Switch();
+            
+            // This information is for allocating auto-placed resources.
             _ResolvePassDependencyLevel();
             H_TaskUtilities::Switch();
+            
+            // Allocate auto-placed resources
             _PrepareForAutoPlacedResources();
             H_TaskUtilities::Switch();
+            
+            // Gather aliasing dependencies for the final pass dependency graph + aliasing barriers
             _GatherAliasingDependencies();
             H_TaskUtilities::Switch();
+            
+            // May be used in the future, but it is necessary to re-calculate pass-dependency level for correctness.
             _ResolvePassDependencyLevel();
+            
+            // Calculate dependency score and sort passes for pass batch creations
             H_TaskUtilities::Switch();
             _ResolvePassDependencyScore();
             H_TaskUtilities::Switch();
             _SortPassesByDependencyScore();
             H_TaskUtilities::Switch();
             
+            // 
             _CreatePassBatches();
             H_TaskUtilities::Switch();
             
+            //
             _UpdateLastSubresourceD3D12States();
             H_TaskUtilities::Switch();
+        
+            // Final compile 
+            if (FlagHas(Flags, E_RHIProcessFlushFlag::EXECUTE))
+            {
+                _TransferCompileDataToExecutionData();
+                H_TaskUtilities::Switch();
+                _TransferCompileDataToLateExecutionData();
+                H_TaskUtilities::Switch();
+                _UpdateViewports();
+                H_TaskUtilities::Switch();
+            }
             
             _EndCompileSection();
-            H_TaskUtilities::Switch();
-        }
-        
-        // Final compile 
-        if (FlagHas(Flags, E_RHIProcessFlushFlag::EXECUTE))
-        {
-            _TransferCompileDataToExecutionData();
-            H_TaskUtilities::Switch();
-            _TransferCompileDataToLateExecutionData();
-            H_TaskUtilities::Switch();
-            _UpdateViewports();
         }
     } 
     void F_DirectX12RHIProcess::CleanCompile() 
@@ -239,9 +298,15 @@ namespace Abytek
         _CopyDescriptors();
         H_TaskUtilities::Switch();
         
+        _TransientUploadBuffers();
+        H_TaskUtilities::Switch();
+        
         _ExecutePassBatches();
         H_TaskUtilities::Switch();
         _JoinPassBatches();
+        H_TaskUtilities::Switch();
+        
+        _TransientReadbackBuffers();
         H_TaskUtilities::Switch();
         
         _CleanCommandListManagers();
@@ -294,9 +359,56 @@ namespace Abytek
         }
     }
 
+    void F_DirectX12RHIProcess::_EarlyAnalyze()
+    {
+        ABYTEK_PROFILER_EVENT();
+        const auto& RootSubmissionItems = GetRootSubmissionItems();
+        auto CurrentSection_BeginRootSubmissionItemIndex = GetCurrentSection_BeginRootSubmissionItemIndex();
+        auto CurrentSection_EndRootSubmissionItemIndex = GetCurrentSection_EndRootSubmissionItemIndex();
+        
+        for (
+            auto RootSubmissionItemIndex = CurrentSection_BeginRootSubmissionItemIndex;
+            RootSubmissionItemIndex < CurrentSection_EndRootSubmissionItemIndex;
+            ++RootSubmissionItemIndex
+        )
+        {
+            const auto& RootSubmissionItem = RootSubmissionItems[RootSubmissionItemIndex];
+            _EarlyAnalyze(RootSubmissionItem);
+        }
+    }
+    void F_DirectX12RHIProcess::_EarlyAnalyze(const TS<A_RHISubmissionItem>& SubmissionItem)
+    {
+        TW<F_DirectX12RHIViewportPresentation> ViewportPresentation;
+        if (SubmissionItem.TryDynamicCast<F_DirectX12RHIViewportPresentation>(ViewportPresentation))
+        {
+            auto Viewport = ViewportPresentation->GetViewport().Weak();
+            if (
+                std::find(
+                    CompileData.Viewports.begin(),
+                    CompileData.Viewports.end(),
+                    Viewport
+                )
+                == CompileData.Viewports.end()
+            )
+            {
+                CompileData.Viewports.push_back(Viewport);
+                CompileSectionData.Viewports.push_back(Viewport);
+                ++CompileData.CurrentSection_EndViewportIndex;
+            }
+        }
+        
+        TW<A_RHISubmissionList> SubmissionList;
+        if (SubmissionItem.TryDynamicCast<A_RHISubmissionList>(SubmissionList))
+        {
+            for (const auto& Child : *SubmissionList)
+            {
+                _EarlyAnalyze(Child);
+            }
+        }
+    }
+
     void F_DirectX12RHIProcess::_UploadResources(
-        I_RHISubmissionItemContainer& CPUSubmissionItemContainer,
-        I_RHISubmissionItemContainer& GPUSubmissionItemContainer
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer
     )
     {
         ABYTEK_PROFILER_EVENT();
@@ -304,33 +416,31 @@ namespace Abytek
             DirectX12RHIProcessQueries::Compile::F_UploadBuffer Query;
             while (Queues.Compile.UploadBuffer.TryPop(Query))
             {
-                _UploadBuffer(CPUSubmissionItemContainer, GPUSubmissionItemContainer, Query);
+                _UploadBuffer(SubmissionItemContainer, Query);
             }
         }
         {
             DirectX12RHIProcessQueries::Compile::F_UploadTexture Query;
             while (Queues.Compile.UploadTexture.TryPop(Query))
             {
-                _UploadTexture(CPUSubmissionItemContainer, GPUSubmissionItemContainer, Query);
+                _UploadTexture(SubmissionItemContainer, Query);
             }
         }
         {
             DirectX12RHIProcessQueries::Compile::F_UploadRTAS Query;
             while (Queues.Compile.UploadRTAS.TryPop(Query))
             {
-                _UploadRTAS(CPUSubmissionItemContainer, GPUSubmissionItemContainer, Query);
+                _UploadRTAS(SubmissionItemContainer, Query);
             }
         }
     }
     void F_DirectX12RHIProcess::_UploadBuffer(
-        I_RHISubmissionItemContainer& CPUSubmissionItemContainer,
-        I_RHISubmissionItemContainer& GPUSubmissionItemContainer,
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
         const DirectX12RHIProcessQueries::Compile::F_UploadBuffer& Query
     )
     {
-        H_RHIPassUtilities::UploadBuffer(
-                CPUSubmissionItemContainer,
-                GPUSubmissionItemContainer,
+        H_RHISubmissionUtilities::UploadBuffer(
+            SubmissionItemContainer,
             Query.BufferDataView,
             Query.Resource,
             0,
@@ -342,14 +452,12 @@ namespace Abytek
         );
     }
     void F_DirectX12RHIProcess::_UploadTexture(
-        I_RHISubmissionItemContainer& CPUSubmissionItemContainer,
-        I_RHISubmissionItemContainer& GPUSubmissionItemContainer,
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
         const DirectX12RHIProcessQueries::Compile::F_UploadTexture& Query
     )
     {
-        H_RHIPassUtilities::UploadTexture(
-                CPUSubmissionItemContainer,
-                GPUSubmissionItemContainer,
+        H_RHISubmissionUtilities::UploadTexture(
+            SubmissionItemContainer,
             Query.TextureDataView,
             Query.Resource,
 #ifdef ABYTEK_DEBUG_INFO
@@ -360,8 +468,7 @@ namespace Abytek
         );
     }
     void F_DirectX12RHIProcess::_UploadRTAS(
-        I_RHISubmissionItemContainer& CPUSubmissionItemContainer,
-        I_RHISubmissionItemContainer& GPUSubmissionItemContainer,
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
         const DirectX12RHIProcessQueries::Compile::F_UploadRTAS& Query
     )
     {
@@ -369,8 +476,7 @@ namespace Abytek
     }
 
     void F_DirectX12RHIProcess::_UploadConstantData(
-        I_RHISubmissionItemContainer& CPUSubmissionItemContainer,
-        I_RHISubmissionItemContainer& GPUSubmissionItemContainer
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer
     )
     {
         ABYTEK_PROFILER_EVENT();
@@ -378,14 +484,8 @@ namespace Abytek
         while (Queues.Compile.UploadConstantData.TryPop(Query))
         {
             Query.ConstantDataRange.Upload(
-                CPUSubmissionItemContainer,
-                GPUSubmissionItemContainer,
-                Query.BufferDataView,
-#ifdef ABYTEK_DEBUG_INFO
-                ABYTEK_DEBUG_NAME("Query")
-#else
-                {}
-#endif
+                SubmissionItemContainer,
+                Query.BufferDataView
             );
         }
     }
@@ -395,7 +495,7 @@ namespace Abytek
         ABYTEK_PROFILER_EVENT();
         auto SubmissionList = RACreateAndBuildShared<A_RHISubmissionList>(ABYTEK_WTHIS());
 #ifdef ABYTEK_DEBUG_INFO
-        SubmissionList->SetDebugName(ABYTEK_DEBUG_NAME("RHIResourceStaticTransitions"));   
+        SubmissionList->SetDebugName(ABYTEK_DEBUG_NAME("Abytek::RHIResourceStaticTransitions"));   
 #endif
         DirectX12RHIProcessQueries::Compile::F_ResourceStaticTransition Query;
         while (Queues.Compile.ResourceStaticTransition.TryPop(Query))
@@ -433,9 +533,9 @@ namespace Abytek
         ABYTEK_PROFILER_EVENT();
         auto SubmissionList = RACreateAndBuildShared<A_RHISubmissionList>(ABYTEK_WTHIS());
 #ifdef ABYTEK_DEBUG_INFO
-        SubmissionList->SetDebugName(ABYTEK_DEBUG_NAME("RHIBackBufferTransitions"));   
+        SubmissionList->SetDebugName(ABYTEK_DEBUG_NAME("Abytek::RHIBackBufferTransitions"));   
 #endif
-        for (const auto& Viewport : GetViewports())
+        for (const auto& Viewport : CompileSectionData.Viewports)
         {
             F_RHIResourceSyncPassBuildParams PassBuildParams;
             PassBuildParams.Context = Viewport->GetContext();
@@ -450,7 +550,7 @@ namespace Abytek
         AddSubmissionItem(SubmissionList);
     }
 
-    void F_DirectX12RHIProcess::_EarlyAnalyze()
+    void F_DirectX12RHIProcess::_MainAnalyze()
     {
         ABYTEK_PROFILER_EVENT();
         const auto& RootSubmissionItems = GetRootSubmissionItems();
@@ -466,10 +566,10 @@ namespace Abytek
             const auto& RootSubmissionItem = RootSubmissionItems[RootSubmissionItemIndex];
             
             F_DirectX12RHISubmissionItemGraphData GraphData;
-            _EarlyAnalyze(RootSubmissionItem, GraphData);
+            _MainAnalyze(RootSubmissionItem, GraphData);
         }
     }
-    void F_DirectX12RHIProcess::_EarlyAnalyze(const TS<A_RHISubmissionItem>& SubmissionItem, F_DirectX12RHISubmissionItemGraphData& GraphData)
+    void F_DirectX12RHIProcess::_MainAnalyze(const TS<A_RHISubmissionItem>& SubmissionItem, F_DirectX12RHISubmissionItemGraphData& GraphData)
     {
         TW<A_DirectX12RHISubmissionItemExtension> SubmissionItemExtension;
         if (SubmissionItem.TryDynamicCast<A_DirectX12RHISubmissionItemExtension>(SubmissionItemExtension))
@@ -511,7 +611,7 @@ namespace Abytek
             {
                 auto ChildGraphData = GraphData;
                 ChildGraphData.ListExtensions.push_back(SubmissionListExtension);
-                _EarlyAnalyze(Child, ChildGraphData);
+                _MainAnalyze(Child, ChildGraphData);
                 GraphData.Offset = ChildGraphData.Offset;
             }
         }
@@ -546,13 +646,13 @@ namespace Abytek
                 
                 if (CompileData_Subresource->GlobalIndex == ~U32(0))
                 {
-                    CompileData_Subresource->GlobalIndex = SubresourceReferences.size();
+                    CompileData_Subresource->GlobalIndex = static_cast<U32>(SubresourceReferences.size());
                     SubresourceReferences.push_back(SubresourceReference);
                     ++CurrentSection_EndSubresourceReferenceIndex;
                 }
                 if (CompileData_Subresource->IndexInSection == ~U32(0))
                 {
-                    CompileData_Subresource->IndexInSection = CurrentSection_SubresourceReferences.size();
+                    CompileData_Subresource->IndexInSection = static_cast<U32>(CurrentSection_SubresourceReferences.size());
                     CurrentSection_SubresourceReferences.push_back(SubresourceReference);
                 }
             }
@@ -566,7 +666,7 @@ namespace Abytek
             auto ProcessData_PassExtension = PassExtension->GetProcessData_PassExtension();
             auto& SubresourceBindingSet = ProcessData_PassExtension->SubresourceBindingSet;
             
-            U32 NumSubresourceBindings = SubresourceBindingSet.size();
+            U32 NumSubresourceBindings = static_cast<U32>(SubresourceBindingSet.size());
             
             for (U32 SubresourceBindingIndex = 0; SubresourceBindingIndex < NumSubresourceBindings; SubresourceBindingIndex++)
             {
@@ -576,7 +676,7 @@ namespace Abytek
                 
                 SubresourceBinding.PassTrackingReference = F_DirectX12RHISubresourcePassTrackingReference::Make(
                     SubresourceBinding.SubresourceReference,
-                    OutPassTrackings.size()
+                    static_cast<U32>(OutPassTrackings.size())
                 );
                 
                 F_DirectX12RHISubresourcePassTracking PassTracking;
@@ -606,7 +706,7 @@ namespace Abytek
                 // Try add resource use
                 {
                     B8 AddedResourceUse = false;
-                    U32 NumResourceUses = ResourceUseSet.size();
+                    U32 NumResourceUses = static_cast<U32>(ResourceUseSet.size());
                     for (U32 ResourceUseIndex = 0; ResourceUseIndex < NumResourceUses; ++ResourceUseIndex)
                     {
                         const auto& ResourceUse = ResourceUseSet[ResourceUseIndex];
@@ -650,14 +750,14 @@ namespace Abytek
                 
                 if (CompileData_Resource->GlobalIndex == ~U32(0))
                 {
-                    CompileData_Resource->GlobalIndex = Resources.size();
+                    CompileData_Resource->GlobalIndex = static_cast<U32>(Resources.size());
                     Resources.push_back(ShareObject(CastedResource));
                     ++CurrentSection_EndResourceIndex;
                 }
                 
                 if (CompileData_Resource->IndexInSection == ~U32(0))
                 {
-                    CompileData_Resource->IndexInSection = CurrentSection_Resources.size();
+                    CompileData_Resource->IndexInSection = static_cast<U32>(CurrentSection_Resources.size());
                     CurrentSection_Resources.push_back(CastedResource);
                 }
             }
@@ -671,7 +771,7 @@ namespace Abytek
             auto ProcessData_PassExtension = PassExtension->GetProcessData_PassExtension();
             auto& ResourceUseSet = ProcessData_PassExtension->ResourceUseSet;
             
-            U32 NumResourceUses = ResourceUseSet.size();
+            U32 NumResourceUses = static_cast<U32>(ResourceUseSet.size());
             
             for (U32 ResourceUseIndex = 0; ResourceUseIndex < NumResourceUses; ResourceUseIndex++)
             {
@@ -681,7 +781,7 @@ namespace Abytek
                 
                 ResourceUse.PassTrackingReference = F_DirectX12RHIResourcePassTrackingReference::Make(
                     ResourceUse.Resource,
-                    OutPassTrackings.size()
+                    static_cast<U32>(OutPassTrackings.size())
                 );
                 
                 F_DirectX12RHIResourcePassTracking PassTracking;
@@ -704,9 +804,9 @@ namespace Abytek
         const auto& PassExtensions = CompileData.PassExtensions;
         const auto& SubmissionListExtensions = CompileData.SubmissionListExtensions;
         
-        U32 NumSubmissionItemExtensions = SubmissionItemExtensions.size();
-        U32 NumPassExtensions = PassExtensions.size();
-        U32 NumSubmissionListExtensions = SubmissionListExtensions.size();
+        U32 NumSubmissionItemExtensions = static_cast<U32>(SubmissionItemExtensions.size());
+        U32 NumPassExtensions = static_cast<U32>(PassExtensions.size());
+        U32 NumSubmissionListExtensions = static_cast<U32>(SubmissionListExtensions.size());
         
         // Phase 1: gathering all the subresource validation data
         for (const auto& PassExtension : PassExtensions)
@@ -715,7 +815,7 @@ namespace Abytek
             auto ProcessData_PassExtension = PassExtension->GetProcessData_PassExtension();
             
             const auto& SubresourceBindingSet = ProcessData_PassExtension->SubresourceBindingSet;
-            U32 NumSubresourceBindings = SubresourceBindingSet.size();
+            U32 NumSubresourceBindings = static_cast<U32>(SubresourceBindingSet.size());
             for (U32 SubresourceBindingIndex = 0; SubresourceBindingIndex < NumSubresourceBindings; ++SubresourceBindingIndex)
             {
                 const auto& SubresourceBinding = SubresourceBindingSet[SubresourceBindingIndex];
@@ -884,7 +984,9 @@ namespace Abytek
                     const auto& PassTracking = CompileData_Subresource->PassTrackings[PassTrackingIndex];
                     if (PassTracking.PassExtension->IsBeforeIfHasLowerOffset(PassExtension))
                     {
-                        static_cast<F_DirectX12RHISubresourceBindingReference&>(StateDependency) = PassTracking;
+                        static_cast<F_DirectX12RHISubresourceBindingReference&>(StateDependency) = static_cast<const F_DirectX12RHISubresourceBindingReference&>(
+                            PassTracking
+                        );
                         break;
                     }
                 }
@@ -903,7 +1005,7 @@ namespace Abytek
             auto& PassTrackings = CompileData_Subresource->PassTrackings;
             auto& D3D12States = CompileData_Subresource->D3D12States;
             
-            U32 NumPassTrackings = PassTrackings.size();
+            U32 NumPassTrackings = static_cast<U32>(PassTrackings.size());
             auto CurrentSection_BeginPassTrackingIndex = CompileData_Subresource->CurrentSection_BeginPassTrackingIndex;
             auto CurrentSection_EndPassTrackingIndex = CompileData_Subresource->CurrentSection_EndPassTrackingIndex;
             
@@ -928,7 +1030,7 @@ namespace Abytek
         // Merge states
         {
             const auto& PassExtensions = CompileSectionData.PassExtensions;
-            U32 NumPassExtensions = PassExtensions.size();
+            U32 NumPassExtensions = static_cast<U32>(PassExtensions.size());
             for (U32 PassIndex = NumPassExtensions - 1; PassIndex != ~U32(0); --PassIndex)
             {
                 const auto& PassExtension = PassExtensions[PassIndex];
@@ -1147,7 +1249,9 @@ namespace Abytek
                     } 
                     
                     F_DirectX12RHISubresourceWriteDependency WriteDependency;
-                    static_cast<F_DirectX12RHISubresourceBindingReference&>(WriteDependency) = PassTracking_Subresource;
+                    static_cast<F_DirectX12RHISubresourceBindingReference&>(WriteDependency) = static_cast<const F_DirectX12RHISubresourceBindingReference&>(
+                        PassTracking_Subresource
+                    );
                     WriteDependencies.push_back(WriteDependency);
                     
                     // Note that write dependencies always happen on state-joint points!
@@ -1256,8 +1360,7 @@ namespace Abytek
             // Prologue state dependencies (for first resource state transition)
             for (auto& SubresourceBinding : SubresourceBindingSet)
             {
-                auto& PrologueStateDependency = SubresourceBinding.PrologueStateDependency;
-                if (PrologueStateDependency)
+                if (auto& PrologueStateDependency = SubresourceBinding.PrologueStateDependency)
                 {
                     auto PrologueStatePassExtension = PrologueStateDependency.PassExtension;
                     
@@ -1276,7 +1379,7 @@ namespace Abytek
                 }
             }
             
-            // Cross-section dependencies
+            // Cross-section prologue state dependencies
             for (auto& SubresourceBinding : SubresourceBindingSet)
             {
                 if (SubresourceBinding.NeedPrologueStateTransitionBarrier)
@@ -1359,7 +1462,7 @@ namespace Abytek
                 AutoPlacedResourcesToAllocate.push_back(Resource);
                 if (AutoPlacedData.IndexInSection == ~U32(0))
                 {
-                    AutoPlacedData.IndexInSection = AutoPlacedResources.size();
+                    AutoPlacedData.IndexInSection = static_cast<U32>(AutoPlacedResources.size());
                     AutoPlacedResources.push_back(Resource.Weak());
                 }
             }
@@ -1375,7 +1478,7 @@ namespace Abytek
                 AutoPlacedResourcesToDeallocate.push_back(Resource);
                 if (AutoPlacedData.IndexInSection == ~U32(0))
                 {
-                    AutoPlacedData.IndexInSection = AutoPlacedResources.size();
+                    AutoPlacedData.IndexInSection = static_cast<U32>(AutoPlacedResources.size());
                     AutoPlacedResources.push_back(Resource.Weak());
                 }
             }
@@ -1471,8 +1574,8 @@ namespace Abytek
         
         // Allocate + deallocate
         U32 MaxNumLevels = Max<U32>(
-            LevelsOfResourceAllocations.size() + 1,    
-            LevelsOfResourceDeallocations.size() + 1    
+            static_cast<U32>(LevelsOfResourceAllocations.size()) + 1,    
+            static_cast<U32>(LevelsOfResourceDeallocations.size()) + 1    
         );
         for (U32 LevelIndex = 0; LevelIndex < MaxNumLevels; ++LevelIndex)
         {
@@ -1497,7 +1600,7 @@ namespace Abytek
                         D3D12ResourceAllocationInfo.Alignment
                     );
                     AutoPlacedProcessData.Placement = ResourcePlacement;
-                    AutoPlacedProcessData.EndDeallocationIndexToCheck = SortedAutoPlacedResourcesToDeallocate.size();
+                    AutoPlacedProcessData.EndDeallocationIndexToCheck = static_cast<U32>(SortedAutoPlacedResourcesToDeallocate.size());
                     
                     ABYTEK_ENGINE_RHI_ASSERT(ResourcePlacement);
                     
@@ -1562,7 +1665,7 @@ namespace Abytek
                 
                 if (ResourcePlacement_Allocated.IsOverlap(ResourcePlacement_Deallocated))
                 {
-                    U32 NumPassTrackings_Deallocated = PassTrackings_Deallocated.size();
+                    U32 NumPassTrackings_Deallocated = static_cast<U32>(PassTrackings_Deallocated.size());
                     if (NumPassTrackings_Deallocated > 0)
                     {
                         auto& PassTracking_Deallocated = PassTrackings_Deallocated.back();
@@ -1598,7 +1701,7 @@ namespace Abytek
     {
         ABYTEK_PROFILER_EVENT();
         const auto& PassExtensions = CompileSectionData.PassExtensions;
-        U32 NumPassExtensions = PassExtensions.size();
+        U32 NumPassExtensions = static_cast<U32>(PassExtensions.size());
         U64 NumPassExtensions_U64 = NumPassExtensions;
         U64 HeuristicFactor = Min<U64>(NumPassExtensions_U64, ABYTEK_U16_MAX);
         
@@ -1628,6 +1731,9 @@ namespace Abytek
             case E_DirectX12RHIPassBatchType::CPU_SYNC:
                 BaseDependencyScore += 1 * HeuristicFactor;
                 break;
+            default:
+                ABYTEK_LOG_FATAL() << "Unknown pass batch type";
+                break;
             }
             switch (CommandQueue->GetCommandListType())
             {
@@ -1640,6 +1746,9 @@ namespace Abytek
             case DirectX12SharedAPIWrapper::E_CommandListType::COPY:
                 BaseDependencyScore += 2 * HeuristicFactor * HeuristicFactor;
                 break;
+            default:
+                ABYTEK_LOG_FATAL() << "Unknown command list type";
+                break;
             }
             switch (ExecutionRangeType)
             {
@@ -1651,6 +1760,9 @@ namespace Abytek
                 break;
             case E_DirectX12RHIExecutionRangeType::USE_COMMAND_QUEUE:
                 BaseDependencyScore += 2 * HeuristicFactor * HeuristicFactor * HeuristicFactor;
+                break;
+            default:
+                ABYTEK_LOG_FATAL() << "Unknown execution range type";
                 break;
             }
              
@@ -1724,7 +1836,7 @@ namespace Abytek
             }
         );
         
-        U32 NumPassExtensions = PassExtensions.size();
+        U32 NumPassExtensions = static_cast<U32>(PassExtensions.size());
         for (U32 PassExtensionIndex = 0; PassExtensionIndex < NumPassExtensions; ++PassExtensionIndex)
         {
             PassExtensions_SortedByDependencyScore[PassExtensionIndex]->GetProcessData_PassExtension()->SortedIndexInSection = PassExtensionIndex;
@@ -1740,7 +1852,7 @@ namespace Abytek
         auto& CurrentSection_PassExtensions = CompileSectionData.PassExtensions;
         auto& CurrentSection_PassExtensions_SortedByDependencyScore = CompileSectionData.PassExtensions_SortedByDependencyScore;
         
-        U32 CurrentSection_NumPassExtensions = CurrentSection_PassExtensions.size();
+        U32 CurrentSection_NumPassExtensions = static_cast<U32>(CurrentSection_PassExtensions.size());
         
         // Creating pass batches
         {
@@ -1806,7 +1918,7 @@ namespace Abytek
                     MinimalPassRange.PassBatchType = PassBatchType_PassExtension;
                     MinimalPassRange.EndIndex = PassExtensionIndex + 1;
             
-                    MinimalPassRangeIndex = MinimalPassRanges.size();
+                    MinimalPassRangeIndex = static_cast<U32>(MinimalPassRanges.size());
                     
                     if (MinimalPassRange.GetSize() >= DirectX12RHIMaxPassBatchSize)
                     {
@@ -1815,7 +1927,7 @@ namespace Abytek
                 }
                 FlushMinimalPassRange();
             }
-            U32 NumMinimalPassRanges = MinimalPassRanges.size();
+            U32 NumMinimalPassRanges = static_cast<U32>(MinimalPassRanges.size());
             
             // Setup MinReverseDependencyIndex and MaxDependencyIndex
             for (U32 PassExtensionIndex = 0; PassExtensionIndex < CurrentSection_NumPassExtensions; ++PassExtensionIndex)
@@ -1939,22 +2051,19 @@ namespace Abytek
                         const auto& PassExtension = CurrentSection_PassExtensions_SortedByDependencyScore[PassExtensionIndex];
                         
                         auto ProcessData_PassExtension = PassExtension->GetProcessData_PassExtension();
-                        ProcessData_PassExtension->BatchIndex = PassBatches.size();
+                        ProcessData_PassExtension->BatchIndex = static_cast<U32>(PassBatches.size());
                         PassBatch.PassExtensions.push_back(PassExtension);
                     }
                     
                     MinimalPassRangeIndexToMerge = MinimalPassRangeToMerge.MergeNext;
                 }
                 
-                ABYTEK_ENGINE_RHI_ASSERT(PassBatch.PassExtensions.size() > 0);
+                ABYTEK_ENGINE_RHI_ASSERT(!PassBatch.PassExtensions.empty());
                 PassBatches.push_back(ABYTEK_MOVE(PassBatch));
                 ++CurrentSection_EndPassBatchIndex;
             }
         } 
         
-        //
-        U32 NumPassBatches = PassBatches.size();
-            
         // 
         _CreateResourceBarriersForPasses();
         
@@ -1986,7 +2095,7 @@ namespace Abytek
                     }
                 }
                 
-                if (BarrierProxies.size() > 0)
+                if (!BarrierProxies.empty())
                 {
                     F_DirectX12RHIExecutionRange ExecutionRange;
                     ExecutionRange.Type = E_DirectX12RHIExecutionRangeType::USE_COMMAND_LIST;
@@ -2004,7 +2113,7 @@ namespace Abytek
                 const auto& PassExtensions = PassBatch.PassExtensions;
                 auto& ExecutionRanges = PassBatch.ExecutionRanges;
                 
-                U32 NumLocalPassExtensions = PassExtensions.size();
+                U32 NumLocalPassExtensions = static_cast<U32>(PassExtensions.size());
                 
                 F_DirectX12RHIExecutionRange ExecutionRange;
                 
@@ -2101,7 +2210,7 @@ namespace Abytek
                 {
                     auto ProcessData_PassExtension = PassExtension->GetProcessData_PassExtension();
                     const auto& D3D12ResourceBarrierProxies_After_PassExtension = ProcessData_PassExtension->D3D12ResourceBarrierProxies_After;
-                    if (D3D12ResourceBarrierProxies_After_PassExtension.size() > 0)
+                    if (!D3D12ResourceBarrierProxies_After_PassExtension.empty())
                     {
                         BarrierProxies.insert(
                             BarrierProxies.end(),
@@ -2111,7 +2220,7 @@ namespace Abytek
                     }
                 }
                 
-                if (BarrierProxies.size() > 0)
+                if (!BarrierProxies.empty())
                 {
                     F_DirectX12RHIExecutionRange ExecutionRange;
                     ExecutionRange.Type = E_DirectX12RHIExecutionRangeType::USE_COMMAND_LIST;
@@ -2154,7 +2263,7 @@ namespace Abytek
         }
         
         // Setting up pass batch reverse dependencies
-        for (U32 PassBatchIndex = 0; PassBatchIndex < NumPassBatches; ++PassBatchIndex)
+        for (U32 PassBatchIndex = CurrentSection_BeginPassBatchIndex; PassBatchIndex < CurrentSection_EndPassBatchIndex; ++PassBatchIndex)
         {
             auto& PassBatch = PassBatches[PassBatchIndex];
             for (auto DependencyIndex : PassBatch.DependencyIndices)
@@ -2184,12 +2293,12 @@ namespace Abytek
             PassBatch.HasCommands_End = (ExecutionRanges.back().Type != E_DirectX12RHIExecutionRangeType::CPU_ACCESS);
         }
         
-        // Setup execution ranges
-        for (U32 PassBatchIndex = 0; PassBatchIndex < NumPassBatches; ++PassBatchIndex)
+        // Setup execution range sync-related params
+        for (U32 PassBatchIndex = CurrentSection_BeginPassBatchIndex; PassBatchIndex < CurrentSection_EndPassBatchIndex; ++PassBatchIndex)
         {
             auto& PassBatch = PassBatches[PassBatchIndex];
             auto& ExecutionRanges = PassBatch.ExecutionRanges;
-            U32 NumExecutionRanges = ExecutionRanges.size();
+            U32 NumExecutionRanges = static_cast<U32>(ExecutionRanges.size());
             
             // Sync between execution ranges
             for (U32 ExecutionRangeIndex = 1; ExecutionRangeIndex < NumExecutionRanges; ++ExecutionRangeIndex)
@@ -2245,8 +2354,8 @@ namespace Abytek
         }
         
         //
-#ifdef ABYTEK_ENGINE_RHI_ENABLE_PROFILER
-        _CreateProfilerDataForPassBatches();
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
+        _CreateCaptureDataForPassBatches();
 #endif
         
         // Create pass proxies
@@ -2294,6 +2403,7 @@ namespace Abytek
             
         CompileData.CurrentSection_BeginSubmissionListExtensionIndex = CompileData.CurrentSection_EndSubmissionListExtensionIndex;
         CompileData.CurrentSection_BeginPassExtensionIndex = CompileData.CurrentSection_EndPassExtensionIndex;
+        CompileData.CurrentSection_BeginViewportIndex = CompileData.CurrentSection_EndViewportIndex;
             
         CompileData.CurrentSection_BeginSubresourceReferenceIndex = CompileData.CurrentSection_EndSubresourceReferenceIndex;
         CompileData.CurrentSection_BeginResourceIndex = CompileData.CurrentSection_EndResourceIndex;
@@ -2503,36 +2613,48 @@ namespace Abytek
         }
     }
     
-#ifdef ABYTEK_ENGINE_RHI_ENABLE_PROFILER
-    void F_DirectX12RHIProcess::_CreateProfilerDataForPassBatches()
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
+    void F_DirectX12RHIProcess::_CreateCaptureDataForPassBatches()
     {
         ABYTEK_PROFILER_EVENT();
-        auto GetProfilerEventStatesForPassExtensions = [](const TW_Valid<A_DirectX12RHIPassExtension>& PassExtension)
+        auto GetCaptureEventStatesForPassExtensions = [this](const TW_Valid<A_DirectX12RHIPassExtension>& PassExtension)
         {
             auto ProcessData_SubmissionItemExtension = PassExtension->GetProcessData_SubmissionItemExtension();
-            TF_SmallVector<F_DirectX12RHIProfilerEventState, 4> PassProfilerEventStates;
+            TF_SmallVector<F_RHICaptureEventState, 4> PassCaptureEventStates;
+            if (auto CaptureEventState = GetCaptureEventState())
+            {
+                PassCaptureEventStates.push_back(CaptureEventState);
+            }
             for (const auto& ListExtension : ProcessData_SubmissionItemExtension->GraphData.ListExtensions)
             {
                 auto SubmissionItem = ListExtension->GetSubmissionItem();
-                
-                F_DirectX12RHIProfilerEventState State;
-#ifdef ABYTEK_DEBUG_INFO
-                State.Name = SubmissionItem->GetDebugName();
-                State.Color = SubmissionItem->GetProfilerEventColor();
-#endif
-                PassProfilerEventStates.push_back(State);
+                for (const auto& StackCaptureEventState : SubmissionItem->GetStackCaptureEventStates())
+                {
+                    if (StackCaptureEventState)
+                    {
+                        PassCaptureEventStates.push_back(StackCaptureEventState);
+                    }
+                }
+                if (auto CaptureEventState = SubmissionItem->GetCaptureEventState())
+                {
+                    PassCaptureEventStates.push_back(CaptureEventState);
+                }
             }
             {
                 auto SubmissionItem = PassExtension->GetSubmissionItem();
-                
-                F_DirectX12RHIProfilerEventState State;
-#ifdef ABYTEK_DEBUG_INFO
-                State.Name = SubmissionItem->GetDebugName();
-                State.Color = SubmissionItem->GetProfilerEventColor();
-#endif
-                PassProfilerEventStates.push_back(State);
+                for (const auto& StackCaptureEventState : SubmissionItem->GetStackCaptureEventStates())
+                {
+                    if (StackCaptureEventState)
+                    {
+                        PassCaptureEventStates.push_back(StackCaptureEventState);
+                    }
+                }
+                if (auto CaptureEventState = SubmissionItem->GetCaptureEventState())
+                {
+                    PassCaptureEventStates.push_back(CaptureEventState);
+                }
             }
-            return ABYTEK_MOVE(PassProfilerEventStates);
+            return ABYTEK_MOVE(PassCaptureEventStates);
         };
         
         for (
@@ -2553,7 +2675,7 @@ namespace Abytek
                     continue;
                 }
                 
-                TF_SmallVector<F_DirectX12RHIProfilerEventState, 4> ProfilerEventStates;
+                TF_SmallVector<F_RHICaptureEventState, 4> CaptureEventStates;
                 for (
                     auto PassExtensionIndex = ExecuteRange.BeginLocalPassExtensionIndex; 
                     PassExtensionIndex != ExecuteRange.EndLocalPassExtensionIndex;
@@ -2562,27 +2684,33 @@ namespace Abytek
                     auto PassExtension = PassBatch.PassExtensions[PassExtensionIndex];
                     auto ProcessData_PassExtension = PassExtension->GetProcessData_PassExtension();
 
-                    auto& ProfilerEventStatesToBegin = ProcessData_PassExtension->ProfilerEventStatesToBegin;
-                    auto& ProfilerEventStatesToEnd = ProcessData_PassExtension->ProfilerEventStatesToEnd;
+                    auto& CaptureEventStatesToBegin = ProcessData_PassExtension->CaptureEventStatesToBegin;
+                    auto& CaptureEventStatesToEnd = ProcessData_PassExtension->CaptureEventStatesToEnd;
                 
-                    auto PassProfilerEventStates = GetProfilerEventStatesForPassExtensions(PassExtension);
+                    auto PassCaptureEventStates = GetCaptureEventStatesForPassExtensions(PassExtension);
                 
                     // Begin
                     {
                         U32 BeginChangeIdx = 0;
-                        for (; BeginChangeIdx < Min<U32>(ProfilerEventStates.size(), PassProfilerEventStates.size()); ++BeginChangeIdx)
+                        for (; 
+                            BeginChangeIdx < Min<U32>(
+                                static_cast<U32>(CaptureEventStates.size()), 
+                                static_cast<U32>(PassCaptureEventStates.size())
+                            ); 
+                            ++BeginChangeIdx
+                        )
                         {
-                            if (ProfilerEventStates[BeginChangeIdx] != PassProfilerEventStates[BeginChangeIdx])
+                            if (CaptureEventStates[BeginChangeIdx] != PassCaptureEventStates[BeginChangeIdx])
                             {
                                 break;
                             }
                         }
-                        for (U32 Idx = BeginChangeIdx; Idx < PassProfilerEventStates.size(); ++Idx)
+                        for (U32 Idx = BeginChangeIdx; Idx < PassCaptureEventStates.size(); ++Idx)
                         {
-                            ProfilerEventStatesToBegin.push_back(PassProfilerEventStates[Idx]);
+                            CaptureEventStatesToBegin.push_back(PassCaptureEventStates[Idx]);
                         }
                     }
-                    ProfilerEventStates = PassProfilerEventStates;
+                    CaptureEventStates = PassCaptureEventStates;
                 
                     auto NextPassExtensionIndex = PassExtensionIndex;
                     ++NextPassExtensionIndex;
@@ -2590,26 +2718,32 @@ namespace Abytek
                     // End
                     if (NextPassExtensionIndex == ExecuteRange.EndLocalPassExtensionIndex)
                     {
-                        ProfilerEventStatesToEnd.insert(
-                            ProfilerEventStatesToEnd.end(),
-                            ProfilerEventStates.begin(),
-                            ProfilerEventStates.end()
+                        CaptureEventStatesToEnd.insert(
+                            CaptureEventStatesToEnd.end(),
+                            CaptureEventStates.begin(),
+                            CaptureEventStates.end()
                         );
                     }
                     else
                     {
-                        auto PassProfilerEventStates_Next = GetProfilerEventStatesForPassExtensions(PassBatch.PassExtensions[NextPassExtensionIndex]);
+                        auto PassCaptureEventStates_Next = GetCaptureEventStatesForPassExtensions(PassBatch.PassExtensions[NextPassExtensionIndex]);
                         U32 BeginChangeIdx = 0;
-                        for (; BeginChangeIdx < Min<U32>(ProfilerEventStates.size(), PassProfilerEventStates_Next.size()); ++BeginChangeIdx)
+                        for (; 
+                            BeginChangeIdx < Min<U32>(
+                                static_cast<U32>(CaptureEventStates.size()), 
+                                static_cast<U32>(PassCaptureEventStates_Next.size())
+                            ); 
+                            ++BeginChangeIdx
+                        )
                         {
-                            if (ProfilerEventStates[BeginChangeIdx] != PassProfilerEventStates_Next[BeginChangeIdx])
+                            if (CaptureEventStates[BeginChangeIdx] != PassCaptureEventStates_Next[BeginChangeIdx])
                             {
                                 break;
                             }
                         }
-                        for (U32 Idx = BeginChangeIdx; Idx < ProfilerEventStates.size(); ++Idx)
+                        for (U32 Idx = BeginChangeIdx; Idx < CaptureEventStates.size(); ++Idx)
                         {
-                            ProfilerEventStatesToEnd.push_back(ProfilerEventStates[Idx]);
+                            CaptureEventStatesToEnd.push_back(CaptureEventStates[Idx]);
                         }
                     }
 
@@ -2624,11 +2758,55 @@ namespace Abytek
     {
         ABYTEK_PROFILER_EVENT();
         ExecutionData.PassBatches = CompileData.PassBatches;
+        _TransferCompileDataToTransientUploadBuffers();
+        _TransferCompileDataToTransientReadbackBuffers();
+    }
+    void F_DirectX12RHIProcess::_TransferCompileDataToTransientUploadBuffers()
+    {
+        ABYTEK_PROFILER_EVENT();
+        for (const auto& Context : GetContexts())
+        {
+            auto TransientUploadBufferManager = Context->GetTransientUploadBufferManager_V2();
+            for (const auto& Page : TransientUploadBufferManager->SectionData.Pages)
+            {
+                DirectX12RHIProcessData::Execution::F_TransientUploadBuffer Buffer;
+                Buffer.BufferProxy = Page->GetBuffer()->GetProxy().StaticCast<A_RHIResourceProxy>();
+                
+                F_RHITransientUploadBufferCandidate_V2 Candidate;
+                while (Page->Queue.TryPop(Candidate))
+                {
+                    Buffer.Candidates.push_back(ABYTEK_MOVE(Candidate));
+                }
+                
+                ExecutionData.TransientUploadBuffers.push_back(ABYTEK_MOVE(Buffer));
+            }
+        }
+    }
+    void F_DirectX12RHIProcess::_TransferCompileDataToTransientReadbackBuffers()
+    {
+        ABYTEK_PROFILER_EVENT();
+        for (const auto& Context : GetContexts())
+        {
+            auto TransientReadbackBufferManager = Context->GetTransientReadbackBufferManager_V2();
+            for (const auto& Page : TransientReadbackBufferManager->SectionData.Pages)
+            {
+                DirectX12RHIProcessData::Execution::F_TransientReadbackBuffer Buffer;
+                Buffer.BufferProxy = Page->GetBuffer()->GetProxy().StaticCast<A_RHIResourceProxy>();
+                
+                F_RHITransientReadbackBufferCandidate_V2 Candidate;
+                while (Page->Queue.TryPop(Candidate))
+                {
+                    Buffer.Candidates.push_back(ABYTEK_MOVE(Candidate));
+                }
+                
+                ExecutionData.TransientReadbackBuffers.push_back(ABYTEK_MOVE(Buffer));
+            }
+        }
     }
     void F_DirectX12RHIProcess::_TransferCompileDataToLateExecutionData()
     {
         ABYTEK_PROFILER_EVENT();
-        for (const auto& Viewport : GetViewports())
+        for (const auto& Viewport : CompileSectionData.Viewports)
         {
             LateExecutionData.ViewportProxies.push_back(Viewport->GetProxy().FastCast<A_RHIViewportProxy>());
         }
@@ -2636,7 +2814,7 @@ namespace Abytek
     void F_DirectX12RHIProcess::_UpdateViewports()
     {
         ABYTEK_PROFILER_EVENT();
-        for (const auto& Viewport : GetViewports())
+        for (const auto& Viewport : CompileSectionData.Viewports)
         {
             Viewport.FastCast<F_DirectX12RHIViewport>()->Update();
         }
@@ -2762,7 +2940,7 @@ namespace Abytek
             ABYTEK_ENGINE_RHI_ASSERT(D3D12Resource) << "Failed to create d3d12 committed resource";
         
 #ifdef ABYTEK_DEBUG_INFO
-            D3D12Resource->SetName(*CastedResourceProxy->GetDebugName());
+            D3D12Resource->SetName(CastedResourceProxy->GetDebugName()->c_str());
 #endif
 
             CastedResourceProxy->AssignCommittedD3D12Resource(D3D12Resource);
@@ -2796,7 +2974,7 @@ namespace Abytek
             ABYTEK_ENGINE_RHI_ASSERT(D3D12Resource) << "Failed to create d3d12 placed resource";
         
 #ifdef ABYTEK_DEBUG_INFO
-            D3D12Resource->SetName(*CastedResourceProxy->GetDebugName());
+            D3D12Resource->SetName(CastedResourceProxy->GetDebugName()->c_str());
 #endif
 
             CastedResourceProxy->AssignPlacedD3D12Resource(D3D12Resource);
@@ -2824,7 +3002,7 @@ namespace Abytek
             for (const auto& DescriptorAllocationPair : Query.DescriptorAllocationPairs)
             {
                 DirectX12RHIProcessQueries::Execution::F_CopyDescriptors ForwardQuery;
-                ForwardQuery.Payload.DestDescriptorRange = DescriptorAllocationPair.first.ConvertToRange();
+                ForwardQuery.Payload.DstDescriptorRange = DescriptorAllocationPair.first.ConvertToRange();
                 ForwardQuery.Payload.SrcDescriptorRange = DescriptorAllocationPair.second.ConvertToRange();
                 Queues.Execution.CopyDescriptors.Push(ForwardQuery);
             }
@@ -2961,7 +3139,7 @@ namespace Abytek
         DirectX12RHIProcessQueries::Execution::F_CopyDescriptors Query;
         while (Queues.Execution.CopyDescriptors.TryPop(Query))
         {
-            Query.Payload.DestDescriptorRange.Manager->Queues.Copy.Push(Query.Payload);
+            Query.Payload.DstDescriptorRange.ManagerProxy->Queues.Copy.Push(Query.Payload);
         }
         _FlushDescriptorManagers();
     }
@@ -2980,13 +3158,40 @@ namespace Abytek
         }
     }
 
+    void F_DirectX12RHIProcess::_TransientUploadBuffers()
+    {
+        ABYTEK_PROFILER_EVENT();
+        for (auto& Buffer : ExecutionData.TransientUploadBuffers)
+        {
+            const auto& BufferAspect = Buffer.BufferProxy->GetBufferAspect();
+            auto D3D12Resource = Buffer.BufferProxy.StaticCast<F_DirectX12RHIResourceProxy>()->GetD3D12Resource();
+        
+            U8* DataPtr = nullptr;
+            HRESULT HR = D3D12Resource->Map(0, nullptr, (void**)&DataPtr);
+            ABYTEK_ENGINE_RHI_ASSERT(SUCCEEDED(HR)) << "Cannot map resource";
+        
+            for (auto& Candidate : Buffer.Candidates)
+            {
+                memcpy(
+                    DataPtr + Candidate.BeginOffsetInBytes,
+                    Candidate.BufferDataView.data(),
+                    Min(Candidate.GetSizeInBytes(), Candidate.BufferDataView.size())
+                );
+                Candidate = {};
+            }
+        
+            D3D12_RANGE WrittenRange = { 0, BufferAspect.SizeInBytes };
+            D3D12Resource->Unmap(0, &WrittenRange);
+        }
+    }
+
     void F_DirectX12RHIProcess::_ExecutePassBatches()
     {
         ABYTEK_PROFILER_EVENT();
         auto& PassBatches = ExecutionData.PassBatches;
         auto& PassBatchesPromise = ExecutionData.PassBatchesPromise;
         
-        U32 NumPassBatches = PassBatches.size();
+        U32 NumPassBatches = static_cast<U32>(PassBatches.size());
         
         PassBatchesPromise = TS_Unmanaged<F_TaskPromise>()(NumPassBatches);
 #ifdef ABYTEK_DEBUG_INFO
@@ -3010,6 +3215,33 @@ namespace Abytek
         ABYTEK_PROFILER_EVENT();
         const auto& PassBatchesPromise = ExecutionData.PassBatchesPromise;
         ABYTEK_AWAIT PassBatchesPromise;
+    }
+
+    void F_DirectX12RHIProcess::_TransientReadbackBuffers()
+    {
+        ABYTEK_PROFILER_EVENT();
+        for (auto& Buffer : ExecutionData.TransientReadbackBuffers)
+        {
+            const auto& BufferAspect = Buffer.BufferProxy->GetBufferAspect();
+            auto D3D12Resource = Buffer.BufferProxy.StaticCast<F_DirectX12RHIResourceProxy>()->GetD3D12Resource();
+        
+            U8* DataPtr = nullptr;
+            D3D12_RANGE D3D12ReadRange = { 0, BufferAspect.SizeInBytes };
+            HRESULT HR = D3D12Resource->Map(0, &D3D12ReadRange, (void**)&DataPtr);
+            ABYTEK_ENGINE_RHI_ASSERT(SUCCEEDED(HR)) << "Cannot map resource";
+        
+            for (auto& Candidate : Buffer.Candidates)
+            {
+                F_RHIBufferDataView BufferDataView(
+                    DataPtr + Candidate.BeginOffsetInBytes,
+                    DataPtr + Candidate.EndOffsetInBytes
+                );
+                Candidate.Callback(BufferDataView);
+                Candidate = {};
+            }
+        
+            D3D12Resource->Unmap(0, nullptr);
+        }
     }
 
     void F_DirectX12RHIProcess::_CleanCommandListManagers()
@@ -3131,7 +3363,7 @@ namespace Abytek
                     ExecuteParams.CommandQueueProxy = CommandQueueProxy;
                     ExecuteParams.D3D12CommandList = D3D12CommandList;
 
-#ifdef ABYTEK_ENGINE_RHI_ENABLE_PROFILER
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
                     F_DirectX12RHIEventStack EventStack;
                     EventStack.D3D12CommandList = D3D12CommandList;
 #endif
@@ -3142,10 +3374,10 @@ namespace Abytek
                         auto PassProxyExtension = PassProxy.DynamicCast<A_DirectX12RHIPassProxyExtension>();
                 
                         // Begin events
-#ifdef ABYTEK_ENGINE_RHI_ENABLE_PROFILER
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
                         if (EventStack)
                         {
-                            EventStack.Push(PassProxyExtension->GetProfilerEventStatesToBegin());
+                            EventStack.Push(PassProxyExtension->GetCaptureEventStatesToBegin());
                         }
 #endif
                         
@@ -3171,10 +3403,10 @@ namespace Abytek
                         }
                         
                         // End events
-#ifdef ABYTEK_ENGINE_RHI_ENABLE_PROFILER
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
                         if (EventStack)
                         {
-                            EventStack.Pop(PassProxyExtension->GetProfilerEventStatesToEnd());
+                            EventStack.Pop(PassProxyExtension->GetCaptureEventStatesToEnd());
                         }
 #endif
                     }
@@ -3260,7 +3492,7 @@ namespace Abytek
     void F_DirectX12RHIProcess::_EndLateExecuteForViewportProxies()
     {
         ABYTEK_PROFILER_EVENT();
-        U32 NumViewportProxies = LateExecutionData.ViewportProxies.size();
+        U32 NumViewportProxies = static_cast<U32>(LateExecutionData.ViewportProxies.size());
         for (U32 ViewportProxyIndex = 0; ViewportProxyIndex < NumViewportProxies; ++ViewportProxyIndex)
         {
             const auto& ViewportProxy = LateExecutionData.ViewportProxies[ViewportProxyIndex];

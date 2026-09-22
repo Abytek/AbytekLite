@@ -10,9 +10,9 @@ namespace Abytek
     
     using F_DirectX12RHIDescriptorIndex = U32;
     
-    struct ABYTEK_ENGINE_RHI_API F_DirectX12RHIDescriptorRange
+    struct ABYTEK_ENGINE_RHI_API F_DirectX12RHIDescriptorAllocationProxy
     {
-        TW<F_DirectX12RHIDescriptorManagerProxy> Manager;
+        TW<F_DirectX12RHIDescriptorManagerProxy> ManagerProxy;
         F_DirectX12RHIDescriptorIndex BeginOffset = 0;
         F_DirectX12RHIDescriptorIndex EndOffset = 0;
     
@@ -23,7 +23,7 @@ namespace Abytek
         ABYTEK_FORCE_INLINE B8 IsValid() const noexcept
         {
             return (
-                Manager
+                ManagerProxy
                 && (GetSize() > 0)
             );
         }

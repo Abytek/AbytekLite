@@ -9,7 +9,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_Asset)
-        ABYTEK_END_REFLECTOR(F_TextAsset)
+        ABYTEK_END_REFLECTOR(F_TextAsset);
 
     public:
         F_Text Text;

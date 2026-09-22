@@ -16,7 +16,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_ApplicationSubsystem)
-        ABYTEK_END_REFLECTOR(F_IHISubsystem)
+        ABYTEK_END_REFLECTOR(F_IHISubsystem);
 
     public:
         ABYTEK_DECLARE_STATIC_APPLICATION_SUBSYSTEM(F_IHISubsystem);

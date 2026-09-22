@@ -134,6 +134,34 @@ namespace Abytek
     namespace Internal
     {
         template<typename __F_Reflector, typename = void>
+        struct TH_ResolveSpecificDefaultReflector
+        {
+            using F = Internal::Reflection::TF_MakeItAbleToBePointer<__F_Reflector>;
+        };
+        template<typename __F_Reflector>
+        struct TH_ResolveSpecificDefaultReflector<__F_Reflector, std::void_t<typename __F_Reflector::F_ManualReflector>>
+        {
+            using F = typename __F_Reflector::F_ManualReflector;
+        };
+    }
+    template<typename __F_Type>
+    using TF_DefaultReflector = std::conditional_t<
+        !ShouldUseEmptyReflector<__F_Type>(),
+        typename Internal::TH_ResolveSpecificDefaultReflector<__F_Type>::F,
+        TF_EmptyReflector<__F_Type>
+    >;
+    
+    template<typename __F_Type>
+    struct TH_ResolveReflector
+    {
+        using F = TF_DefaultReflector<__F_Type>;
+    };
+    template<typename __F_Type>
+    using TF_ResolveReflector = typename TH_ResolveReflector<__F_Type>::F;
+    
+    namespace Internal
+    {
+        template<typename __F_Reflector, typename = void>
         struct TH_ResolveDefaultReflectMode
         {
             static constexpr E_ReflectMode Value = E_ReflectMode::DEFAULT;
@@ -144,21 +172,6 @@ namespace Abytek
             static constexpr E_ReflectMode Value = __F_Reflector::DefaultReflectMode;
         };
     }
-    template<typename __F_Type>
-    using TF_DefaultReflector = std::conditional_t<
-        !ShouldUseEmptyReflector<__F_Type>(),
-        Internal::Reflection::TF_MakeItAbleToBePointer<__F_Type>,
-        TF_EmptyReflector<__F_Type>
-    >;
-    
-    template<typename __F_Type>
-    struct TH_ResolveReflector
-    {
-        using F = TF_DefaultReflector<__F_Type>;
-    };
-    
-    template<typename __F_Type>
-    using TF_ResolveReflector = typename TH_ResolveReflector<__F_Type>::F;
     template<typename __F_Type>
     static constexpr E_ReflectMode ReflectorDefaultReflectMode = Internal::TH_ResolveDefaultReflectMode<
         TF_ResolveReflector<__F_Type>    

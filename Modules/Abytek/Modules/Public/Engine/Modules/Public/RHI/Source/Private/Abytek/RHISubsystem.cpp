@@ -24,6 +24,7 @@
 #include "Abytek/RHIDispatchComputePassProxy.hpp"
 #include "Abytek/RHIDrawPassProxy.hpp"
 #include "Abytek/RHISubmissionList.hpp"
+#include "Abytek/RHISubmissionQueue.hpp"
 #include "Abytek/RHIFeature.hpp"
 #include "Abytek/RHIIndirectUtilities.hpp"
 #include "Abytek/RHIPipelineState.hpp"
@@ -107,6 +108,7 @@ namespace Abytek
         A_RHISampler,
         A_RHISamplerProxy,
         A_RHISubmissionList,
+        A_RHISubmissionQueue,
         A_RHIViewport,
         A_RHIViewportProxy,
         A_RHIWorkGraphPass
@@ -164,13 +166,20 @@ namespace Abytek
                 auto UpdateFunction = H_ApplicationUpdateFunction::Register(
                     [this]
                     {
-                        F_RHIProcessBuildParams RHIProcessBuildParams;
-                        RHIProcessBuildParams.Contexts = { _MainRHIContext.Weak() };
-                        auto RHIProcess = RACreateAndBuildShared<A_RHIProcess>(RHIProcessBuildParams);
-                        
                         H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
-                            [this, RHIProcess]
+                            [this]
                             {
+                                F_RHIProcessBuildParams RHIProcessBuildParams;
+                                RHIProcessBuildParams.Contexts = { _MainRHIContext.Weak() };
+                                auto RHIProcess = RACreateAndBuildShared<A_RHIProcess>(RHIProcessBuildParams);
+#ifdef ABYTEK_DEBUG_INFO
+                                RHIProcess->SetDebugName(
+                                    ABYTEK_TEXT("Abytek::RHIFrameProcess(") 
+                                    + ToText(H_Frame::GetIndex(E_FrameParamType::RENDER))
+                                    + ABYTEK_TEXT(")") 
+                                );
+#endif
+                                
                                 _MainRHIProcess_Render = RHIProcess;
                                 _CaptureCriticalSection_Render(
                                     [this]
@@ -185,6 +194,9 @@ namespace Abytek
                                     AddCaptureFlag_Render(E_RHICaptureFlag::DEFAULT);
                                 }
                                 _Proxy->OnBeginFrameParam(E_FrameParamType::RENDER);
+                                
+                                _MainRHISubmissionQueue = RACreateAndBuildShared<A_RHISubmissionQueue>(RHIProcess.Weak());
+                                
                                 H_Frame::EnqueueCommand<E_FrameParamType::GPU, E_FrameParamType::RENDER>(
                                     [this, RHIProcess, CaptureFlagsPtr_Render = _CaptureFlagsPtr_Render]
                                     {
@@ -205,7 +217,7 @@ namespace Abytek
                     },
                     GetBeginRenderUpdateFunctionName()
                 );
-                UpdateFunction->AddDependency(
+                UpdateFunction->AddReverseDependency(
                     A_WindowManager::GetUpdateUpdateFunctionName()
                 );
                 UpdateFunction->AddReverseDependency(
@@ -221,8 +233,12 @@ namespace Abytek
                             {
                                 auto RHIProcess = _MainRHIProcess_Render;
                                 
+                                _MainRHISubmissionQueue->Flush(E_RHIProcessFlushFlag::NONE);
+                                _MainRHISubmissionQueue = {};
+                                
                                 RHIProcess->Flush();
                                 ABYTEK_AWAIT RHIProcess->GetCompilePromise();
+                                
                                 H_Frame::EnqueueCommand<E_FrameParamType::GPU, E_FrameParamType::RENDER>(
                                     [this, RHIProcess]
                                     {
@@ -256,7 +272,7 @@ namespace Abytek
                 UpdateFunction->AddDependency(
                     F_HighLevelUpdateRange::GetEndFunctionName()  
                 );
-                UpdateFunction->AddReverseDependency(
+                UpdateFunction->AddDependency(
                     A_WindowManager::GetPostUpdateUpdateFunctionName()
                 );
             }

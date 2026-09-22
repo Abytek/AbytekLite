@@ -23,7 +23,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_SerializableObject)
-        ABYTEK_END_REFLECTOR(F_Foo)
+        ABYTEK_END_REFLECTOR(F_Foo);
         
     public:
         U32 A = 3;

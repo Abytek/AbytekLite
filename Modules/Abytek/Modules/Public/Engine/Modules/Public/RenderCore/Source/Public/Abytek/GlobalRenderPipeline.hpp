@@ -32,7 +32,7 @@ namespace Abytek
         F_RHITemplateHashCode PermutationHashCode;
     };
 
-    struct A_GlobalRenderPipeline
+    struct F_GlobalRenderPipeline
     {
         using F_Metadata_BuildCommandsAndCompilationSet = TF_Function<
             F_FeedbackStatus(
@@ -45,7 +45,7 @@ namespace Abytek
         >;
         static F_Name GetMetadataElementName_BuildCommandsAndCompilationSet()
         {
-            return ABYTEK_NAME("Abytek::A_GlobalRenderPipeline::BuildCommandsAndCompilationSet");
+            return ABYTEK_NAME("Abytek::F_GlobalRenderPipeline::BuildCommandsAndCompilationSet");
         }
         
         ABYTEK_BEGIN_REFLECTOR();
@@ -59,7 +59,9 @@ namespace Abytek
                     )
                 );
             }
-        ABYTEK_END_REFLECTOR(A_GlobalRenderPipeline);
+        ABYTEK_END_REFLECTOR(F_GlobalRenderPipeline);
+        
+        using F_PermutationDomain = F_DefaultPermutationDomain;
         
         F_RHITemplateHashCode TemplateHashCode = INVALID_RHI_TEMPLATE_HASH_CODE;
         F_RHITemplateHashCode PermutationHashCode = 0;
@@ -83,7 +85,7 @@ namespace Abytek
             PermutationHashCode = 0;
             TemplateRuntime.Reset();
         }
-        friend B8 operator == (const A_GlobalRenderPipeline& A, const A_GlobalRenderPipeline& B) noexcept
+        friend B8 operator == (const F_GlobalRenderPipeline& A, const F_GlobalRenderPipeline& B) noexcept
         {
             return (
                 (A.TemplateHashCode == B.TemplateHashCode)    
@@ -91,7 +93,7 @@ namespace Abytek
                 && (A.TemplateRuntime == B.TemplateRuntime)    
             );
         }
-        friend B8 operator != (const A_GlobalRenderPipeline& A, const A_GlobalRenderPipeline& B) noexcept
+        friend B8 operator != (const F_GlobalRenderPipeline& A, const F_GlobalRenderPipeline& B) noexcept
         {
             return (
                 (A.TemplateHashCode != B.TemplateHashCode)    
@@ -101,19 +103,15 @@ namespace Abytek
         }
     };
     
-    template<class __F_Pipeline>
-    struct TF_GlobalRenderPipeline : A_GlobalRenderPipeline
-    {
-        using F_Pipeline = __F_Pipeline;
-        using F_PermutationDomain = F_DefaultPermutationDomain;
-    };
-    
     using F_ShaderDefinitionSet = TF_Vector<std::pair<F_Name, F_Text>>;
 }
 
-#define ABYTEK_DECLARE_GLOBAL_RENDER_PIPELINE(Name) \
-            ABYTEK_BEGIN_REFLECTOR(Abytek::A_GlobalRenderPipeline) \
+#define ABYTEK_GLOBAL_RENDER_PIPELINE(Name, ...) \
+            ABYTEK_BEGIN_REFLECTOR(Abytek::F_GlobalRenderPipeline) \
             ABYTEK_END_REFLECTOR(Name) \
+            { \
+                ABYTEK_REFLECT_CANONICAL(__VA_ARGS__); \
+            }; \
              \
             using F_DynamicPermutationVector = typename F_PermutationDomain::F_DynamicVector; \
             using F_DefaultStaticPermutationVector = typename F_PermutationDomain::F_DefaultStaticVector; \
@@ -123,7 +121,7 @@ namespace Abytek
             static constexpr Abytek::F_RHITemplateHashCode GetTemplateHashCode(Abytek::F_RHITemplateHashCode InPermutationHashCode = DefaultPermutationHashCode) \
             { \
                 Abytek::F_RHITemplateHashCode UseDefinedHashCode = 0; \
-                UseDefinedHashCode = Abytek::HashCombineU64(UseDefinedHashCode, Abytek::TypeHashCode<F_Pipeline>); \
+                UseDefinedHashCode = Abytek::HashCombineU64(UseDefinedHashCode, Abytek::TypeHashCode<Name>); \
                 UseDefinedHashCode = Abytek::HashCombineU64(UseDefinedHashCode, InPermutationHashCode); \
                 return Abytek::H_RenderCore::GenerateTemplateHashCode<F_GlobalRenderPack>(UseDefinedHashCode); \
             } \
@@ -270,60 +268,70 @@ namespace Abytek
                         B8 ShouldCompile = Abytek::Internal::GlobalRenderPipeline::EnableInternalDebugger; \
                         if (TemplateMap->HasTemplate(*Config.CustomHashCode)) \
                         { \
-                            auto Template = TemplateMap->GetTemplate(*Config.CustomHashCode).FastCast<Abytek::A_RHIPipelineStateTemplate>(); \
-                            const auto& LastSlangShaderFileVersions = Template->GetSlangShaderFileVersions(); \
-                            if (Template->GetConfig() != static_cast<const Abytek::F_RHIPipelineStateTemplateConfig&>(Config)) \
+                            Abytek::TW<Abytek::A_RHIPipelineStateTemplate> Template; \
+                            if (TemplateMap->GetTemplate(*Config.CustomHashCode).TryDynamicCast<Abytek::A_RHIPipelineStateTemplate>(Template)) \
                             { \
-                                ShouldCompile = true; \
-                            } \
-                            if (Template->GetCompileConfig() != static_cast<const Abytek::F_RHIPipelineStateTemplateCompileConfig&>(Config)) \
-                            { \
-                                ShouldCompile = true; \
-                            } \
-                            Abytek::TF_Set<Abytek::F_Text> SlangShaderFilePaths; \
-                            Config.ForEachShaderSource( \
-                                [&](const Abytek::F_RHIShaderSource& ShaderSource) \
+                                const auto& LastSlangShaderFileVersions = Template->GetSlangShaderFileVersions(); \
+                                if (Template->GetConfig() != static_cast<const Abytek::F_RHIPipelineStateTemplateConfig&>(Config)) \
                                 { \
-                                    if (ShaderSource.Type == Abytek::E_RHIShaderSourceType::SLANG) \
+                                    ShouldCompile = true; \
+                                } \
+                                if (Template->GetCompileConfig() != static_cast<const Abytek::F_RHIPipelineStateTemplateCompileConfig&>(Config)) \
+                                { \
+                                    ShouldCompile = true; \
+                                } \
+                                Abytek::TF_Set<Abytek::F_Text> SlangShaderFilePaths; \
+                                for (const auto& [_, SlangShaderFileVersion] : Template->GetSlangShaderFileVersions()) \
+                                { \
+                                    if (SlangShaderFilePaths.find(SlangShaderFileVersion.Path) != SlangShaderFilePaths.end()) continue; \
+                                    SlangShaderFilePaths.insert(SlangShaderFileVersion.Path); \
+                                } \
+                                Config.ForEachShaderSource( \
+                                    [&](const Abytek::F_RHIShaderSource& ShaderSource) \
                                     { \
-                                        ShaderSource.Slang.ForEachModuleFile( \
-                                            [&](const Abytek::F_Name& ModuleName, const Abytek::TF_Optional<Abytek::F_Text>& SlangShaderFilePath) \
-                                            { \
-                                                ABYTEK_ENGINE_RENDER_CORE_ASSERT(SlangShaderFilePath) << "Not found slang shader file for module: " << ModuleName << ", in global render pipeline: " << Abytek::TypeFullName<Name>(); \
-                                                if (SlangShaderFilePaths.find(*SlangShaderFilePath) != SlangShaderFilePaths.end()) return; \
-                                                SlangShaderFilePaths.insert(*SlangShaderFilePath); \
-                                            } \
-                                        ); \
-                                        return; \
+                                        if (ShaderSource.Type == Abytek::E_RHIShaderSourceType::SLANG) \
+                                        { \
+                                            ShaderSource.Slang.ForEachModuleFile( \
+                                                [&](const Abytek::F_Name& ModuleName, const Abytek::TF_Optional<Abytek::F_Text>& SlangShaderFilePath) \
+                                                { \
+                                                    ABYTEK_ENGINE_RENDER_CORE_ASSERT(SlangShaderFilePath) << "Not found slang shader file for module: " << ModuleName << ", in global render pipeline: " << Abytek::TypeFullName<Name>(); \
+                                                    if (SlangShaderFilePaths.find(*SlangShaderFilePath) != SlangShaderFilePaths.end()) return; \
+                                                    SlangShaderFilePaths.insert(*SlangShaderFilePath); \
+                                                } \
+                                            ); \
+                                            return; \
+                                        } \
+                                        ShouldCompile = true; \
                                     } \
-                                    ShouldCompile = true; \
-                                } \
-                            ); \
-                            for (const auto& SlangShaderFilePath : SlangShaderFilePaths) \
-                            { \
-                                auto SlangShaderFileVersion = Abytek::F_RHISlangShaderFileVersion::Make(SlangShaderFilePath); \
-                                ABYTEK_FEEDBACK_STATUS_CHECK( \
-                                    SlangShaderFileVersion.LoadCurrent() \
                                 ); \
-                                auto It = LastSlangShaderFileVersions.find(SlangShaderFilePath); \
-                                if (It == LastSlangShaderFileVersions.end()) \
+                                for (const auto& SlangShaderFilePath : SlangShaderFilePaths) \
                                 { \
-                                    ShouldCompile = true; \
-                                    continue; \
+                                    auto SlangShaderFileVersion = Abytek::F_RHISlangShaderFileVersion::Make(SlangShaderFilePath); \
+                                    if (!SlangShaderFileVersion.LoadCurrent()) \
+                                    { \
+                                        ShouldCompile = true; \
+                                        continue; \
+                                    } \
+                                    auto It = LastSlangShaderFileVersions.find(SlangShaderFilePath); \
+                                    if (It == LastSlangShaderFileVersions.end()) \
+                                    { \
+                                        ShouldCompile = true; \
+                                        continue; \
+                                    } \
+                                    if (It->second.Hash != SlangShaderFileVersion.Hash) \
+                                    { \
+                                        ShouldCompile = true; \
+                                        continue; \
+                                    } \
                                 } \
-                                if (It->second.Hash != SlangShaderFileVersion.Hash) \
+                                 \
+                                for (const auto& BindGroup : Config.BindGroups) \
                                 { \
-                                    ShouldCompile = true; \
-                                    continue; \
-                                } \
-                            } \
-                             \
-                            for (const auto& BindGroup : Config.BindGroups) \
-                            { \
-                                if (OutTemplateHashCodesToCompile.find(BindGroup.TemplateHashCode) != OutTemplateHashCodesToCompile.end()) \
-                                { \
-                                    ShouldCompile = true; \
-                                    break; \
+                                    if (OutTemplateHashCodesToCompile.find(BindGroup.TemplateHashCode) != OutTemplateHashCodesToCompile.end()) \
+                                    { \
+                                        ShouldCompile = true; \
+                                        break; \
+                                    } \
                                 } \
                             } \
                         } \
@@ -373,9 +381,6 @@ namespace Abytek
                     return Abytek::F_FeedbackStatus::MakeSucceeded(); \
                 } \
             )
-
-#define ABYTEK_DEFINE_GLOBAL_RENDER_PIPELINE(...) \
-            ABYTEK_REFLECT(__VA_ARGS__)
     
 #define ABYTEK_MODULE_SHADER_SEARCH_PATHS() \
             Abytek::F_RenderCoreModule::GetInstance()->GetShaderSearchPaths(ABYTEK_MODULE_NAME)

@@ -11,7 +11,7 @@ namespace Abytek
     class ABYTEK_ENGINE_RHI_API F_DirectX12RHISamplerProxy : public A_RHISamplerProxy
     {
     private:
-        F_DirectX12RHIDescriptorRange _DescriptorRange;
+        F_DirectX12RHIDescriptorAllocationProxy _DescriptorRange;
         
     public:
         ABYTEK_FORCE_INLINE const auto& GetDescriptorRange() const noexcept
@@ -29,7 +29,7 @@ namespace Abytek
         virtual void Release() override;
         
     public:
-        void AssignDescriptorRange(const F_DirectX12RHIDescriptorRange& DescriptorRange);
+        void AssignDescriptorRange(const F_DirectX12RHIDescriptorAllocationProxy& DescriptorRange);
         
     public:
         DirectX12SharedAPIWrapper::F_D3D12DescriptorDesc GetDescriptorDesc();

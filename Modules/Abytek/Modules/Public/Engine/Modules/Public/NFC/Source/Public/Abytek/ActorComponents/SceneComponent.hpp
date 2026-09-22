@@ -9,7 +9,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_ActorComponent)
-        ABYTEK_END_REFLECTOR(F_SceneComponent)
+        ABYTEK_END_REFLECTOR(F_SceneComponent);
     
     private:
         TW<F_SceneComponent> _Parent;

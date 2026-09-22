@@ -38,12 +38,8 @@ namespace Abytek
         ~F_RenderPackProxy() override;
         
     protected:
-        void OnInit_RenderTask() override;
-        void OnRelease_RenderTask() override;
-        
-    protected:
-        void OnCreateRenderState_RenderTask() override;
-        void OnDestroyRenderState_RenderTask() override;
+        void OnCreateRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
+        void OnDestroyRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
         
     public:
         TS<A_RHITemplateRuntime> GetTemplateRuntime(F_RHITemplateHashCode HashCode);

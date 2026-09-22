@@ -59,7 +59,7 @@ namespace Abytek
     struct ABYTEK_ENGINE_NFC_API F_CanvasWindowConfig
     {
         ABYTEK_BEGIN_REFLECTOR(I_Serializable)
-        ABYTEK_END_REFLECTOR(F_CanvasWindowConfig)
+        ABYTEK_END_REFLECTOR(F_CanvasWindowConfig);
         
         F_Vector2_I32 Offset = F_Vector2_I32::Zero();
         F_Vector2_U32 Size = F_Vector2_U32 { 1920, 1080 };
@@ -89,7 +89,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_RenderableComponent)
-        ABYTEK_END_REFLECTOR(F_CanvasComponent)
+        ABYTEK_END_REFLECTOR(F_CanvasComponent);
         
     public:
         friend class F_CameraComponent;

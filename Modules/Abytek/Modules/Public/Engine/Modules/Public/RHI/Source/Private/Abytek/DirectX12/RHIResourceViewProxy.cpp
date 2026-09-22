@@ -24,7 +24,7 @@ namespace Abytek
         A_RHIResourceViewProxy::Release();
     }
 
-    void F_DirectX12RHIResourceViewProxy::AssignDescriptorRange(const F_DirectX12RHIDescriptorRange& DescriptorRange)
+    void F_DirectX12RHIResourceViewProxy::AssignDescriptorRange(const F_DirectX12RHIDescriptorAllocationProxy& DescriptorRange)
     {
         _DescriptorRange = DescriptorRange;
     }

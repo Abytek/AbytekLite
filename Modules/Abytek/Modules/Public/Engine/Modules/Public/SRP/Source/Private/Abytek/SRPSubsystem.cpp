@@ -1,6 +1,6 @@
 ﻿#include "Abytek/SRPSubsystem.hpp"
 #include "Abytek/SRPRenderPath.hpp"
-#include "Abytek/RenderBase/RenderManager.hpp"
+#include "Abytek/Renderer/RendererManager.hpp"
 
 
 namespace Abytek
@@ -22,8 +22,8 @@ namespace Abytek
 
     void F_SRPSubsystem::OnPostConfig()
     {
-        auto RenderManager = GetContainer()->GetUnit<F_RenderManager>();
-        RenderManager->GetConsoleVariable_RenderPathType()->SetValue(
+        auto RendererManager = GetContainer()->GetUnit<F_RendererManager>();
+        RendererManager->GetConsoleVariable_RenderPathType()->SetValue(
             TF_ReflectionTypeHandle<F_SRPRenderPath>(F_ReflectionContext::GetGlobal())  
         );
     }

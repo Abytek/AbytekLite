@@ -18,7 +18,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_WorldSubsystem)
-        ABYTEK_END_REFLECTOR(F_RenderCoreManager)
+        ABYTEK_END_REFLECTOR(F_RenderCoreManager);
 
     public:
         ABYTEK_DECLARE_STATIC_SUBSYSTEM(F_RenderCoreManager);

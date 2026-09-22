@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Abytek/RenderBase/WorldContextRenderProxy.hpp"
+#include "Abytek/Renderer/WorldContextRenderProxy.hpp"
 #include "Abytek/Assets/Texture.hpp"
 
 
@@ -12,9 +12,6 @@ namespace Abytek
         friend class F_Texture;
         
     private:
-#ifdef ABYTEK_DEBUG_INFO
-        F_Name _DebugName;
-#endif
         TS_Unmanaged<F_RHIImage> _TempImage;
         F_TextureSetting _Setting;
         E_RHIFormat _Format = E_RHIFormat::NONE;
@@ -22,12 +19,6 @@ namespace Abytek
         TS<A_RHIResource> _RHITexture;
         
     public:
-#ifdef ABYTEK_DEBUG_INFO
-        ABYTEK_FORCE_INLINE const auto& GetDebugName() const noexcept
-        {
-            return _DebugName;
-        }
-#endif
         ABYTEK_FORCE_INLINE const auto& GetSetting() const noexcept
         {
             return _Setting;
@@ -71,7 +62,7 @@ namespace Abytek
         ~F_TextureRenderProxy() override;
         
     protected:
-        void OnCreateRenderState_RenderTask() override;
-        void OnDestroyRenderState_RenderTask() override;
+        void OnCreateRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
+        void OnDestroyRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
     };
 }

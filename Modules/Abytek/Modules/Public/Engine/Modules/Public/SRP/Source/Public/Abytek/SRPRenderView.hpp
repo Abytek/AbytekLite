@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "Abytek/Engine.SRP.prerequisites.hpp"
-#include "Abytek/RenderBase/RenderView.hpp"
+#include "Abytek/Renderer/RenderView.hpp"
 #include "Abytek/SRPCommon.hpp"
 
 
@@ -27,20 +27,26 @@ namespace Abytek
         {
             return _OpaqueVisibilityUAV;
         }
-
+        
     public:
-        F_SRPRenderView(const TW_Valid<F_WorldRenderResource>& WorldRenderResource, const F_RenderViewBuildParams& BuildParams);
-        ~F_SRPRenderView() override;
+        ABYTEK_RENDER_OBJECT_CREATABLE(F_SRPRenderView, A_RenderView);
+        
+    public:
+        void Init(
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, 
+            const F_RenderViewBuildParams& BuildParams
+        ) override;
+        void Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
         
     protected:
-        void OnBeginFrame() override;
-        void OnEndFrame() override;
+        void OnBeginFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
+        void OnEndFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
         
     public:
-        void BeginOpaqueVisibilityBuffer();
-        void EndOpaqueVisibilityBuffer();
+        void BeginOpaqueVisibilityBuffer(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
+        void EndOpaqueVisibilityBuffer(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
         
     public:
-        void ClearOpaqueVisibilityBuffer(I_RHISubmissionItemContainer& SubmissionItemContainer);
+        void ClearOpaqueVisibilityBuffer(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
     };
 }

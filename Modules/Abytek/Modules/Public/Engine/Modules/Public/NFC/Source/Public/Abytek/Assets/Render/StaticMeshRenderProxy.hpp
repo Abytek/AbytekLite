@@ -1,8 +1,8 @@
 ﻿#pragma once
 
-#include "Abytek/RenderBase/WorldContextRenderProxy.hpp"
+#include "Abytek/Renderer/WorldContextRenderProxy.hpp"
 #include "Abytek/Assets/StaticMesh.hpp"
-#include "Abytek/Geometries/Render/RenderGeometryCommon.hpp"
+#include "Abytek/Renderer/RenderGeometry/RenderGeometryCommon.hpp"
 
 
 namespace Abytek
@@ -22,9 +22,6 @@ namespace Abytek
         friend class F_StaticMesh;
         
     private:
-#ifdef ABYTEK_DEBUG_INFO
-        F_Name _DebugName;
-#endif
         E_StaticMeshDataType _DataType = E_StaticMeshDataType::NONE;
         TS_Unmanaged<TF_Vector<F_SimpleMeshData>> _TempSimpleDataList;
         F_StaticMeshSetting _Setting;
@@ -32,12 +29,6 @@ namespace Abytek
         TF_Vector<F_StaticMeshResource_Simple> _ResourceList_Simple;
         
     public:
-#ifdef ABYTEK_DEBUG_INFO
-        ABYTEK_FORCE_INLINE const auto& GetDebugName() const noexcept
-        {
-            return _DebugName;
-        }
-#endif
         ABYTEK_FORCE_INLINE auto GetDataType() const noexcept
         {
             return _DataType;
@@ -57,7 +48,7 @@ namespace Abytek
         ~F_StaticMeshRenderProxy() override;
         
     protected:
-        void OnCreateRenderState_RenderTask() override;
-        void OnDestroyRenderState_RenderTask() override;
+        void OnCreateRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
+        void OnDestroyRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
     };
 }

@@ -8,7 +8,7 @@ namespace Abytek
     class ABYTEK_ENGINE_FOUNDATION_API F_MinimalApplication : public A_ApplicationCore
     {
         ABYTEK_BEGIN_REFLECTOR(A_ApplicationCore)
-        ABYTEK_END_REFLECTOR(F_MinimalApplication)
+        ABYTEK_END_REFLECTOR(F_MinimalApplication);
 
     private:
         

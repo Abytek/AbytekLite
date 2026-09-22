@@ -50,7 +50,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR(A_WorldContext)
-        ABYTEK_END_REFLECTOR(F_World)
+        ABYTEK_END_REFLECTOR(F_World);
         
     public:
         static F_Name GetCookTaskTag();

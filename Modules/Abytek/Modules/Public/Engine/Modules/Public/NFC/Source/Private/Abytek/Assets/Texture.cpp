@@ -141,20 +141,6 @@ namespace Abytek
     }
     void F_Texture::OnCreateRenderState()
     {
-        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
-            [
-                RenderProxy = GetRenderProxy().FastCast<F_TextureRenderProxy>()
-#ifdef ABYTEK_DEBUG_INFO
-                , CachedName = GetName()
-#endif
-            ]() mutable
-            {
-#ifdef ABYTEK_DEBUG_INFO
-                RenderProxy->_DebugName = CachedName;
-#endif
-            }
-        );
-        
         F_RHIImage Image;
         B8 Status = LoadImage_(Image);
         ABYTEK_ENGINE_NFC_ASSERT(Status) << "Failed to load the image while being renderable";

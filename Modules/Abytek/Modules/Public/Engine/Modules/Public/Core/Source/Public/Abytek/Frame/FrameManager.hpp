@@ -19,7 +19,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(F_FrameManager)
+        ABYTEK_END_REFLECTOR(F_FrameManager);
         
     public:
         ABYTEK_DECLARE_OBJECT_SINGLETON_CRT(F_FrameManager);

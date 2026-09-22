@@ -125,15 +125,9 @@ namespace Abytek
             [
                 RenderProxy = GetRenderProxy().FastCast<F_StaticMeshRenderProxy>(), 
                 CachedDataType = _DataType
-#ifdef ABYTEK_DEBUG_INFO
-                , CachedName = GetName()
-#endif
             ]() mutable
             {
                 RenderProxy->_DataType = CachedDataType;
-#ifdef ABYTEK_DEBUG_INFO
-                RenderProxy->_DebugName = CachedName;
-#endif
             }
         );
         if (_DataType == E_StaticMeshDataType::SIMPLE)

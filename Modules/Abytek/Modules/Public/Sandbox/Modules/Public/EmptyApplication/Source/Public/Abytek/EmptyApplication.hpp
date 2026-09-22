@@ -8,7 +8,7 @@ namespace Abytek
     class F_EmptyApplication : public F_Application
     {
         ABYTEK_BEGIN_REFLECTOR(F_Application)
-        ABYTEK_END_REFLECTOR(F_EmptyApplication)
+        ABYTEK_END_REFLECTOR(F_EmptyApplication);
 
     private:
         

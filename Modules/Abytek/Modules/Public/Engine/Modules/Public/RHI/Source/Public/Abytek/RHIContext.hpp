@@ -11,6 +11,8 @@ namespace Abytek
     class A_RHITemplateRuntimeDatabase;
     class F_RHITransientUploadBufferManager;
     class F_RHITransientReadbackBufferManager;
+    class F_RHITransientUploadBufferManager_V2;
+    class F_RHITransientReadbackBufferManager_V2;
     class F_RHIConstantDataManager;
     
     struct F_RHIContextBuildParams
@@ -32,6 +34,8 @@ namespace Abytek
         
         TS<F_RHITransientUploadBufferManager> _TransientUploadBufferManager;
         TS<F_RHITransientReadbackBufferManager> _TransientReadbackBufferManager;
+        TS<F_RHITransientUploadBufferManager_V2> _TransientUploadBufferManager_V2;
+        TS<F_RHITransientReadbackBufferManager_V2> _TransientReadbackBufferManager_V2;
         TS<F_RHIConstantDataManager> _ConstantDataManager;
         
     public:
@@ -70,6 +74,14 @@ namespace Abytek
         ABYTEK_FORCE_INLINE const auto& GetTransientReadbackBufferManager() const noexcept
         {
             return _TransientReadbackBufferManager;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetTransientUploadBufferManager_V2() const noexcept
+        {
+            return _TransientUploadBufferManager_V2;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetTransientReadbackBufferManager_V2() const noexcept
+        {
+            return _TransientReadbackBufferManager_V2;
         }
         ABYTEK_FORCE_INLINE const auto& GetConstantDataManager() const noexcept
         {

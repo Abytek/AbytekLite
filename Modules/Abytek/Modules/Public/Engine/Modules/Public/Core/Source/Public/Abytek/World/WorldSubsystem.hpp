@@ -16,7 +16,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR(F_Subsystem)
-        ABYTEK_END_REFLECTOR(A_WorldSubsystem)
+        ABYTEK_END_REFLECTOR(A_WorldSubsystem);
         
     public:
         static F_Name GetTickUpdateFunctionName();

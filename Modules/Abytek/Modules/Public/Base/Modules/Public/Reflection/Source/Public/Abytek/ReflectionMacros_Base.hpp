@@ -17,7 +17,7 @@
                 static void OnReflect( \
                     const Abytek::TW_Valid<Abytek::F_ReflectionSession>& ReflectionSession, \
                     const Abytek::TW_Valid<Abytek::F_ReflectionType>& ReflectionType \
-                );
+                )
 
 /**
  * @brief Implements the OnReflect method for a reflector
@@ -209,10 +209,8 @@
                     ReflectGen_EnumValue_PublicRecursive<__F_SelfOrInherited, __F_IndirectReflector>(ReflectionSession, ReflectionType, ReflectionEnumValue); \
                     H_ReflectGen::template EnumValue_Private<true, __F_SelfOrInherited, __F_IndirectReflector>(ReflectionSession, ReflectionType, ReflectionEnumValue); \
                 } \
-                ABYTEK_EXPAND(ABYTEK_DECLARE_ON_REFLECT(Reflector)) \
-                ABYTEK_EXPAND(ABYTEK_IMPLEMENT_REFLECT(Reflector, __VA_ARGS__))
-
-#define ABYTEK_IMPLEMENT_REFLECTOR(...) ABYTEK_EXPAND(ABYTEK_IMPLEMENT_REFLECTOR_ADVANCED(__VA_ARGS__, __VA_ARGS__))
+                ABYTEK_EXPAND(ABYTEK_IMPLEMENT_REFLECT(Reflector, __VA_ARGS__)) \
+                ABYTEK_EXPAND(ABYTEK_DECLARE_ON_REFLECT(Reflector))
 
 namespace Abytek
 {
@@ -586,12 +584,12 @@ namespace Abytek
                     static constexpr Abytek::E_ReflectMode DefaultReflectMode = Abytek::E_ReflectMode::INLINE; \
                      \
                     ABYTEK_BEGIN_REFLECTOR(__VA_ARGS__) \
-                    ABYTEK_END_REFLECTOR(F_Base) \
+                    ABYTEK_END_REFLECTOR(F_Base); \
                 }; \
                 struct F \
                 { \
                     ABYTEK_BEGIN_REFLECTOR(Abytek::TF_ResolveReflector<Abytek::TF_UInt<sizeof(Enum)>>, F_Base) \
-                    ABYTEK_END_REFLECTOR_ADVANCED(F, Enum) \
+                    ABYTEK_END_REFLECTOR_ADVANCED(F, Enum); \
                 }; \
             };
 #define ABYTEK_DECLARE_ENUM_REFLECTOR(Enum, ...) \

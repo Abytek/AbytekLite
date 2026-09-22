@@ -10,7 +10,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(F_ExecutionGraph)
-        ABYTEK_END_REFLECTOR(F_CookGraph)
+        ABYTEK_END_REFLECTOR(F_CookGraph);
         
     public:
         ABYTEK_DECLARE_OBJECT_SINGLETON_CRT(F_CookGraph);

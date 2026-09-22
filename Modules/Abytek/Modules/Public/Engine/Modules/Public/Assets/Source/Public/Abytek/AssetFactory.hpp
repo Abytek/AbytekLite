@@ -18,7 +18,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(A_AssetFactory)
+        ABYTEK_END_REFLECTOR(A_AssetFactory);
 
     private:
         TF_Vector<F_Name> _FileExtensions;

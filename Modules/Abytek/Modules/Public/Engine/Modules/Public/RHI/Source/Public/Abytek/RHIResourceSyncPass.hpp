@@ -34,7 +34,7 @@ namespace Abytek
         void Release() override;
         
     public:
-        E_RHIPassClass GetPassClass() override
+        E_RHIPassClass GetPassClass() const override
         {
             if (_Access.GPU != E_RHIResourceGPUAccess::NONE)
             {

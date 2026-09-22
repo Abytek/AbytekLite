@@ -1,6 +1,7 @@
 ﻿#include "Abytek/RenderResource.hpp"
 #include "Abytek/RenderRegistry.hpp"
 #include "Abytek/RenderRegistryRuntime.hpp"
+#include "Abytek/RHISubmissionQueue.hpp"
 #include "Abytek/Frame/FrameHelper.hpp"
 
 
@@ -24,7 +25,7 @@ namespace Abytek
             [SThis = ABYTEK_STHIS(), RenderRegistry]
             {
                 SThis->_RenderRegistryRuntime = RenderRegistry->GetOrActiveRuntime(H_RHI::GetMainContext());
-                SThis->OnInit_RenderTask();
+                SThis->OnInit_RenderTask(H_RHI::GetMainSubmissionQueue());
             }
         );
 #ifdef ABYTEK_ENGINE_RENDER_CORE_ENABLE_ASSERTIONS
@@ -37,7 +38,7 @@ namespace Abytek
         H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
             [SThis = ABYTEK_STHIS()]
             {
-                SThis->OnRelease_RenderTask();
+                SThis->OnRelease_RenderTask(H_RHI::GetMainSubmissionQueue());
                 SThis->_RenderRegistryRuntime = {};
             }
         );
@@ -46,10 +47,10 @@ namespace Abytek
 #endif
     }
 
-    void A_RenderResource::OnInit_RenderTask()
+    void A_RenderResource::OnInit_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
     }
-    void A_RenderResource::OnRelease_RenderTask()
+    void A_RenderResource::OnRelease_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
     }
 

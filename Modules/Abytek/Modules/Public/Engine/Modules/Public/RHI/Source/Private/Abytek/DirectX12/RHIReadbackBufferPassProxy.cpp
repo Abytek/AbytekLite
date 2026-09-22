@@ -12,16 +12,11 @@ namespace Abytek
         A_DirectX12RHIPassProxyExtension::Build(Pass);
         
         auto CastedPass = Pass.FastCast<F_DirectX12RHIReadbackBufferPass>();
-        const auto& TransientReadbackBufferRange = CastedPass->GetTransientReadbackBufferRange();
-        if (TransientReadbackBufferRange)
+        if (HasWork())
         {
+            const auto& TransientReadbackBufferRange = CastedPass->GetTransientReadbackBufferRange();
             _ReadbackBufferProxy = TransientReadbackBufferRange.GetBuffer()->GetProxy().FastCast<A_RHIResourceProxy>();
             _ReadbackBufferOffsetInBytes = TransientReadbackBufferRange.BeginOffsetInBytes;
-        }
-        else
-        {
-            _ReadbackBufferProxy = GetBufferProxy();
-            _ReadbackBufferOffsetInBytes = GetOffsetInBytes();
         }
     }   
     void F_DirectX12RHIReadbackBufferPassProxy::Release()
@@ -36,27 +31,21 @@ namespace Abytek
     void F_DirectX12RHIReadbackBufferPassProxy::Execute(F_DirectX12RHIPassProxyExtensionExecuteParams& ExecuteParams)
     {
         A_DirectX12RHIPassProxyExtension::Execute(ExecuteParams);
+        if (HasWork())
+        {
+            auto SrcD3D12Resource = GetBufferProxy().FastCast<F_DirectX12RHIResourceProxy>()->GetD3D12Resource();
+            auto SrcOffsetInBytes = GetOffsetInBytes();
+            auto DstD3D12Resource = _ReadbackBufferProxy.FastCast<F_DirectX12RHIResourceProxy>()->GetD3D12Resource();
+            auto DstOffsetInBytes = _ReadbackBufferOffsetInBytes;
         
-        auto D3D12Resource = _ReadbackBufferProxy.FastCast<F_DirectX12RHIResourceProxy>()->GetD3D12Resource();
-    
-        auto SizeInBytes = GetSizeInBytes();
-        F_RHIBufferData BufferData;
-        BufferData.resize(SizeInBytes);
-        
-        D3D12_RANGE D3D12ReadRange = { _ReadbackBufferOffsetInBytes, _ReadbackBufferOffsetInBytes + SizeInBytes };
-        U8* DataPtr = nullptr;
-        HRESULT HR = D3D12Resource->Map(0, &D3D12ReadRange, (void**)&DataPtr);
-        ABYTEK_ENGINE_RHI_ASSERT(SUCCEEDED(HR)) << "Cannot map resource";
-        
-        memcpy(
-            BufferData.data(),
-            DataPtr + _ReadbackBufferOffsetInBytes,
-            SizeInBytes
-        );
-        
-        GetCallback()(BufferData);
-        
-        D3D12Resource->Unmap(0, nullptr);
+            ExecuteParams.D3D12CommandList->CopyBufferRegion(
+                DstD3D12Resource.Get(),
+                DstOffsetInBytes,
+                SrcD3D12Resource.Get(),
+                SrcOffsetInBytes,
+                GetSizeInBytes()
+            );
+        }
     }
 }
 #endif

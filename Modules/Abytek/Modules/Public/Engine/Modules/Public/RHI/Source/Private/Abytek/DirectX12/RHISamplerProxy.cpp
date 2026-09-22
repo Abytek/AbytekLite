@@ -15,7 +15,7 @@ namespace Abytek
         A_RHISamplerProxy::Release();
     }
 
-    void F_DirectX12RHISamplerProxy::AssignDescriptorRange(const F_DirectX12RHIDescriptorRange& DescriptorRange)
+    void F_DirectX12RHISamplerProxy::AssignDescriptorRange(const F_DirectX12RHIDescriptorAllocationProxy& DescriptorRange)
     {
         _DescriptorRange = DescriptorRange;
     }

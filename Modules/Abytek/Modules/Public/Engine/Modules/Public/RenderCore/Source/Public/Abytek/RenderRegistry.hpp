@@ -23,7 +23,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(F_RenderRegistry)
+        ABYTEK_END_REFLECTOR(F_RenderRegistry);
         
     public:
         static F_Name GetSerializableEnvironmentMetadataElementName_Registry();

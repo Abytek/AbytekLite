@@ -14,7 +14,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_ActorComponent)
-        ABYTEK_END_REFLECTOR(F_SampleSpectatorComponent)
+        ABYTEK_END_REFLECTOR(F_SampleSpectatorComponent);
         
     private:
         TS<F_CanvasComponent> _CanvasComponent;

@@ -31,15 +31,7 @@ namespace Abytek
         {
             return _Buffer;
         }
-        ABYTEK_FORCE_INLINE auto& InjectBuffer() noexcept
-        {
-            return _Buffer;
-        }
         ABYTEK_FORCE_INLINE auto GetSizeInBytes() const noexcept
-        {
-            return _SizeInBytes;
-        }
-        ABYTEK_FORCE_INLINE auto& InjectSizeInBytes() noexcept
         {
             return _SizeInBytes;
         }
@@ -47,35 +39,30 @@ namespace Abytek
         {
             return _OffsetInBytes;
         }
-        ABYTEK_FORCE_INLINE auto& InjectOffsetInBytes() noexcept
-        {
-            return _OffsetInBytes;
-        }
         ABYTEK_FORCE_INLINE const auto& GetCallback() const noexcept
         {
             return _Callback;
         }
-        ABYTEK_FORCE_INLINE auto& InjectCallback() noexcept
+        ABYTEK_FORCE_INLINE auto HasWork() const noexcept
         {
-            return _Callback;
+            return _SizeInBytes > 0;
         }
 
     public:
         ABYTEK_RA_DECLARE_OBJECT_CREATABLE(A_RHIReadbackBufferPass);
         virtual void Build(const F_RHIReadbackBufferPassBuildParams& BuildParams);
-        virtual void Release() override;
+        void Release() override;
         
     public:
-        virtual E_RHIPassClass GetPassClass() override
+        E_RHIPassClass GetPassClass() const override
         {
             return E_RHIPassClass::BLIT;
         }
         
     public:
-        virtual TS_Valid<A_RHIPassProxy> CreateProxy() override;
+        TS_Valid<A_RHIPassProxy> CreateProxy() override;
         
-    public:
-        virtual B8 CanDetachCopyPass();
-        virtual void DetachCopyPass(I_RHISubmissionItemContainer& SubmissionItemContainer);
+    protected:
+        F_RHIReadbackBufferCallback MoveCallback();
     };
 }

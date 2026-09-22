@@ -1,25 +1,13 @@
 ﻿#include "Abytek/SRPBasicDrawers/StaticMesh.hpp"
 #include "Abytek/Assets/Render/StaticMeshRenderProxy.hpp"
-#include "Abytek/RenderBase/RenderScene.hpp"
-#include "Abytek/RenderBase/RenderViewFamily.hpp"
+#include "Abytek/Renderer/RenderScene.hpp"
+#include "Abytek/Renderer/RenderViewFamily.hpp"
 
 
 namespace Abytek
 {
-    namespace SRPBasicDrawers
-    {
-        ABYTEK_DEFINE_GLOBAL_RENDER_PIPELINE(F_StaticMeshBinding)
-        {
-            ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::SRPBasicDrawers::F_StaticMeshBinding"));
-        }
-        ABYTEK_DEFINE_GLOBAL_RENDER_PIPELINE(F_StaticMeshPipeline)
-        {
-            ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::SRPBasicDrawers::F_StaticMeshPipeline"));
-        }
-    }
-
     void H_SRPStaticMeshDrawer::Render(
-        I_RHISubmissionItemContainer& SubmissionItemContainer,
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
         const TW_Valid<A_RenderView>& View, 
         const TW_Valid<F_StaticMeshRenderProxy> StaticMeshRenderProxy,
         const F_Matrix4x4_F32& StaticMeshTransformMatrix, 
@@ -28,7 +16,7 @@ namespace Abytek
     )
     {
         auto ViewUniformBindGroup = View->GetUniformBindGroup();
-        auto GeometryGlobalSRVBindGroup = View->GetFamily()->GetScene()->GetGeometryManager()->GetGlobalSRVBindGroup();
+        auto GeometryGlobalSRVBindGroup = View->GetFamily()->GetScene()->GetGeometryStorage()->GetGlobalSRVBindGroup();
         
         auto DataType = StaticMeshRenderProxy->GetDataType();
         
@@ -73,7 +61,7 @@ namespace Abytek
                 }
                 StaticMeshBindGroup->Commit();
         
-                H_RHIPassUtilities::DrawNonIndexed(
+                H_RHISubmissionUtilities::DrawNonIndexed(
                     SubmissionItemContainer,
                     Pipeline.AcquirePipelineState(),
                     { 

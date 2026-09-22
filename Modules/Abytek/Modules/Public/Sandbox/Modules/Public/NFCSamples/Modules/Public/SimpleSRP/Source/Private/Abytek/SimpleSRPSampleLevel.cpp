@@ -7,10 +7,10 @@
 #include "Abytek/Assets/StaticMesh.hpp"
 #include "Abytek/Assets/Render/StaticMeshRenderProxy.hpp"
 #include "Abytek/Frame/FrameHelper.hpp"
-#include "Abytek/RenderBase/Renderer.hpp"
-#include "Abytek/RenderBase/RenderViewFamily.hpp"
-#include "Abytek/RenderBase/RenderView.hpp"
-#include "Abytek/RenderBase/WorldRenderResource.hpp"
+#include "Abytek/Renderer/Renderer.hpp"
+#include "Abytek/Renderer/RenderViewFamily.hpp"
+#include "Abytek/Renderer/RenderView.hpp"
+#include "Abytek/Renderer/WorldRenderResource.hpp"
 #include "Abytek/SRPBasicDrawers/StaticMesh.hpp"
 #include "Abytek/UpdateBase/UpdateUtilities.hpp"
 
@@ -88,13 +88,12 @@ namespace Abytek
                     {
                         auto Renderer = CameraRenderProxy->GetRenderer();
                         Renderer->PostRenderQueue.Push(
-                            [=]
+                            [=](const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
                             {
-                                auto SubmissionList = RACreateAndBuildShared<A_RHISubmissionList>(H_RHI::GetMainProcess().Weak());
                                 for (const auto& View : Renderer->GetViewFamily()->GetViews())
                                 {
                                     H_SRPStaticMeshDrawer::Render(
-                                        *SubmissionList,
+                                        SubmissionItemContainer,
                                         View.Weak(),
                                         StaticMeshRenderProxy.Weak(),
                                         MakeTranslationMatrix(F_Vector3_F32(0.0f, 0.0f, 5.0f)),
@@ -102,7 +101,6 @@ namespace Abytek
                                         E_RHIFillMode::SOLID
                                     );
                                 }
-                                H_RHI::GetMainProcess()->AddSubmissionItem(SubmissionList);
                             }
                         );
                     }

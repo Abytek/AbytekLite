@@ -77,7 +77,7 @@ namespace Abytek
                     F_UniqueObjectCreator::Make<__F_SelfOrInherited>()
                 );
             }
-        ABYTEK_END_REFLECTOR(F_ProgramUnit)
+        ABYTEK_END_REFLECTOR(F_ProgramUnit);
         
     public:
         static F_Name GetStaticName()

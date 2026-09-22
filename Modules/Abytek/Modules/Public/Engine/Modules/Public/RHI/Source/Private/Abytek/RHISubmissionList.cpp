@@ -17,29 +17,20 @@ namespace Abytek
     ABYTEK_RA_END_OBJECT()
     void A_RHISubmissionList::Build(const TW_Valid<A_RHIProcess>& Process, E_RHISubmissionListOrder Order)
     {
-        A_RHISubmissionItem::Build();
-        _Process = Process;
+        BuildSubmissionItemContainer(Process);
         _Order = Order;
     }   
     void A_RHISubmissionList::Release()
     {
-#ifdef ABYTEK_ENGINE_RHI_ENABLE_ASSERTIONS
-        if (auto Process = ShareObject(_Process))
-        {
-            ABYTEK_ENGINE_RHI_ASSERT(Process->GetStage() == E_RHIProcessStage::COMPILE) << "Invalid moment to release submission item (too late, must be inside the compile stage)";
-        }
-#endif
-        _Items = {};
         _Order = E_RHISubmissionListOrder::DEFAULT;
-        _Process = {};
-        A_RHISubmissionItem::Release();
+        A_RHISubmissionItemContainer::Release();
     }
 
     TS<A_RHISubmissionList> A_RHISubmissionList::ForwardOrAddNew(E_RHISubmissionListOrder TargetOrder)
     {
         if (_Order != TargetOrder)
         {
-            auto Result = RACreateAndBuildShared<A_RHISubmissionList>(_Process, TargetOrder);
+            auto Result = RACreateAndBuildShared<A_RHISubmissionList>(GetProcess(), TargetOrder);
             Add(Result);
             return Result;
         }

@@ -19,7 +19,7 @@ namespace Abytek
     ABYTEK_RA_END_OBJECT()
     void A_RHICopyBufferPassProxy::Build(const TW_Valid<A_RHICopyBufferPass>& Pass)
     {
-        A_RHIPassProxy::Build(Pass);
+        BuildPassProxy(Pass);
         _SrcBufferProxy = Pass->GetSrcBuffer()->GetProxy().FastCast<A_RHIResourceProxy>();
         _SrcOffsetInBytes = Pass->GetSrcOffsetInBytes();
         _DstBufferProxy = Pass->GetDstBuffer()->GetProxy().FastCast<A_RHIResourceProxy>();

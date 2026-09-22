@@ -3,77 +3,80 @@ module Access;
 __exported import Common;
 __exported import DeclarePages;
 
-#ifdef ABYTEK_RENDER_GEOMETRY_ENABLE_MULTIPLE_PAGES
-#define ABYTEK_RENDER_GEOMETRY_GET_PAGE_FROM_ALLOCATION(...) RenderGeometryPages[(__VA_ARGS__).PageIndex]
-#else
-#define ABYTEK_RENDER_GEOMETRY_GET_PAGE_FROM_ALLOCATION(...) RenderGeometryPage_Single
-#endif
-
 namespace NFC::RenderGeometry
 {
+    public F_DeclaredPage GetPage(F_GeometryAddress Address)
+    {
+#ifdef ABYTEK_RENDER_GEOMETRY_ENABLE_MULTIPLE_PAGES
+        return RenderGeometryPages[NFC::RenderGeometry::GetPageIndexFromGeometryAddress(Address)];
+#else
+        return RenderGeometryPage_Single;
+#endif
+    }
+
     public uint SimpleMesh_LoadVertexIndex(
-        in F_GeometryAllocation GeometryAllocation,
+        F_GeometryAddress GeometryAddress,
         in F_GeometryAllocationStructure_Simple GeometryAllocationStructure,
         uint IndexId
     )
     {
-        return ABYTEK_RENDER_GEOMETRY_GET_PAGE_FROM_ALLOCATION(GeometryAllocation).Load(
-            GeometryAllocation.BeginOffsetInBytes
+        return GetPage(GeometryAddress).Load(
+            NFC::RenderGeometry::GetOffsetInBytesFromGeometryAddress(GeometryAddress)
             + GeometryAllocationStructure.Indices_LocalOffsetInBytes
             + IndexId * 4
         );
     }
     public float3 SimpleMesh_LoadVertexPosition(
-        in F_GeometryAllocation GeometryAllocation,
+        F_GeometryAddress GeometryAddress,
         in F_GeometryAllocationStructure_Simple GeometryAllocationStructure,
         uint VertexId
     )
     {
         return asfloat(
-                   ABYTEK_RENDER_GEOMETRY_GET_PAGE_FROM_ALLOCATION(GeometryAllocation).Load4(
-                GeometryAllocation.BeginOffsetInBytes
+            GetPage(GeometryAddress).Load4(
+                NFC::RenderGeometry::GetOffsetInBytesFromGeometryAddress(GeometryAddress)
                 + GeometryAllocationStructure.Positions_LocalOffsetInBytes
                 + VertexId * 16
             )
         ).xyz;
     }
     public float3 SimpleMesh_LoadVertexNormal(
-        in F_GeometryAllocation GeometryAllocation,
+        F_GeometryAddress GeometryAddress,
         in F_GeometryAllocationStructure_Simple GeometryAllocationStructure,
         uint VertexId
     )
     {
         return asfloat(
-                   ABYTEK_RENDER_GEOMETRY_GET_PAGE_FROM_ALLOCATION(GeometryAllocation).Load4(
-                GeometryAllocation.BeginOffsetInBytes
+            GetPage(GeometryAddress).Load4(
+                NFC::RenderGeometry::GetOffsetInBytesFromGeometryAddress(GeometryAddress)
                 + GeometryAllocationStructure.Normals_LocalOffsetInBytes
                 + VertexId * 16
             )
         ).xyz;
     }
     public float4 SimpleMesh_LoadVertexTangentAndSign(
-        in F_GeometryAllocation GeometryAllocation,
+        F_GeometryAddress GeometryAddress,
         in F_GeometryAllocationStructure_Simple GeometryAllocationStructure,
         uint VertexId
     )
     {
         return asfloat(
-                   ABYTEK_RENDER_GEOMETRY_GET_PAGE_FROM_ALLOCATION(GeometryAllocation).Load4(
-                GeometryAllocation.BeginOffsetInBytes
+            GetPage(GeometryAddress).Load4(
+                NFC::RenderGeometry::GetOffsetInBytesFromGeometryAddress(GeometryAddress)
                 + GeometryAllocationStructure.TangentsAndSigns_LocalOffsetInBytes
                 + VertexId * 16
             )
         );
     }
     public float2 SimpleMesh_LoadVertexUV(
-        in F_GeometryAllocation GeometryAllocation,
+        F_GeometryAddress GeometryAddress,
         in F_GeometryAllocationStructure_Simple GeometryAllocationStructure,
         uint VertexId
     )
     {
         return asfloat(
-                   ABYTEK_RENDER_GEOMETRY_GET_PAGE_FROM_ALLOCATION(GeometryAllocation).Load2(
-                GeometryAllocation.BeginOffsetInBytes
+            GetPage(GeometryAddress).Load2(
+                NFC::RenderGeometry::GetOffsetInBytesFromGeometryAddress(GeometryAddress)
                 + GeometryAllocationStructure.UVs_LocalOffsetInBytes
                 + VertexId * 8
             )

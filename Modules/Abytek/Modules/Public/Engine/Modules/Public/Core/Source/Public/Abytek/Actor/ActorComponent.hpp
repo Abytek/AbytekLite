@@ -14,7 +14,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR(A_WorldContext)
-        ABYTEK_END_REFLECTOR(A_ActorComponent)
+        ABYTEK_END_REFLECTOR(A_ActorComponent);
         
     public:
         static F_Name GetTickUpdateFunctionName();

@@ -9,7 +9,7 @@ namespace Abytek
     class F_MLPDemoApplication : public F_MinimalApplication
     {
         ABYTEK_BEGIN_REFLECTOR(F_MinimalApplication)
-        ABYTEK_END_REFLECTOR(F_MLPDemoApplication)
+        ABYTEK_END_REFLECTOR(F_MLPDemoApplication);
 
     public:
         ABYTEK_DECLARE_OBJECT_SINGLETON_CRT(F_MLPDemoApplication);

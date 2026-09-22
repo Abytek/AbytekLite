@@ -2,7 +2,7 @@
 
 #include "Abytek/RHIUploadBufferPass.hpp"
 #include "Abytek/DirectX12/RHIPassExtension.hpp"
-#include "Abytek/RHITransientUploadBufferManager.hpp"
+#include "Abytek/RHITransientUploadBuffer.hpp"
 
 
 #ifdef ABYTEK_ENGINE_RHI_ENABLE_DIRECTX12
@@ -13,41 +13,21 @@ namespace Abytek
     class ABYTEK_ENGINE_RHI_API F_DirectX12RHIUploadBufferPass : public A_RHIUploadBufferPass, public A_DirectX12RHIPassExtension
     {
     private:
-        F_RHITransientUploadBufferRange _TransientUploadBufferRange;
-        TS<A_RHICopyBufferPass> _CopyPass;
+        F_RHITransientUploadBufferRange_V2 _TransientUploadBufferRange;
 
     public:
         ABYTEK_FORCE_INLINE const auto& GetTransientUploadBufferRange() const noexcept
         {
             return _TransientUploadBufferRange;
         }
-        ABYTEK_FORCE_INLINE const auto& GetCopyPass() const noexcept
-        {
-            return _CopyPass;
-        }
 
     public:
         ABYTEK_RA_DECLARE_OBJECT(F_DirectX12RHIUploadBufferPass);
         virtual void Build(const F_RHIUploadBufferPassBuildParams& BuildParams);
-        virtual void Release() override;
+        void Release() override;
         
     protected:
-        virtual void AppendSubresourceBindings(F_DirectX12RHISubresourceBindingSet& SubresourceBindingSet) override;
-    
-    public:
-        virtual E_DirectX12RHIPassBatchType GetPassBatchType() override;
-        
-    protected:
-        void OnAddItemsAfter(I_RHISubmissionItemContainer& Container) override;
-        
-    public:
-        B8 CanDetachCopyPass() override;
-        void DetachCopyPass(I_RHISubmissionItemContainer& SubmissionItemContainer) override;
-        
-    public:
-#ifdef ABYTEK_DEBUG_INFO
-        void SetDebugName(const F_DebugName& Value) noexcept override;
-#endif
+        void AppendSubresourceBindings(F_DirectX12RHISubresourceBindingSet& SubresourceBindingSet) override;
     };
 }
 #endif

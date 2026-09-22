@@ -1,9 +1,9 @@
 ﻿#include "Abytek/Assets/Render/StaticMeshRenderProxy.hpp"
 #include "Abytek/Frame/FrameHelper.hpp"
-#include "Abytek/Geometries/Render/RenderGeometryManager.hpp"
-#include "Abytek/Geometries/Render/RenderGeometryPage.hpp"
-#include "Abytek/RenderBase/WorldRenderResource.hpp"
-#include "Abytek/RenderBase/RenderScene.hpp"
+#include "Abytek/Renderer/RenderGeometry/RenderGeometryStorage.hpp"
+#include "Abytek/Renderer/RenderGeometry/RenderGeometryPage.hpp"
+#include "Abytek/Renderer/WorldRenderResource.hpp"
+#include "Abytek/Renderer/RenderScene.hpp"
 
 
 namespace Abytek
@@ -16,14 +16,14 @@ namespace Abytek
     {
     }
 
-    void F_StaticMeshRenderProxy::OnCreateRenderState_RenderTask()
+    void F_StaticMeshRenderProxy::OnCreateRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
         auto RHIContext = H_RHI::GetMainContext();
         
         if (_DataType == E_StaticMeshDataType::SIMPLE)
         {
             auto Scene = GetWorldRenderResource()->GetScene();
-            auto GeometryManager = Scene->GetGeometryManager();
+            auto GeometryStorage = Scene->GetGeometryStorage();
             
             const auto& SimpleDataList = *_TempSimpleDataList;
             U32 NumSimpleData = static_cast<U32>(SimpleDataList.size());
@@ -32,7 +32,7 @@ namespace Abytek
                 const auto& SimpleData = SimpleDataList[Idx];
                 F_StaticMeshResource_Simple Resource;
                 Resource.Index = Idx;
-                if (GeometryManager->AddMeshData_Simple(SimpleData, Resource.GeometryAllocation, Resource.GeometryAllocationStructure))
+                if (GeometryStorage->AddMeshData_Simple(SubmissionItemContainer, SimpleData, Resource.GeometryAllocation, Resource.GeometryAllocationStructure))
                 {
                     _ResourceList_Simple.push_back(Resource);
                 }
@@ -44,21 +44,19 @@ namespace Abytek
             );
         }
     }
-    void F_StaticMeshRenderProxy::OnDestroyRenderState_RenderTask()
+    void F_StaticMeshRenderProxy::OnDestroyRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
         if (_DataType == E_StaticMeshDataType::SIMPLE)
         {
+            auto Scene = GetWorldRenderResource()->GetScene();
+            auto GeometryStorage = Scene->GetGeometryStorage();
+            
             for (const auto& Resource : _ResourceList_Simple)
             {
-                Resource.GeometryAllocation.Page->Deallocate(
-                    Resource.GeometryAllocation  
-                );
+                GeometryStorage->RemoveMeshData_Simple(SubmissionItemContainer, Resource.GeometryAllocation);
             }
             _ResourceList_Simple = {};
         }
         _DataType = E_StaticMeshDataType::NONE;
-#ifdef ABYTEK_DEBUG_INFO
-        _DebugName = {};
-#endif
     }
 }

@@ -7,24 +7,26 @@ namespace Abytek
 {
     void A_RHIPassProxy::Release()
     {
+        _PassPosition = E_RHIPassPosition::NONE;
         _PassClass = E_RHIPassClass::NONE;
         _GPUWorkClass = E_RHIGPUWorkClass::NONE;
         _Process = {};
         _ContextProxy = {}; 
         A_RAObject::Release();
     }
-    void A_RHIPassProxy::Build(const TW_Valid<A_RHIPass>& Pass)
+    void A_RHIPassProxy::BuildPassProxy(const TW_Valid<A_RHIPass>& Pass)
     {
         A_RAObject::BuildMinimal();
         _ContextProxy = Pass->GetContext()->GetProxy().Weak();
         _Process = Pass->GetProcess();
         _GPUWorkClass = Pass->GetGPUWorkClass();
         _PassClass = Pass->GetPassClass();
+        _PassPosition = Pass->GetPassPosition();
     }
 
     void A_RHIPass::Build(const F_RHIPassBuildParams& BuildParams)
     {
-        A_RHISubmissionItem::Build();
+        BuildSubmissionItem();
         _Context = BuildParams.Context;
         _GPUWorkClass = BuildParams.GPUWorkClass;
     }
@@ -41,10 +43,14 @@ namespace Abytek
         A_RHISubmissionItem::Release();
     }
 
-    E_RHIPassClass A_RHIPass::GetPassClass()
+    E_RHIPassClass A_RHIPass::GetPassClass() const
     {
         ABYTEK_ENGINE_RHI_ASSERT(false) << "Not implemented";
         return E_RHIPassClass::NONE;
+    }
+    E_RHIPassPosition A_RHIPass::GetPassPosition() const
+    {
+        return E_RHIPassPosition::DEFAULT;
     }
 
     TS_Valid<A_RHIPassProxy> A_RHIPass::CreateProxy()

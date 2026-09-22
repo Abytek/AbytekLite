@@ -19,7 +19,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(F_ExecutionGraphFunction)
+        ABYTEK_END_REFLECTOR(F_ExecutionGraphFunction);
 
     private:
         TW<F_ExecutionGraph> _Graph;
@@ -101,7 +101,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(F_ExecutionGraph)
+        ABYTEK_END_REFLECTOR(F_ExecutionGraph);
 
     private:
         TF_Map<F_Name, TS<F_ExecutionGraphFunction>> _Functions;

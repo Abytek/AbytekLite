@@ -10,11 +10,11 @@
 #include "Abytek/ActorComponents/RenderableComponentUpdateRange.hpp"
 #include "Abytek/CoreUpdateGraph/PreShutdownUpdateRange.hpp"
 #include "Abytek/UpdateBase/UpdateUtilities.hpp"
-#include "Abytek/RenderBase/RenderSceneUpdateRange.hpp"
+#include "Abytek/Renderer/RenderSceneUpdateRange.hpp"
 #include "Abytek/Frame/FrameHelper.hpp"
 #include "Abytek/World/WorldContextHelper.hpp"
 #include "Abytek/CoreUpdateGraph/HighLevelUpdateRange.hpp"
-#include "Abytek/RenderBase/RenderScenePostUpdateRange.hpp"
+#include "Abytek/Renderer/RenderScenePostUpdateRange.hpp"
 
 
 namespace Abytek
@@ -361,7 +361,7 @@ namespace Abytek
                                 NewScaledClientSize
                             ]
                             {
-                                RenderProxy->ResizeRHIViewport_Window_RenderTask(NewScaledClientSize);
+                                RenderProxy->ResizeRHIViewport_Window_RenderTask(H_RHI::GetMainSubmissionQueue(), NewScaledClientSize);
                             }
                         );
                     }
@@ -384,7 +384,10 @@ namespace Abytek
                 {
                 case E_CanvasTopology::MONO:
                     {
-                        _RTTexture_Mono = H_WorldContext::CreateObject<F_Texture>(ABYTEK_WTHIS());
+                        _RTTexture_Mono = H_WorldContext::CreateObject<F_Texture>(
+                            ABYTEK_WTHIS(), 
+                            *GetName() + ABYTEK_TEXT(".RTTextureMono")
+                        );
                         
                         F_RHIImageSettingMinimal ImageSettingMinimal;
                         ImageSettingMinimal.Width = _Resolution_Mono.X;
@@ -407,7 +410,10 @@ namespace Abytek
                 case E_CanvasTopology::STEREO:
                     {
                         {
-                            _RTTexture_StereoLeft = H_WorldContext::CreateObject<F_Texture>(ABYTEK_WTHIS());
+                            _RTTexture_StereoLeft = H_WorldContext::CreateObject<F_Texture>(
+                                ABYTEK_WTHIS(), 
+                                *GetName() + ABYTEK_TEXT(".RTTextureStereoLeft")
+                            );
                         
                             F_RHIImageSettingMinimal ImageSettingMinimal;
                             ImageSettingMinimal.Width = _Resolution_StereoLeft.X;
@@ -428,7 +434,10 @@ namespace Abytek
                         }
                         
                         {
-                            _RTTexture_StereoRight = H_WorldContext::CreateObject<F_Texture>(ABYTEK_WTHIS());
+                            _RTTexture_StereoRight = H_WorldContext::CreateObject<F_Texture>(
+                                ABYTEK_WTHIS(), 
+                                *GetName() + ABYTEK_TEXT(".RTTextureStereoRight")
+                            );
                         
                             F_RHIImageSettingMinimal ImageSettingMinimal;
                             ImageSettingMinimal.Width = _Resolution_StereoRight.X;
@@ -479,7 +488,7 @@ namespace Abytek
                     ScaledClientSize = _Window->GetScaledClientSize()
                 ]
                 {
-                    RenderProxy->CreateRHIViewport_Window_RenderTask(ScaledClientSize);
+                    RenderProxy->CreateRHIViewport_Window_RenderTask(H_RHI::GetMainSubmissionQueue(), ScaledClientSize);
                 }
             );
         }
@@ -729,14 +738,14 @@ namespace Abytek
         H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
             [CachedRenderProxy = GetRenderProxy().FastCast<F_CanvasRenderProxy>()]
             {
-                CachedRenderProxy->BeginDraw_RenderTask();
+                CachedRenderProxy->BeginDraw_RenderTask(H_RHI::GetMainSubmissionQueue());
             }
         );
         OnDraw();
         H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
             [CachedRenderProxy = GetRenderProxy().FastCast<F_CanvasRenderProxy>()]
             {
-                CachedRenderProxy->EndDraw_RenderTask();
+                CachedRenderProxy->EndDraw_RenderTask(H_RHI::GetMainSubmissionQueue());
             }
         );
     }

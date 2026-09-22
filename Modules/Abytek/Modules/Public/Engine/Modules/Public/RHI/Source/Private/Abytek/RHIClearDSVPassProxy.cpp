@@ -19,7 +19,7 @@ namespace Abytek
     ABYTEK_RA_END_OBJECT()
     void A_RHIClearDSVPassProxy::Build(const TW_Valid<A_RHIClearDSVPass>& Pass)
     {
-        A_RHIPassProxy::Build(Pass);
+        BuildPassProxy(Pass);
         _DSVProxy = Pass->GetDSV()->GetProxy().FastCast<A_RHIResourceViewProxy>();
         _Flags = Pass->GetFlags();
         _Depth = Pass->GetDepth();

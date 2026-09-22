@@ -9,7 +9,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(F_ModuleList)
+        ABYTEK_END_REFLECTOR(F_ModuleList);
         
     public:
         ABYTEK_DECLARE_OBJECT_SINGLETON_CRT(F_ModuleList);

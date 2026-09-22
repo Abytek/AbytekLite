@@ -13,7 +13,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(F_Resource)
+        ABYTEK_END_REFLECTOR(F_Resource);
 
     private:
         F_Name _Name;

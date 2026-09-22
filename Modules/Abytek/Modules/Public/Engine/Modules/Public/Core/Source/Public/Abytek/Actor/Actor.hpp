@@ -16,7 +16,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR(A_WorldContext)
-        ABYTEK_END_REFLECTOR(F_Actor)
+        ABYTEK_END_REFLECTOR(F_Actor);
     
     private:
         TW<F_Level> _Level;

@@ -24,6 +24,8 @@
 #include "Abytek/DirectX12/RHIResourceView.hpp"
 #include "Abytek/DirectX12/RHIPassBatch.hpp"
 #include "Abytek/RHIBindGroupProxy.hpp"
+#include "Abytek/RHITransientUploadBuffer.hpp"
+#include "Abytek/RHITransientReadbackBuffer.hpp"
 
 
 #ifdef ABYTEK_ENGINE_RHI_ENABLE_DIRECTX12
@@ -145,6 +147,26 @@ namespace Abytek
         }
     }
     
+    namespace DirectX12RHIProcessData
+    {
+        namespace Compile
+        {
+        }
+        namespace Execution
+        {
+            struct F_TransientUploadBuffer
+            {
+                TS<A_RHIResourceProxy> BufferProxy;
+                TF_Vector<F_RHITransientUploadBufferCandidate_V2> Candidates;
+            };
+            struct F_TransientReadbackBuffer
+            {
+                TS<A_RHIResourceProxy> BufferProxy;
+                TF_Vector<F_RHITransientReadbackBufferCandidate_V2> Candidates;
+            };
+        }
+    }
+    
     
     class ABYTEK_ENGINE_RHI_API F_DirectX12RHIProcess : public A_RHIProcess
     {
@@ -196,6 +218,7 @@ namespace Abytek
         {
             TF_Vector<TW<A_DirectX12RHIPassExtension>> PassExtensions; // Graph-based order
             TF_Vector<TW<A_DirectX12RHIPassExtension>> PassExtensions_SortedByDependencyScore;
+            TF_Vector<TW<A_RHIViewport>> Viewports;
             TF_Vector<F_DirectX12RHISubresourceReference> SubresourceReferences;
             TF_Vector<TW<A_RHIResource>> Resources;
             
@@ -213,6 +236,7 @@ namespace Abytek
             TF_Vector<TW<A_DirectX12RHISubmissionItemExtension>> SubmissionItemExtensions; // Graph-based order
             TF_Vector<TW<A_DirectX12RHISubmissionListExtension>> SubmissionListExtensions; // Graph-based order
             TF_Vector<TW<A_DirectX12RHIPassExtension>> PassExtensions; // Graph-based order
+            TF_Vector<TW<A_RHIViewport>> Viewports; // Graph-based order
             
             TF_Vector<F_DirectX12RHISubresourceReference> SubresourceReferences;
             TF_Vector<TS<A_RHIResource>> Resources;
@@ -223,6 +247,8 @@ namespace Abytek
             U32 CurrentSection_EndSubmissionListExtensionIndex = 0;
             U32 CurrentSection_BeginPassExtensionIndex = 0;
             U32 CurrentSection_EndPassExtensionIndex = 0;
+            U32 CurrentSection_BeginViewportIndex = 0;
+            U32 CurrentSection_EndViewportIndex = 0;
             
             U32 CurrentSection_BeginSubresourceReferenceIndex = 0;
             U32 CurrentSection_EndSubresourceReferenceIndex = 0;
@@ -242,6 +268,9 @@ namespace Abytek
         {
             TF_Vector<F_DirectX12RHIPassBatch> PassBatches;
             TS_Unmanaged<F_TaskPromise> PassBatchesPromise;
+                
+            TF_Vector<DirectX12RHIProcessData::Execution::F_TransientUploadBuffer> TransientUploadBuffers;
+            TF_Vector<DirectX12RHIProcessData::Execution::F_TransientReadbackBuffer> TransientReadbackBuffers;
         } ExecutionData;
         
         struct F_LateExecutionData
@@ -269,36 +298,34 @@ namespace Abytek
         void _DeallocateDescriptors();
         void _DeallocateResourcePlacements();
         
+        void _EarlyAnalyze();
+        void _EarlyAnalyze(const TS<A_RHISubmissionItem>& SubmissionItem);
+        
         void _UploadResources(
-            I_RHISubmissionItemContainer& CPUSubmissionItemContainer,
-            I_RHISubmissionItemContainer& GPUSubmissionItemContainer
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer
         );
         void _UploadBuffer(
-            I_RHISubmissionItemContainer& CPUSubmissionItemContainer,
-            I_RHISubmissionItemContainer& GPUSubmissionItemContainer,
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
             const DirectX12RHIProcessQueries::Compile::F_UploadBuffer& Query
         );
         void _UploadTexture(
-            I_RHISubmissionItemContainer& CPUSubmissionItemContainer,
-            I_RHISubmissionItemContainer& GPUSubmissionItemContainer,
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
             const DirectX12RHIProcessQueries::Compile::F_UploadTexture& Query
         );
         void _UploadRTAS(
-            I_RHISubmissionItemContainer& CPUSubmissionItemContainer,
-            I_RHISubmissionItemContainer& GPUSubmissionItemContainer,
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
             const DirectX12RHIProcessQueries::Compile::F_UploadRTAS& Query
         );
         
         void _UploadConstantData(
-            I_RHISubmissionItemContainer& CPUSubmissionItemContainer,
-            I_RHISubmissionItemContainer& GPUSubmissionItemContainer
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer
         );
         
         void _ResourceStaticTransitions();
         void _AddBackBufferTransitions();
         
-        void _EarlyAnalyze();
-        void _EarlyAnalyze(const TS<A_RHISubmissionItem>& SubmissionItem, F_DirectX12RHISubmissionItemGraphData& GraphData);
+        void _MainAnalyze();
+        void _MainAnalyze(const TS<A_RHISubmissionItem>& SubmissionItem, F_DirectX12RHISubmissionItemGraphData& GraphData);
         
         void _GatherSubresourceBindings();
         void _GatherSubresourceReferences();
@@ -339,11 +366,13 @@ namespace Abytek
         void _CreateResourceTransitionBarriersForPasses();
         void _CreateResourceAliasingBarriersForPasses();
         
-#ifdef ABYTEK_ENGINE_RHI_ENABLE_PROFILER
-        void _CreateProfilerDataForPassBatches();
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
+        void _CreateCaptureDataForPassBatches();
 #endif
         
         void _TransferCompileDataToExecutionData();
+        void _TransferCompileDataToTransientUploadBuffers();
+        void _TransferCompileDataToTransientReadbackBuffers();
         void _TransferCompileDataToLateExecutionData();
         void _UpdateViewports();
         
@@ -374,8 +403,12 @@ namespace Abytek
         
         void _FlushDescriptorManagers();
         
+        void _TransientUploadBuffers();
+        
         void _ExecutePassBatches();
         void _JoinPassBatches();
+        
+        void _TransientReadbackBuffers();
         
         void _CleanCommandListManagers();
         

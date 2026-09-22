@@ -18,15 +18,7 @@ namespace Abytek
         {
             return _TextureProxy;
         }
-        ABYTEK_FORCE_INLINE auto& InjectTextureProxy() noexcept
-        {
-            return _TextureProxy;
-        }
         ABYTEK_FORCE_INLINE const auto& GetCallback() const noexcept
-        {
-            return _Callback;
-        }
-        ABYTEK_FORCE_INLINE auto& InjectCallback() noexcept
         {
             return _Callback;
         }

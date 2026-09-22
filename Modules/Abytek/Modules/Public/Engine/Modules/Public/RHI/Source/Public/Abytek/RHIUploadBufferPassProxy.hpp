@@ -19,15 +19,7 @@ namespace Abytek
         {
             return _BufferDataView;
         }
-        ABYTEK_FORCE_INLINE auto& InjectBufferDataView() noexcept
-        {
-            return _BufferDataView;
-        }
         ABYTEK_FORCE_INLINE const auto& GetBufferProxy() const noexcept
-        {
-            return _BufferProxy;
-        }
-        ABYTEK_FORCE_INLINE auto& InjectBufferProxy() noexcept
         {
             return _BufferProxy;
         }
@@ -35,9 +27,9 @@ namespace Abytek
         {
             return _OffsetInBytes;
         }
-        ABYTEK_FORCE_INLINE auto& InjectOffsetInBytes() noexcept
+        ABYTEK_FORCE_INLINE auto HasWork() const noexcept
         {
-            return _OffsetInBytes;
+            return !_BufferDataView.empty();
         }
         
     public:

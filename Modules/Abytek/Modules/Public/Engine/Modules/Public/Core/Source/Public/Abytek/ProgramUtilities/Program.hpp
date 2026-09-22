@@ -16,7 +16,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(A_Program)
+        ABYTEK_END_REFLECTOR(A_Program);
         
     public:
         virtual void GatherConfigFilePaths(TF_Vector<F_Text>& FilePaths);

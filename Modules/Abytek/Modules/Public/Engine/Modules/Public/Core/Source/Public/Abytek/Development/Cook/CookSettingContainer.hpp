@@ -12,7 +12,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(F_ProgramUnitContainer)
-        ABYTEK_END_REFLECTOR(F_CookSettingContainer)
+        ABYTEK_END_REFLECTOR(F_CookSettingContainer);
         
     public:
         friend class F_CookProfile;

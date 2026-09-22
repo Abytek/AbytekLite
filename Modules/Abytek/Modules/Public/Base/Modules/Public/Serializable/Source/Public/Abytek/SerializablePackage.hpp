@@ -44,7 +44,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(F_SerializablePackage)
+        ABYTEK_END_REFLECTOR(F_SerializablePackage);
         
     public:
         static F_Name GetFileExtension();

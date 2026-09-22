@@ -31,7 +31,7 @@ namespace Abytek
             []
             {
                 auto RHIContext = H_RHI::GetMainContext();
-                auto RHIProcess = H_RHI::GetMainProcess();
+                auto RHIProcess = H_RHI::GetMainSubmissionQueue();
                 
                 static constexpr E_RHIFormat Format = E_RHIFormat::NV12;
                 U32 Width = 4;

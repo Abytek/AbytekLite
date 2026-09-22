@@ -3,7 +3,7 @@
 #include "Abytek/Engine.SRP.prerequisites.hpp"
 #include "Abytek/GlobalRenderBinding.hpp"
 #include "Abytek/GlobalRenderPipeline.hpp"
-#include "Abytek/RenderBase/RenderView.hpp"
+#include "Abytek/Renderer/RenderView.hpp"
 
 
 namespace Abytek
@@ -17,9 +17,9 @@ namespace Abytek
             F_Matrix4x4_F32 TransformMatrix;
             F_Vector4_F32 Color = { 0.0f, 1.0f, 1.0f, 1.0f };
         };
-        struct ABYTEK_ENGINE_SRP_API F_CubeBinding : TF_GlobalRenderBinding<F_CubeBinding>
+        struct ABYTEK_ENGINE_SRP_API F_CubeBinding : F_GlobalRenderBinding
         {
-            ABYTEK_DECLARE_GLOBAL_RENDER_BINDING(F_CubeBinding);
+            ABYTEK_GLOBAL_RENDER_BINDING(F_CubeBinding, ABYTEK_NAME("Abytek::SRPBasicDrawers::F_CubeBinding"));
             
             static F_FeedbackStatus Build(F_Config& Config)
             {
@@ -37,7 +37,7 @@ namespace Abytek
                 return F_FeedbackStatus::MakeSucceeded();
             }
         };
-        struct ABYTEK_ENGINE_SRP_API F_CubePipeline : TF_GlobalRenderPipeline<F_CubePipeline>
+        struct ABYTEK_ENGINE_SRP_API F_CubePipeline : F_GlobalRenderPipeline
         {
             ABYTEK_DEFINE_PERMUTATION(
                 F_FillMode, 
@@ -48,7 +48,7 @@ namespace Abytek
             );
             ABYTEK_OVERRIDE_PERMUTATION_DOMAIN(F_FillMode);
             
-            ABYTEK_DECLARE_GLOBAL_RENDER_PIPELINE(F_CubePipeline);
+            ABYTEK_GLOBAL_RENDER_PIPELINE(F_CubePipeline, ABYTEK_NAME("Abytek::SRPBasicDrawers::F_CubePipeline"));
             
             static F_FeedbackStatus Build(F_Config& Config)
             {
@@ -75,7 +75,7 @@ namespace Abytek
     struct ABYTEK_ENGINE_SRP_API H_SRPCubeDrawer
     {
         static void Render(
-            I_RHISubmissionItemContainer& SubmissionItemContainer,
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
             const TW_Valid<A_RenderView>& View, 
             const F_Matrix4x4_F32& CubeTransformMatrix, 
             const F_Vector4_F32& CubeColor = { 0.0f, 1.0f, 1.0f, 1.0f }, 

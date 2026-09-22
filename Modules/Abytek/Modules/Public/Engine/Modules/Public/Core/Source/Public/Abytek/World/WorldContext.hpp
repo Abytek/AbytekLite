@@ -17,7 +17,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_SerializableObject)
-        ABYTEK_END_REFLECTOR(A_WorldContext)
+        ABYTEK_END_REFLECTOR(A_WorldContext);
     
     private:
         

@@ -2,14 +2,24 @@ module Common;
 
 namespace NFC::RenderGeometry
 {
-    public struct F_GeometryAllocation
+    public typealias F_GeometryAddress = uint2;
+    public void PackGeometryAddress(out F_GeometryAddress OutGeometryAddress, uint PageIndex, uint OffsetInBytes)
     {
-        public uint BeginOffsetInBytes = 0;
-        public uint EndOffsetInBytes = 0;
-        public uint PageIndex = 0;
-
-        private uint ___Padding___;
-    };
+        OutGeometryAddress = uint2(PageIndex, OffsetInBytes);
+    }
+    public uint GetPageIndexFromGeometryAddress(F_GeometryAddress GeometryAddress)
+    {
+        return GeometryAddress.x;
+    }
+    public uint GetOffsetInBytesFromGeometryAddress(F_GeometryAddress GeometryAddress)
+    {
+        return GeometryAddress.y;
+    }
+    public void UnpackGeometryAddress(F_GeometryAddress GeometryAddress, out uint OutPageIndex, out uint OutOffsetInBytes)
+    {
+        OutPageIndex = GetPageIndexFromGeometryAddress(GeometryAddress);
+        OutOffsetInBytes = GetOffsetInBytesFromGeometryAddress(GeometryAddress);
+    }
 
     public struct F_GeometryAllocationStructure_Simple
     {
@@ -26,10 +36,9 @@ namespace NFC::RenderGeometry
     };
     public struct F_StaticMeshGeometryUniformData_Simple
     {
-        public F_GeometryAllocation GeometryAllocation;
         public F_GeometryAllocationStructure_Simple GeometryAllocationStructure;
+        public F_GeometryAddress GeometryAddress;
         public uint Index = 0;
-
-        private uint3 ___Padding___;
+        private uint ___Padding___;
     };
 }

@@ -6,6 +6,8 @@
 #include "Abytek/RHITemplateRuntimeDatabase.hpp"
 #include "Abytek/RHITransientUploadBufferManager.hpp"
 #include "Abytek/RHITransientReadbackBufferManager.hpp"
+#include "Abytek/RHITransientUploadBuffer.hpp"
+#include "Abytek/RHITransientReadbackBuffer.hpp"
 #include "Abytek/RHIConstantDataManager.hpp"
 
 
@@ -88,6 +90,16 @@ namespace Abytek
             _TransientReadbackBufferManager = RACreateAndBuildShared<F_RHITransientReadbackBufferManager>(ReadbackBufferManagerBuildParams);
         }
         {
+            F_RHITransientUploadBufferManagerBuildParams_V2 UploadBufferManagerBuildParams;
+            UploadBufferManagerBuildParams.Context = ABYTEK_WTHIS();
+            _TransientUploadBufferManager_V2 = RACreateAndBuildShared<F_RHITransientUploadBufferManager_V2>(UploadBufferManagerBuildParams);
+        }
+        {
+            F_RHITransientReadbackBufferManagerBuildParams_V2 ReadbackBufferManagerBuildParams;
+            ReadbackBufferManagerBuildParams.Context = ABYTEK_WTHIS();
+            _TransientReadbackBufferManager_V2 = RACreateAndBuildShared<F_RHITransientReadbackBufferManager_V2>(ReadbackBufferManagerBuildParams);
+        }
+        {
             F_RHIConstantDataManagerBuildParams ConstantDataManagerBuildParams;
             ConstantDataManagerBuildParams.Context = ABYTEK_WTHIS();
             _ConstantDataManager = RACreateAndBuildShared<F_RHIConstantDataManager>(ConstantDataManagerBuildParams);
@@ -96,6 +108,8 @@ namespace Abytek
     void A_RHIContext::HighLevelDeinitialize()
     {
         _ConstantDataManager = {};
+        _TransientReadbackBufferManager_V2 = {};
+        _TransientUploadBufferManager_V2 = {};
         _TransientReadbackBufferManager = {};
         _TransientUploadBufferManager = {};
     }

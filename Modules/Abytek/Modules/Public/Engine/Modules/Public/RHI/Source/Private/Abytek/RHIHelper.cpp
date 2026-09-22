@@ -55,6 +55,7 @@ namespace Abytek
         }
         return {};
     }
+
     void H_RHI::SignalCapture(E_RHICaptureFlag Flags)
     {
         ABYTEK_ENGINE_RHI_ASSERT(

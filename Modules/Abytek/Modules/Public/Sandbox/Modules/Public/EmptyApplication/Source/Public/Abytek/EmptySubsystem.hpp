@@ -9,7 +9,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_ApplicationSubsystem)
-        ABYTEK_END_REFLECTOR(F_EmptySubsystem)
+        ABYTEK_END_REFLECTOR(F_EmptySubsystem);
         
     public:
         ABYTEK_DECLARE_STATIC_APPLICATION_SUBSYSTEM(F_EmptySubsystem);

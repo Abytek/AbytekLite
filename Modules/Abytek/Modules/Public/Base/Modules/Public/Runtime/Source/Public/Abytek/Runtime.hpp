@@ -14,7 +14,7 @@ namespace Abytek
         ABYTEK_DECLARE_OBJECT_SINGLETON_CRT(A_Runtime);
 
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(A_Runtime)
+        ABYTEK_END_REFLECTOR(A_Runtime);
         
     public:
         virtual void GatherConfigFilePaths(TF_Vector<F_Text>& FilePaths);

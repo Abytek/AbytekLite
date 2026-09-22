@@ -49,26 +49,21 @@ namespace Abytek
     {
     private:
         TS<A_RHIResourceProxy> _ReadbackBufferProxy;
-        U64 _ReadbackBufferOffsetInBytes = 0;
-        U64 _ReadbackBufferSizeInBytes = 0;
-        TF_RHIImageView<true> _ImageView;
+        U32 _NumSubresources = 0;
+        TF_SmallVector<D3D12_PLACED_SUBRESOURCE_FOOTPRINT, 3> _SubImages_ReadbackFootprint;
         
     public:
         ABYTEK_FORCE_INLINE const auto& GetReadbackBufferProxy() const noexcept
         {
             return _ReadbackBufferProxy;
         }
-        ABYTEK_FORCE_INLINE auto GetReadbackBufferOffsetInBytes() const noexcept
+        ABYTEK_FORCE_INLINE auto GetNumSubresources() const noexcept
         {
-            return _ReadbackBufferOffsetInBytes;
+            return _NumSubresources;
         }
-        ABYTEK_FORCE_INLINE auto GetReadbackBufferSizeInBytes() const noexcept
+        ABYTEK_FORCE_INLINE const auto& GetSubImages_ReadbackFootprint() const noexcept
         {
-            return _ReadbackBufferSizeInBytes;
-        }
-        ABYTEK_FORCE_INLINE const auto& GetImageView() const noexcept
-        {
-            return _ImageView;
+            return _SubImages_ReadbackFootprint;
         }
         
     public:

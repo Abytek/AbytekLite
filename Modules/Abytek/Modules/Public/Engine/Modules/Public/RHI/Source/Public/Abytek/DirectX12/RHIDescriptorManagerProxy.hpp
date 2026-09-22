@@ -20,8 +20,10 @@ namespace Abytek
         
         struct F_Copy
         {
-            F_DirectX12RHIDescriptorRange SrcDescriptorRange;
-            F_DirectX12RHIDescriptorRange DestDescriptorRange;
+            F_DirectX12RHIDescriptorAllocationProxy SrcDescriptorRange;
+            F_DirectX12RHIDescriptorAllocationProxy DstDescriptorRange;
+            B8 SrcIsShaderVisible = false;
+            B8 DstIsShaderVisible = false;
         };
     }
     

@@ -2,7 +2,7 @@
 
 #include "Abytek/RHIReadbackBufferPass.hpp"
 #include "Abytek/DirectX12/RHIPassExtension.hpp"
-#include "Abytek/RHITransientReadbackBufferManager.hpp"
+#include "Abytek/RHITransientReadbackBuffer.hpp"
 
 
 #ifdef ABYTEK_ENGINE_RHI_ENABLE_DIRECTX12
@@ -13,17 +13,12 @@ namespace Abytek
     class ABYTEK_ENGINE_RHI_API F_DirectX12RHIReadbackBufferPass : public A_RHIReadbackBufferPass, public A_DirectX12RHIPassExtension
     {
     private:
-        F_RHITransientReadbackBufferRange _TransientReadbackBufferRange;
-        TS<A_RHICopyBufferPass> _CopyPass;
+        F_RHITransientReadbackBufferRange_V2 _TransientReadbackBufferRange;
 
     public:
         ABYTEK_FORCE_INLINE const auto& GetTransientReadbackBufferRange() const noexcept
         {
             return _TransientReadbackBufferRange;
-        }
-        ABYTEK_FORCE_INLINE const auto& GetCopyPass() const noexcept
-        {
-            return _CopyPass;
         }
 
     public:
@@ -36,18 +31,6 @@ namespace Abytek
     
     public:
         virtual E_DirectX12RHIPassBatchType GetPassBatchType() override;
-        
-    protected:
-        void OnAddItemsBefore(I_RHISubmissionItemContainer& Container) override;
-        
-    public:
-        B8 CanDetachCopyPass() override;
-        void DetachCopyPass(I_RHISubmissionItemContainer& SubmissionItemContainer) override;
-        
-    public:
-#ifdef ABYTEK_DEBUG_INFO
-        void SetDebugName(const F_DebugName& Value) noexcept override;
-#endif
     };
 }
 #endif

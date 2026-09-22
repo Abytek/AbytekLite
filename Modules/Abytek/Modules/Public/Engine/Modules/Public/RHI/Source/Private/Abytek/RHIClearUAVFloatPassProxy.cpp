@@ -19,7 +19,7 @@ namespace Abytek
     ABYTEK_RA_END_OBJECT()
     void A_RHIClearUAVFloatPassProxy::Build(const TW_Valid<A_RHIClearUAVFloatPass>& Pass)
     {
-        A_RHIPassProxy::Build(Pass);
+        BuildPassProxy(Pass);
         _UAVProxy = Pass->GetUAV()->GetProxy().FastCast<A_RHIResourceViewProxy>();
         _Value = Pass->GetValue();
     }   

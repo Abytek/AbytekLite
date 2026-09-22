@@ -62,17 +62,13 @@ namespace Abytek
         ~F_CameraRenderProxy() override;
         
     protected:
-        void OnInit_RenderTask() override;
-        void OnRelease_RenderTask() override;
+        void OnCreateRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
+        void OnDestroyRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
         
     protected:
-        void OnCreateRenderState_RenderTask() override;
-        void OnDestroyRenderState_RenderTask() override;
-        
-    protected:
-        virtual void OnDraw_RenderTask();
+        virtual void OnDraw_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
         
     public:
-        void Draw_RenderTask();
+        void Draw_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
     };
 }

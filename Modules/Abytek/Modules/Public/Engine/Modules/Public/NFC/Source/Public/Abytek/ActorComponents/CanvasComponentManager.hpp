@@ -26,7 +26,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR(A_ApplicationSubsystem)
-        ABYTEK_END_REFLECTOR(F_CanvasComponentManager)
+        ABYTEK_END_REFLECTOR(F_CanvasComponentManager);
         
     public:
         ABYTEK_DECLARE_STATIC_APPLICATION_SUBSYSTEM(F_CanvasComponentManager);

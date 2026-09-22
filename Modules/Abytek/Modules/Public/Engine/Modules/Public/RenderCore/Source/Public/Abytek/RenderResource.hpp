@@ -35,8 +35,8 @@ namespace Abytek
         void Release();
         
     protected:
-        virtual void OnInit_RenderTask();
-        virtual void OnRelease_RenderTask();
+        virtual void OnInit_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
+        virtual void OnRelease_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
         
     public:
         const F_RenderCoreRHIConfig& GetRHIConfig() const noexcept;

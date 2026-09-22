@@ -12,16 +12,11 @@ namespace Abytek
         A_DirectX12RHIPassProxyExtension::Build(Pass);
         
         auto CastedPass = Pass.FastCast<F_DirectX12RHIUploadBufferPass>();
-        const auto& TransientUploadBufferRange = CastedPass->GetTransientUploadBufferRange();
-        if (TransientUploadBufferRange)
+        if (HasWork())
         {
+            const auto& TransientUploadBufferRange = CastedPass->GetTransientUploadBufferRange();
             _UploadBufferProxy = TransientUploadBufferRange.GetBuffer()->GetProxy().FastCast<A_RHIResourceProxy>();
             _UploadBufferOffsetInBytes = TransientUploadBufferRange.BeginOffsetInBytes;
-        }
-        else
-        {
-            _UploadBufferProxy = GetBufferProxy();
-            _UploadBufferOffsetInBytes = GetOffsetInBytes();
         }
     }   
     void F_DirectX12RHIUploadBufferPassProxy::Release()
@@ -36,23 +31,21 @@ namespace Abytek
     void F_DirectX12RHIUploadBufferPassProxy::Execute(F_DirectX12RHIPassProxyExtensionExecuteParams& ExecuteParams)
     {
         A_DirectX12RHIPassProxyExtension::Execute(ExecuteParams);
+        if (HasWork())
+        {
+            auto DstD3D12Resource = GetBufferProxy().FastCast<F_DirectX12RHIResourceProxy>()->GetD3D12Resource();
+            auto DstOffsetInBytes = GetOffsetInBytes();
+            auto SrcD3D12Resource = _UploadBufferProxy.FastCast<F_DirectX12RHIResourceProxy>()->GetD3D12Resource();
+            auto SrcOffsetInBytes = _UploadBufferOffsetInBytes;
         
-        auto D3D12Resource = _UploadBufferProxy.FastCast<F_DirectX12RHIResourceProxy>()->GetD3D12Resource();
-        
-        auto BufferDataView = GetBufferDataView();
-        
-        U8* DataPtr = nullptr;
-        HRESULT HR = D3D12Resource->Map(0, nullptr, (void**)&DataPtr);
-        ABYTEK_ENGINE_RHI_ASSERT(SUCCEEDED(HR)) << "Cannot map resource";
-        
-        memcpy(
-            DataPtr + _UploadBufferOffsetInBytes,
-            BufferDataView.data(),
-            BufferDataView.size()
-        );
-        
-        D3D12_RANGE WrittenRange = { _UploadBufferOffsetInBytes, _UploadBufferOffsetInBytes + BufferDataView.size() };
-        D3D12Resource->Unmap(0, &WrittenRange);
+            ExecuteParams.D3D12CommandList->CopyBufferRegion(
+                DstD3D12Resource.Get(),
+                DstOffsetInBytes,
+                SrcD3D12Resource.Get(),
+                SrcOffsetInBytes,
+                GetBufferDataView().size()
+            );
+        }
     }
 }
 #endif

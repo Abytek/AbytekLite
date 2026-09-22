@@ -14,20 +14,20 @@ namespace Abytek
     F_SRPRenderObjectFactory::~F_SRPRenderObjectFactory()
     {
     }    
-    TS<A_RenderScene> F_SRPRenderObjectFactory::CreateScene(const F_RenderSceneBuildParams& BuildParams)
+    TS<A_RenderScene> F_SRPRenderObjectFactory::CreateScene()
     {
-        return TS<F_SRPRenderScene>()(GetWorldRenderResource(), BuildParams);
+        return F_SRPRenderScene::Create(GetWorldRenderResource());
     }
-    TS<A_RenderViewFamily> F_SRPRenderObjectFactory::CreateViewFamily(const F_RenderViewFamilyBuildParams& BuildParams)
+    TS<A_RenderViewFamily> F_SRPRenderObjectFactory::CreateViewFamily()
     {
-        return TS<A_RenderViewFamily>()(GetWorldRenderResource(), BuildParams);
+        return F_SRPRenderViewFamily::Create(GetWorldRenderResource());
     }
-    TS<A_RenderView> F_SRPRenderObjectFactory::CreateView(const F_RenderViewBuildParams& BuildParams)
+    TS<A_RenderView> F_SRPRenderObjectFactory::CreateView()
     {
-        return TS<F_SRPRenderView>()(GetWorldRenderResource(), BuildParams);
+        return F_SRPRenderView::Create(GetWorldRenderResource());
     }
-    TS<A_Renderer> F_SRPRenderObjectFactory::CreateRenderer(const F_RendererBuildParams& BuildParams)
+    TS<A_Renderer> F_SRPRenderObjectFactory::CreateRenderer()
     {
-        return TS<F_SRPRenderer>()(GetWorldRenderResource(), BuildParams);
+        return F_SRPRenderer::Create(GetWorldRenderResource());
     }
 }

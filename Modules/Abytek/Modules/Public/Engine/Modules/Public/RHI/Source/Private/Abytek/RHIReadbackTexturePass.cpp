@@ -36,12 +36,8 @@ namespace Abytek
         return RACreateAndBuildShared<A_RHIReadbackTexturePassProxy>(ABYTEK_WTHIS());
     }
 
-    B8 A_RHIReadbackTexturePass::CanDetachCopyPass()
+    F_RHIReadbackTextureCallback A_RHIReadbackTexturePass::MoveCallback()
     {
-        return false;
-    }
-    void A_RHIReadbackTexturePass::DetachCopyPass(I_RHISubmissionItemContainer& SubmissionItemContainer)
-    {
-        ABYTEK_LOG_FATAL() << "Not supported";
+        return ABYTEK_MOVE(_Callback);
     }
 }

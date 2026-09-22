@@ -50,9 +50,9 @@ namespace Abytek
             F_ViewUniformData View;
             F_Line Line;
         };
-        struct ABYTEK_ENGINE_MATH_DEBUGGER_2D_API F_DrawLineBinding : TF_GlobalRenderBinding<F_DrawLineBinding>
+        struct ABYTEK_ENGINE_MATH_DEBUGGER_2D_API F_DrawLineBinding : F_GlobalRenderBinding
         {
-            ABYTEK_DECLARE_GLOBAL_RENDER_BINDING(F_DrawLineBinding);
+            ABYTEK_GLOBAL_RENDER_BINDING(F_DrawLineBinding, ABYTEK_NAME("Abytek::MathRenderer2D::F_DrawLineBinding"));
 
             static F_FeedbackStatus Build(F_Config& Config)
             {
@@ -70,7 +70,7 @@ namespace Abytek
                 return F_FeedbackStatus::MakeSucceeded();
             }
         };
-        struct ABYTEK_ENGINE_MATH_DEBUGGER_2D_API F_DrawLinePipeline : TF_GlobalRenderPipeline<F_DrawLinePipeline>
+        struct ABYTEK_ENGINE_MATH_DEBUGGER_2D_API F_DrawLinePipeline : F_GlobalRenderPipeline
         {
             ABYTEK_DEFINE_PERMUTATION(
                 F_FillMode, 
@@ -81,7 +81,7 @@ namespace Abytek
             );
             ABYTEK_OVERRIDE_PERMUTATION_DOMAIN(F_FillMode);
             
-            ABYTEK_DECLARE_GLOBAL_RENDER_PIPELINE(F_DrawLinePipeline);
+            ABYTEK_GLOBAL_RENDER_PIPELINE(F_DrawLinePipeline, ABYTEK_NAME("Abytek::MathRenderer2D::F_DrawLinePipeline"));
 
             static F_FeedbackStatus Build(F_Config& Config)
             {
@@ -167,9 +167,9 @@ namespace Abytek
     public:
         void UpdateSpace();
         void UpdateView();
-        void ClearBackgroundColor(I_RHISubmissionItemContainer& SubmissionItemContainer);
-        void DrawAxisLines(I_RHISubmissionItemContainer& SubmissionItemContainer);
-        void DrawLine(I_RHISubmissionItemContainer& SubmissionItemContainer, const MathRenderer2D::F_Line& Line);
+        void ClearBackgroundColor(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
+        void DrawAxisLines(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
+        void DrawLine(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, const MathRenderer2D::F_Line& Line);
     };
     
     struct F_MathRenderer2DBuildParams

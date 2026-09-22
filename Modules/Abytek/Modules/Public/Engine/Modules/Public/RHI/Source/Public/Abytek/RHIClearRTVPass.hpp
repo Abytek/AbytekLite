@@ -43,7 +43,7 @@ namespace Abytek
         virtual void Release() override;
         
     public:
-        virtual E_RHIPassClass GetPassClass() override
+        virtual E_RHIPassClass GetPassClass() const override
         {
             return E_RHIPassClass::GRAPHICS;
         }

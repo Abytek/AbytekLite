@@ -28,11 +28,11 @@ namespace Abytek
         ~A_RenderProxy() override;
         
     protected:
-        void OnInit_RenderTask() override;
-        void OnRelease_RenderTask() override;
+        void OnInit_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
+        void OnRelease_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
         
     protected:
-        virtual void OnCreateRenderState_RenderTask();
-        virtual void OnDestroyRenderState_RenderTask();
+        virtual void OnCreateRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
+        virtual void OnDestroyRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
     };
 }

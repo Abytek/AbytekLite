@@ -9,7 +9,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(F_ExecutionGraph)
-        ABYTEK_END_REFLECTOR(F_UpdateManager)
+        ABYTEK_END_REFLECTOR(F_UpdateManager);
         
     public:
         ABYTEK_DECLARE_OBJECT_SINGLETON_CRT(F_UpdateManager);

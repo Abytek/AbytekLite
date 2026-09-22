@@ -15,7 +15,7 @@ namespace Abytek
     {
         using F_This = TF_Data;
         ABYTEK_BEGIN_REFLECTOR(I_Serializable)
-        ABYTEK_END_REFLECTOR(F_This)
+        ABYTEK_END_REFLECTOR(F_This);
         
         static constexpr U16 RowCount = 4;
         static constexpr U16 ColumnCount = 1;

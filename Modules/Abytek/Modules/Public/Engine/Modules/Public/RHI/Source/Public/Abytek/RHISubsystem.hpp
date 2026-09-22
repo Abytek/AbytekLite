@@ -14,6 +14,7 @@ namespace Abytek
     class F_RHIPlatform;
     class A_RHIContext;
     class A_RHIProcess;
+    class A_RHISubmissionQueue;
 
     struct F_RHIStaticObjectPoolRegisters;
 
@@ -21,7 +22,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_ApplicationSubsystem)
-        ABYTEK_END_REFLECTOR(F_RHISubsystem)
+        ABYTEK_END_REFLECTOR(F_RHISubsystem);
 
     public:
         ABYTEK_DECLARE_STATIC_APPLICATION_SUBSYSTEM(F_RHISubsystem);
@@ -45,6 +46,8 @@ namespace Abytek
         TS<A_RHIProcess> _MainRHIProcess_Render;
         TS<A_RHIProcess> _MainRHIProcess_GPU;
         TS<A_RHIProcess> _MainRHIProcess_Final;
+        
+        TS<A_RHISubmissionQueue> _MainRHISubmissionQueue;
         
         F_YieldCriticalSection _CaptureCriticalSection_Render;
         E_RHICaptureFlag* _CaptureFlagsPtr_Render = nullptr;
@@ -94,6 +97,11 @@ namespace Abytek
             return _MainRHIProcess_Final;
         }
 
+        ABYTEK_FORCE_INLINE const auto& GetMainRHISubmissionQueue() const noexcept
+        {
+            return _MainRHISubmissionQueue;
+        }
+        
         ABYTEK_FORCE_INLINE E_RHICaptureFlag GetCaptureFlags_Render() const noexcept
         {
             ABYTEK_ENGINE_RHI_ASSERT(

@@ -24,7 +24,7 @@ namespace Abytek
     struct F_CameraProjectionOptions
     {
         ABYTEK_BEGIN_REFLECTOR(I_Serializable)
-        ABYTEK_END_REFLECTOR(F_CameraProjectionOptions)
+        ABYTEK_END_REFLECTOR(F_CameraProjectionOptions);
         
         E_CameraProjectionMode Mode = E_CameraProjectionMode::DEFAULT;
         F32 ViewSize = 5.0f;
@@ -76,7 +76,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_RenderableComponent)
-        ABYTEK_END_REFLECTOR(F_CameraComponent)
+        ABYTEK_END_REFLECTOR(F_CameraComponent);
         
     public:
         friend class F_CanvasComponent;

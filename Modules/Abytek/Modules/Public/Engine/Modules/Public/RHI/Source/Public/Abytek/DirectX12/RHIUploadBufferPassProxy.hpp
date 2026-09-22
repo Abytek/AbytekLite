@@ -25,11 +25,11 @@ namespace Abytek
         
     public:
         ABYTEK_RA_DECLARE_OBJECT(F_DirectX12RHIUploadBufferPassProxy);
-        virtual void Build(const TW_Valid<A_RHIUploadBufferPass>& Pass) override;
-        virtual void Release() override;
+        void Build(const TW_Valid<A_RHIUploadBufferPass>& Pass) override;
+        void Release() override;
         
     public:
-        virtual void Execute(F_DirectX12RHIPassProxyExtensionExecuteParams& ExecuteParams) override;
+        void Execute(F_DirectX12RHIPassProxyExtensionExecuteParams& ExecuteParams) override;
     };
 }
 #endif

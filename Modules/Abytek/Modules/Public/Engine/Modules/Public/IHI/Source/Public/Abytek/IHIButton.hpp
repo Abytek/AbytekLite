@@ -240,7 +240,7 @@ namespace Abytek
     struct ABYTEK_ENGINE_IHI_API F_IHIButton
     {
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(F_IHIButton)
+        ABYTEK_END_REFLECTOR(F_IHIButton);
         
         E_IHIButtonDeviceType DeviceType = E_IHIButtonDeviceType::NONE;
         F_IHIButtonCode Code = 0;

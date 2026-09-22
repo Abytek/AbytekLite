@@ -182,11 +182,6 @@ function(Abytek_SAF_SetupApplication)
     set_target_properties(${CookedExecutable.TargetName} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CookedExecutable.TargetFileDirectory}"
     )
-    if(CMAKE_GENERATOR MATCHES "Visual Studio")
-        set_target_properties(${CookedExecutable.TargetName} PROPERTIES
-            VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${CookedExecutable.TargetName}>"
-        )
-    endif()
     if(ABYTEK_ENABLE_DEVELOPMENT_BUILD)
         set_target_properties(${DevelopmentExecutable.TargetName} PROPERTIES UNITY_BUILD ON)
         target_link_libraries(${DevelopmentExecutable.TargetName}
@@ -202,11 +197,6 @@ function(Abytek_SAF_SetupApplication)
         set_target_properties(${DevelopmentExecutable.TargetName} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${DevelopmentExecutable.TargetFileDirectory}"
         )
-        if(CMAKE_GENERATOR MATCHES "Visual Studio")
-            set_target_properties(${DevelopmentExecutable.TargetName} PROPERTIES
-                VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${DevelopmentExecutable.TargetName}>"
-            )
-        endif()
     endif()
 
     Abytek_ApplyDependencies(

@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "Abytek/Engine.SRP.prerequisites.hpp"
-#include "Abytek/RenderBase/RenderPath.hpp"
+#include "Abytek/Renderer/RenderPath.hpp"
 
 
 namespace Abytek
@@ -10,7 +10,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_RenderPath)
-        ABYTEK_END_REFLECTOR(F_SRPRenderPath)
+        ABYTEK_END_REFLECTOR(F_SRPRenderPath);
 
     private:
         

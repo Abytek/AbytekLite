@@ -11,7 +11,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_CookSetting)
-        ABYTEK_END_REFLECTOR(F_EBTCookSetting)
+        ABYTEK_END_REFLECTOR(F_EBTCookSetting);
         
     public:
         ABYTEK_DECLARE_STATIC_COOK_SETTING(F_EBTCookSetting);

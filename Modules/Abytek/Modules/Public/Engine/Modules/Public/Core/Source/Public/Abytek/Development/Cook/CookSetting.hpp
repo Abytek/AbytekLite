@@ -16,7 +16,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(F_ProgramUnit)
-        ABYTEK_END_REFLECTOR(A_CookSetting)
+        ABYTEK_END_REFLECTOR(A_CookSetting);
 
     private:
         TW<F_CookProfile> _Profile;

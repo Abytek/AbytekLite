@@ -3,22 +3,11 @@
 #include "Abytek/RenderCoreManager.hpp"
 #include "Abytek/ImGuiRenderData.hpp"
 #include "Abytek/RenderCoreHelper.hpp"
+#include "Abytek/RHISubmissionQueue.hpp"
 
 
 namespace Abytek
 {
-    namespace MathRenderer2D
-    {
-        ABYTEK_DEFINE_GLOBAL_RENDER_BINDING(F_DrawLineBinding)
-        {
-            ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::F_DrawLineBinding"));
-        }
-        ABYTEK_DEFINE_GLOBAL_RENDER_PIPELINE(F_DrawLinePipeline)
-        {
-            ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::F_DrawLinePipeline"));
-        }
-    }
-    
     F_MathRenderer2DProxy::F_MathRenderer2DProxy(const TW_Valid<F_MathRenderer2D>& MathRenderer2D) :
         _MathRenderer2D(MathRenderer2D),
         _ModuleName(MathRenderer2D->GetModuleName()),
@@ -67,15 +56,18 @@ namespace Abytek
         
         UpdateSpace();
         UpdateView();
-        ClearBackgroundColor(*SubmissionList);
-        DrawAxisLines(*SubmissionList);
+        ClearBackgroundColor(SubmissionList);
+        DrawAxisLines(SubmissionList);
         for (const auto& Line : FrameData.Lines)
         {
-            DrawLine(*SubmissionList, Line);
+            DrawLine(SubmissionList, Line);
         }
         
-        H_RHI::GetMainProcess()->AddSubmissionItem(SubmissionList);
-        H_RHI::GetMainProcess()->AddViewport(_Viewport);
+        H_RHI::GetMainSubmissionQueue()->AddSubmissionItem(SubmissionList);
+        H_RHISubmissionUtilities::PresentViewport(
+            H_RHI::GetMainSubmissionQueue(),
+            _Viewport
+        );
         
         _LastFrameData = _FrameData;
     }
@@ -103,7 +95,7 @@ namespace Abytek
         _ViewUniformData.InvTransform = Inverse(_ViewUniformData.Transform);
         _ViewUniformData.Scale = _FrameData.ViewScale;
     }
-    void F_MathRenderer2DProxy::ClearBackgroundColor(I_RHISubmissionItemContainer& SubmissionItemContainer)
+    void F_MathRenderer2DProxy::ClearBackgroundColor(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
         F_RHIClearRTVPassBuildParams ClearRTVPassBuildParams;
         ClearRTVPassBuildParams.Context = H_RHI::GetMainContext().Weak();
@@ -113,9 +105,9 @@ namespace Abytek
 #ifdef ABYTEK_DEBUG
         ClearRTVPass->SetDebugName(ABYTEK_DEBUG_NAME("ClearBackgroundColor"));
 #endif
-        SubmissionItemContainer.AddSubmissionItem(ClearRTVPass);
+        SubmissionItemContainer->AddSubmissionItem(ClearRTVPass);
     }
-    void F_MathRenderer2DProxy::DrawAxisLines(I_RHISubmissionItemContainer& SubmissionItemContainer)
+    void F_MathRenderer2DProxy::DrawAxisLines(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
         F32 LineDistance = 999999.0f;
         {
@@ -133,7 +125,7 @@ namespace Abytek
             DrawLine(SubmissionItemContainer, Line);
         }
     }
-    void F_MathRenderer2DProxy::DrawLine(I_RHISubmissionItemContainer& SubmissionItemContainer, const MathRenderer2D::F_Line& Line)
+    void F_MathRenderer2DProxy::DrawLine(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, const MathRenderer2D::F_Line& Line)
     {
         auto BindGroup = MathRenderer2D::F_DrawLineBinding::Instantiate(_RenderRegistryRuntime).CreateBindGroup();
         BindGroup->BindRTV(
@@ -152,7 +144,7 @@ namespace Abytek
         }
         BindGroup->Commit();
         
-        H_RHIPassUtilities::DrawNonIndexed(
+        H_RHISubmissionUtilities::DrawNonIndexed(
             SubmissionItemContainer,
             MathRenderer2D::F_DrawLinePipeline::Instantiate(_RenderRegistryRuntime).AcquirePipelineState(),
             { BindGroup },

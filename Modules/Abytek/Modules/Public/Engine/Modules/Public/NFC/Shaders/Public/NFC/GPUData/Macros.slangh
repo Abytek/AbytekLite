@@ -1,0 +1,21 @@
+#pragma once
+
+import NFC.GPUData.Common;
+
+#ifdef ABYTEK_GPU_DATA_ENABLE_MULTIPLE_PAGES
+#define ABYTEK_GPU_DATA_COMPONENT_TYPE_RW(Name) \
+    public RWByteAddressBuffer ___Abytek_GPUDataPages_##Name[];
+#define ABYTEK_GPU_DATA_COMPONENT_TYPE_RO(Name) \
+    public ByteAddressBuffer ___Abytek_GPUDataPages_##Name[];
+#else
+#define ABYTEK_GPU_DATA_COMPONENT_TYPE_RW(Name) \
+    public RWByteAddressBuffer ___Abytek_GPUDataPageSingle_##Name;
+#define ABYTEK_GPU_DATA_COMPONENT_TYPE_RO(Name) \
+    public ByteAddressBuffer ___Abytek_GPUDataPageSingle_##Name;
+#endif
+
+#ifdef ABYTEK_GPU_DATA_ENABLE_MULTIPLE_PAGES
+#define ABYTEK_GPU_DATA_GET_PAGE(ComponentName, ...) ___Abytek_GPUDataPages_##Name[NFC::GPUData::GetPageIndexFromInstanceAddress(__VA_ARGS__)]
+#else
+#define ABYTEK_GPU_DATA_GET_PAGE(ComponentName, ...) ___Abytek_GPUDataPageSingle_##Name
+#endif

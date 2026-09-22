@@ -28,15 +28,7 @@ namespace Abytek
         {
             return _BufferDataView;
         }
-        ABYTEK_FORCE_INLINE auto& InjectBufferDataView() noexcept
-        {
-            return _BufferDataView;
-        }
         ABYTEK_FORCE_INLINE const auto& GetBuffer() const noexcept
-        {
-            return _Buffer;
-        }
-        ABYTEK_FORCE_INLINE auto& InjectBuffer() noexcept
         {
             return _Buffer;
         }
@@ -44,9 +36,9 @@ namespace Abytek
         {
             return _OffsetInBytes;
         }
-        ABYTEK_FORCE_INLINE auto& InjectOffsetInBytes() noexcept
+        ABYTEK_FORCE_INLINE auto HasWork() const noexcept
         {
-            return _OffsetInBytes;
+            return !_BufferDataView.empty();
         }
 
     public:
@@ -55,7 +47,7 @@ namespace Abytek
         virtual void Release() override;
         
     public:
-        virtual E_RHIPassClass GetPassClass() override
+        virtual E_RHIPassClass GetPassClass() const override
         {
             return E_RHIPassClass::BLIT;
         }
@@ -65,6 +57,6 @@ namespace Abytek
         
     public:
         virtual B8 CanDetachCopyPass();
-        virtual void DetachCopyPass(I_RHISubmissionItemContainer& SubmissionItemContainer);
+        virtual void DetachCopyPass(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
     };
 }

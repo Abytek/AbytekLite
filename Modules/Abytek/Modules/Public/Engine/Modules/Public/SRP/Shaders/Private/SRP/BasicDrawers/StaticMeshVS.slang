@@ -14,22 +14,22 @@ ConstantBuffer<NFC::RenderGeometry::F_StaticMeshGeometryUniformData_Simple> Stat
 SRP::BasicDrawers::StaticMesh::F_PSInput MainVS(SRP::BasicDrawers::StaticMesh::F_VSInput VSInput)
 {
     uint VertexIndex = NFC::RenderGeometry::SimpleMesh_LoadVertexIndex(
-        StaticMeshGeometryUniformData_Simple.GeometryAllocation,
+        StaticMeshGeometryUniformData_Simple.GeometryAddress,
         StaticMeshGeometryUniformData_Simple.GeometryAllocationStructure,
         VSInput.VertexId
     );
     float3 VertexPosition = NFC::RenderGeometry::SimpleMesh_LoadVertexPosition(
-        StaticMeshGeometryUniformData_Simple.GeometryAllocation,
+        StaticMeshGeometryUniformData_Simple.GeometryAddress,
         StaticMeshGeometryUniformData_Simple.GeometryAllocationStructure,
         VertexIndex
     );
     float3 VertexNormal = NFC::RenderGeometry::SimpleMesh_LoadVertexNormal(
-        StaticMeshGeometryUniformData_Simple.GeometryAllocation,
+        StaticMeshGeometryUniformData_Simple.GeometryAddress,
         StaticMeshGeometryUniformData_Simple.GeometryAllocationStructure,
         VertexIndex
     );
     float2 VertexUV = NFC::RenderGeometry::SimpleMesh_LoadVertexUV(
-        StaticMeshGeometryUniformData_Simple.GeometryAllocation,
+        StaticMeshGeometryUniformData_Simple.GeometryAddress,
         StaticMeshGeometryUniformData_Simple.GeometryAllocationStructure,
         VertexIndex
     );

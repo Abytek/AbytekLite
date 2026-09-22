@@ -4,7 +4,7 @@
 #include "Abytek/World/WorldContext.hpp"
 #include "Abytek/Cookable.hpp"
 #include "Abytek/Renderable.hpp"
-#include "Abytek/Geometries/SimpleMeshData.hpp"
+#include "Abytek/Assets/SimpleMeshData.hpp"
 
    
 namespace Abytek
@@ -42,7 +42,7 @@ namespace Abytek
     struct F_StaticMeshSetting
     {
         ABYTEK_BEGIN_REFLECTOR(I_Serializable)
-        ABYTEK_END_REFLECTOR(F_StaticMeshSetting)
+        ABYTEK_END_REFLECTOR(F_StaticMeshSetting);
     };
     
     enum class E_StaticMeshFileImportFlag : U8
@@ -62,7 +62,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_WorldContext)
-        ABYTEK_END_REFLECTOR(F_StaticMesh)
+        ABYTEK_END_REFLECTOR(F_StaticMesh);
         
     protected:
         E_StaticMeshDataType _DataType = E_StaticMeshDataType::NONE;

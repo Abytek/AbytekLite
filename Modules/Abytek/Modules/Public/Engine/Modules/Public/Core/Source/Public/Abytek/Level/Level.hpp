@@ -32,7 +32,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR(A_WorldContext)
-        ABYTEK_END_REFLECTOR(F_Level)
+        ABYTEK_END_REFLECTOR(F_Level);
     
     private:
         E_LevelState _State = E_LevelState::CONTENT_UNLOADED;

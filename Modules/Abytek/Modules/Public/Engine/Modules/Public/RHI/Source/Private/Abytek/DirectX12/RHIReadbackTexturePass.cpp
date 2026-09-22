@@ -8,58 +8,6 @@
 #ifdef ABYTEK_ENGINE_RHI_ENABLE_DIRECTX12
 namespace Abytek
 {
-    ABYTEK_RA_OBJECT_DEFAULT(F_DirectX12RHICopyReadbackTexturePass);
-    void F_DirectX12RHICopyReadbackTexturePass::Build(const F_DirectX12RHICopyReadbackTexturePassBuildParams& BuildParams)
-    {
-        A_RHIPass::Build(BuildParams);
-        A_DirectX12RHIPassExtension::Build();
-        
-        _ReadbackPass = BuildParams.ReadbackPass;
-    }   
-    void F_DirectX12RHICopyReadbackTexturePass::Release()
-    {
-        _ReadbackPass = {};
-        
-        A_DirectX12RHIPassExtension::Release();
-        A_RHIPass::Release();
-    }
-
-    TS_Valid<A_RHIPassProxy> F_DirectX12RHICopyReadbackTexturePass::CreateProxy()
-    {
-        return RACreateAndBuildShared<F_DirectX12RHICopyReadbackTexturePassProxy>(ABYTEK_WTHIS());
-    }
-
-    void F_DirectX12RHICopyReadbackTexturePass::AppendSubresourceBindings(F_DirectX12RHISubresourceBindingSet& SubresourceBindingSet)
-    {
-        A_DirectX12RHIPassExtension::AppendSubresourceBindings(SubresourceBindingSet);
-        
-        auto TransientReadbackBuffer = _ReadbackPass->GetTransientReadbackBufferRange().GetBuffer();
-        auto Texture = _ReadbackPass->GetTexture();
-        auto NumSubresources = _ReadbackPass->GetNumSubresources();
-        
-        SubresourceBindingSet.push_back(
-            F_DirectX12RHISubresourceBinding::MakeCore(
-                F_DirectX12RHISubresourceReference::Make(
-                    TransientReadbackBuffer.Weak(),
-                    0
-                ),
-                F_RHIResourceAccess::MakeCopyDest()
-            )
-        );
-        for (U32 SubresourceIndex = 0; SubresourceIndex < NumSubresources; ++SubresourceIndex)
-        {
-            SubresourceBindingSet.push_back(
-                F_DirectX12RHISubresourceBinding::MakeCore(
-                    F_DirectX12RHISubresourceReference::Make(
-                        Texture.Weak(),
-                        SubresourceIndex
-                    ),
-                    F_RHIResourceAccess::MakeCopySrc()
-                )
-            );
-        }
-    }
-
     void F_DirectX12RHIReadbackTexturePass::Build(const F_RHIReadbackTexturePassBuildParams& BuildParams)
     {
         A_RHIReadbackTexturePass::Build(BuildParams);
@@ -125,7 +73,7 @@ namespace Abytek
             );
         }
         
-        _TransientReadbackBufferRange = Context->GetTransientReadbackBufferManager()->Allocate(
+        _TransientReadbackBufferRange = Context->GetTransientReadbackBufferManager_V2()->Allocate(
               D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT - 1
               + ReadbackSizeInBytes
         );
@@ -140,14 +88,20 @@ namespace Abytek
             SubImageFootprint.Offset += _TransientReadbackBufferRange.BeginOffsetInBytes;
         }
         
-        F_DirectX12RHICopyReadbackTexturePassBuildParams CopyPassBuildParams;
-        CopyPassBuildParams.Context = Context;
-        CopyPassBuildParams.ReadbackPass = ABYTEK_WTHIS();
-        _CopyPass = RACreateAndBuildShared<F_DirectX12RHICopyReadbackTexturePass>(CopyPassBuildParams);
+        _TransientReadbackBufferRange.Readback(
+            [ImageView = _ImageView, ReadBytes = _TransientReadbackBufferRange.GetSizeInBytes(), Callback = MoveCallback()](const F_RHIBufferDataView& BufferDataView)
+            {
+                memcpy(
+                    ImageView.Payload.Bytes.data(),
+                    BufferDataView.data(),
+                    ReadBytes
+                );
+                Callback(ImageView.GetReadOnly());
+            }
+        );
     }   
     void F_DirectX12RHIReadbackTexturePass::Release()
     {
-        _CopyPass = {};
         _SubImages_NumRow = {};
         _SubImages_ReadbackFootprint = {};
         _NumSubresources = 0;
@@ -161,50 +115,37 @@ namespace Abytek
     void F_DirectX12RHIReadbackTexturePass::AppendSubresourceBindings(F_DirectX12RHISubresourceBindingSet& SubresourceBindingSet)
     {
         A_DirectX12RHIPassExtension::AppendSubresourceBindings(SubresourceBindingSet);
+        
+        auto TransientReadbackBuffer = _TransientReadbackBufferRange.GetBuffer();
+        auto Texture = GetTexture();
+        auto NumSubresources = _NumSubresources;
+        
         SubresourceBindingSet.push_back(
             F_DirectX12RHISubresourceBinding::MakeCore(
                 F_DirectX12RHISubresourceReference::Make(
-                    _TransientReadbackBufferRange.GetBuffer().Weak(),
+                    TransientReadbackBuffer.Weak(),
                     0
                 ),
-                F_RHIResourceAccess::MakeReadback()
+                F_RHIResourceAccess::MakeCopyDest()
             )
         );
+        for (U32 SubresourceIndex = 0; SubresourceIndex < NumSubresources; ++SubresourceIndex)
+        {
+            SubresourceBindingSet.push_back(
+                F_DirectX12RHISubresourceBinding::MakeCore(
+                    F_DirectX12RHISubresourceReference::Make(
+                        Texture.Weak(),
+                        SubresourceIndex
+                    ),
+                    F_RHIResourceAccess::MakeCopySrc()
+                )
+            );
+        }
     }
 
     E_DirectX12RHIPassBatchType F_DirectX12RHIReadbackTexturePass::GetPassBatchType()
     {
-        return E_DirectX12RHIPassBatchType::CPU_SYNC;
+        return E_DirectX12RHIPassBatchType::GPU;
     }
-
-    void F_DirectX12RHIReadbackTexturePass::OnAddItemsBefore(I_RHISubmissionItemContainer& Container)
-    {
-        if (_CopyPass)
-        {
-            Container.AddSubmissionItem(_CopyPass);
-        }
-    }
-
-    B8 F_DirectX12RHIReadbackTexturePass::CanDetachCopyPass()
-    {
-        return static_cast<B8>(_CopyPass);
-    }
-    void F_DirectX12RHIReadbackTexturePass::DetachCopyPass(I_RHISubmissionItemContainer& SubmissionItemContainer)
-    {
-        ABYTEK_ENGINE_RHI_ASSERT(_CopyPass) << "Cannot detach copy pass";
-        SubmissionItemContainer.AddSubmissionItem(_CopyPass);
-        _CopyPass = {};
-    }
-
-#ifdef ABYTEK_DEBUG_INFO
-    void F_DirectX12RHIReadbackTexturePass::SetDebugName(const F_DebugName& Value) noexcept
-    {
-        A_RHIReadbackTexturePass::SetDebugName(Value);
-        if (_CopyPass)
-        {
-            _CopyPass->SetDebugName(F_Name(ToText(*GetDebugName()) + ABYTEK_TEXT(".CopyPass")));
-        }
-    }
-#endif
 }
 #endif

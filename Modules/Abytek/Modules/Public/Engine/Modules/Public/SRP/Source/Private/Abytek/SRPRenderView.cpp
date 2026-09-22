@@ -1,39 +1,38 @@
 ﻿#include "Abytek/SRPRenderView.hpp"
 #include "Abytek/RHIClearUAVUIntPass.hpp"
-#include "Abytek/RenderBase/WorldRenderResource.hpp"
+#include "Abytek/Renderer/WorldRenderResource.hpp"
 
 
 namespace Abytek
 {
-    F_SRPRenderView::F_SRPRenderView(const TW_Valid<F_WorldRenderResource>& WorldRenderResource, const F_RenderViewBuildParams& BuildParams) :
-        A_RenderView(WorldRenderResource, BuildParams)
+    void F_SRPRenderView::Init(
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
+        const F_RenderViewBuildParams& BuildParams
+    )
     {
+        A_RenderView::Init(SubmissionItemContainer, BuildParams);
     }
-    F_SRPRenderView::~F_SRPRenderView()
+    void F_SRPRenderView::Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
+        A_RenderView::Release(SubmissionItemContainer);
     }
 
-    void F_SRPRenderView::OnBeginFrame()
+    void F_SRPRenderView::OnBeginFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        A_RenderView::OnBeginFrame();
-        BeginOpaqueVisibilityBuffer();
+        A_RenderView::OnBeginFrame(SubmissionItemContainer);
+        BeginOpaqueVisibilityBuffer(SubmissionItemContainer);
         
         {
-            auto Context = H_RHI::GetMainContext();
-            auto Process = H_RHI::GetMainProcess();
-            
-            auto SubmissionList = RACreateAndBuildShared<A_RHISubmissionList>(Process.Weak());
-            ClearOpaqueVisibilityBuffer(*SubmissionList);
-            Process->AddSubmissionItem(SubmissionList);
+            ClearOpaqueVisibilityBuffer(SubmissionItemContainer);
         }
     }
-    void F_SRPRenderView::OnEndFrame()
+    void F_SRPRenderView::OnEndFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        EndOpaqueVisibilityBuffer();
-        A_RenderView::OnEndFrame();
+        EndOpaqueVisibilityBuffer(SubmissionItemContainer);
+        A_RenderView::OnEndFrame(SubmissionItemContainer);
     }
 
-    void F_SRPRenderView::BeginOpaqueVisibilityBuffer()
+    void F_SRPRenderView::BeginOpaqueVisibilityBuffer(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
         auto Context = H_RHI::GetMainContext();
         
@@ -66,20 +65,20 @@ namespace Abytek
         OpaqueVisibilityUAVBuildParams.TextureViewAspect.UAVClearable = true;
         _OpaqueVisibilityUAV = RACreateAndBuildShared<A_RHIResourceView>(OpaqueVisibilityUAVBuildParams);
     }
-    void F_SRPRenderView::EndOpaqueVisibilityBuffer()
+    void F_SRPRenderView::EndOpaqueVisibilityBuffer(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
         _OpaqueVisibilityUAV = {};
         _OpaqueVisibilitySRV = {};
         _OpaqueVisibilityBuffer = {};
     }
 
-    void F_SRPRenderView::ClearOpaqueVisibilityBuffer(I_RHISubmissionItemContainer& SubmissionItemContainer)
+    void F_SRPRenderView::ClearOpaqueVisibilityBuffer(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
         F_RHIClearUAVUIntPassBuildParams PassBuildParams;
         PassBuildParams.Context = H_RHI::GetMainContext().Weak();
         PassBuildParams.UAV = _OpaqueVisibilityUAV;
         F_Vector4_U64 ClearValue(ABYTEK_U64_MAX);
-        H_RHIPassUtilities::ClearUAVUInt(
+        H_RHISubmissionUtilities::ClearUAVUInt(
             SubmissionItemContainer,
             _OpaqueVisibilityUAV,
             ClearValue,

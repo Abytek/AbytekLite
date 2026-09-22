@@ -13,7 +13,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR(A_ActorComponent)
-        ABYTEK_END_REFLECTOR(A_RenderableComponent)
+        ABYTEK_END_REFLECTOR(A_RenderableComponent);
         
     public:
         static F_Name GetCreateAndDestroyRenderStateUpdateFunctionName();

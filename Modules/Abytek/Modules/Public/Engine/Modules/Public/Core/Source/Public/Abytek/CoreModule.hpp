@@ -16,7 +16,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_ApplicationModule)
-        ABYTEK_END_REFLECTOR(F_CoreModule)
+        ABYTEK_END_REFLECTOR(F_CoreModule);
         
     public:
         ABYTEK_DECLARE_STATIC_APPLICATION_MODULE(F_CoreModule);

@@ -1604,7 +1604,9 @@ namespace Abytek
         for (const auto& SlangShaderFilePath : GatheredSlangShaderFilePaths)
         {
             F_RHISlangShaderFileVersion ShaderFileVersion = F_RHISlangShaderFileVersion::Make(SlangShaderFilePath);
-            ShaderFileVersion.LoadCurrent();
+            ABYTEK_FEEDBACK_STATUS_CHECK(
+                ShaderFileVersion.LoadCurrent()
+            );
             OutCompiledObject->AddSlangShaderFileVersion(ShaderFileVersion);
         }
         return F_RHICommonCompilationStatus::MakeSucceeded();

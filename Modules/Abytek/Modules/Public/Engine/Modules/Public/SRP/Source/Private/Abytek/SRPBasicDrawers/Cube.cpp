@@ -3,20 +3,8 @@
 
 namespace Abytek
 {
-    namespace SRPBasicDrawers
-    {
-        ABYTEK_DEFINE_GLOBAL_RENDER_BINDING(F_CubeBinding)
-        {
-            ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::SRPBasicDrawers::F_CubeBinding"));
-        }
-        ABYTEK_DEFINE_GLOBAL_RENDER_PIPELINE(F_CubePipeline)
-        {
-            ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::SRPBasicDrawers::F_CubePipeline"));
-        }
-    }
-
     void H_SRPCubeDrawer::Render(
-        I_RHISubmissionItemContainer& SubmissionItemContainer,
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
         const TW_Valid<A_RenderView>& View, 
         const F_Matrix4x4_F32& CubeTransformMatrix, 
         const F_Vector4_F32& CubeColor, 
@@ -38,7 +26,7 @@ namespace Abytek
         SRPBasicDrawers::F_CubePipeline::F_DynamicPermutationVector PermutationVector;
         PermutationVector.Get<SRPBasicDrawers::F_CubePipeline::F_FillMode>() = FillMode;
         
-        H_RHIPassUtilities::DrawNonIndexed(
+        H_RHISubmissionUtilities::DrawNonIndexed(
             SubmissionItemContainer,
             SRPBasicDrawers::F_CubePipeline::Instantiate(
                 View->GetRenderRegistryRuntime(), 

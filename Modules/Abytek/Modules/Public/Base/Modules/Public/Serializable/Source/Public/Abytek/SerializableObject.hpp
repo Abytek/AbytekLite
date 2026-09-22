@@ -302,7 +302,7 @@ namespace Abytek
                     )
                 );
             }
-        ABYTEK_END_REFLECTOR(A_SerializableObject)
+        ABYTEK_END_REFLECTOR(A_SerializableObject);
         
     private:
         TF_ReflectionTypeHandle<A_SerializableObject> _Type;

@@ -86,17 +86,15 @@ namespace Abytek
         {
             ABYTEK_PROFILER_THREAD();
         
-            _TaskManager->Start(
-                {
-                    {
-                        [this]()
-                        {
-                            ABYTEK_PROFILER_EVENT();
-                            Main();
-                        }
-                    }
-                }
-            );
+            F_TaskInstanceSet MainTaskInstanceSet;
+            MainTaskInstanceSet.Name = ABYTEK_NAME("Abytek::MainTaskInstance");
+            MainTaskInstanceSet.StackSize = E_TaskStackSize::EXTREME;
+            MainTaskInstanceSet.Functor = [this]
+            {
+                ABYTEK_PROFILER_EVENT();
+                Main();
+            };
+            _TaskManager->Start(ABYTEK_MOVE(MainTaskInstanceSet));
             _TaskManager->Join();
         }
         

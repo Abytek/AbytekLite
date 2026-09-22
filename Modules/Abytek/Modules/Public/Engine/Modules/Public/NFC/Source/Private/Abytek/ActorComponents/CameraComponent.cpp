@@ -4,7 +4,7 @@
 #include "Abytek/ActorComponents/SceneComponent.hpp"
 #include "Abytek/ActorComponents/Render/CameraRenderProxy.hpp"
 #include "Abytek/ActorComponents/Render/CanvasRenderProxy.hpp"
-#include "Abytek/RenderBase/RenderScene.hpp"
+#include "Abytek/Renderer/RenderScene.hpp"
 #include "Abytek/Frame/FrameHelper.hpp"
 
 
@@ -330,7 +330,7 @@ namespace Abytek
                 RenderProxy = GetRenderProxy().FastCast<F_CameraRenderProxy>()
             ]
             {
-                RenderProxy->Draw_RenderTask();
+                RenderProxy->Draw_RenderTask(H_RHI::GetMainSubmissionQueue());
             }
         );
     }

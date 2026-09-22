@@ -323,7 +323,7 @@ namespace Abytek
                     )
                 );
             }
-        ABYTEK_END_REFLECTOR(I_BinarySerializable)
+        ABYTEK_END_REFLECTOR(I_BinarySerializable);
     };
     
     template<typename __F_Value, std::enable_if_t<IsBinarySerializable_ByReflection<__F_Value>(), int> = 0>

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Abytek/Engine.SRP.prerequisites.hpp"
-#include "Abytek/RenderBase/RenderViewFamily.hpp"
+#include "Abytek/Renderer/RenderViewFamily.hpp"
 
 
 namespace Abytek
@@ -13,7 +13,13 @@ namespace Abytek
     public:
 
     public:
-        F_SRPRenderViewFamily(const TW_Valid<F_WorldRenderResource>& WorldRenderResource, const F_RenderViewFamilyBuildParams& BuildParams);
-        ~F_SRPRenderViewFamily() override;
+        ABYTEK_RENDER_OBJECT_CREATABLE(F_SRPRenderViewFamily, A_RenderViewFamily);
+        
+    public:
+        void Init(
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, 
+            const F_RenderViewFamilyBuildParams& BuildParams
+        ) override;
+        void Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
     };
 }

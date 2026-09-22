@@ -148,13 +148,6 @@ namespace Abytek
         D3D12_CPU_DESCRIPTOR_HANDLE D3D12CPUDescriptorHandle = _D3D12DescriptorHeap_NonShaderVisible->GetCPUDescriptorHandleForHeapStart();
         D3D12CPUDescriptorHandle.ptr += static_cast<Sz>(D3D12CPUDescriptorStride) * static_cast<Sz>(Query.DescriptorIndex);
         
-        D3D12_CPU_DESCRIPTOR_HANDLE D3D12CPUDescriptorHandle_ShaderVisible = {};
-        if (_IsShaderVisible)
-        {
-            D3D12CPUDescriptorHandle_ShaderVisible = _D3D12DescriptorHeap_NonShaderVisible->GetCPUDescriptorHandleForHeapStart();
-            D3D12CPUDescriptorHandle_ShaderVisible.ptr += static_cast<Sz>(D3D12CPUDescriptorStride) * static_cast<Sz>(Query.DescriptorIndex);
-        }
-        
         switch (Query.D3D12DescriptorDesc.Type)
         {
         case DirectX12SharedAPIWrapper::E_DescriptorType::CBV:
@@ -162,13 +155,6 @@ namespace Abytek
                 &Query.D3D12DescriptorDesc.D3D12CBVDesc, 
                 D3D12CPUDescriptorHandle
             );
-            if (_IsShaderVisible)
-            {
-                D3D12Device->CreateConstantBufferView(
-                    &Query.D3D12DescriptorDesc.D3D12CBVDesc, 
-                    D3D12CPUDescriptorHandle_ShaderVisible
-                );
-            }
             break;
         case DirectX12SharedAPIWrapper::E_DescriptorType::SRV:
             D3D12Device->CreateShaderResourceView(
@@ -176,14 +162,6 @@ namespace Abytek
                 &Query.D3D12DescriptorDesc.D3D12SRVDesc, 
                 D3D12CPUDescriptorHandle
             );
-            if (_IsShaderVisible)
-            {
-                D3D12Device->CreateShaderResourceView(
-                    Query.D3D12DescriptorDesc.D3D12Resource.Get(), 
-                    &Query.D3D12DescriptorDesc.D3D12SRVDesc, 
-                    D3D12CPUDescriptorHandle_ShaderVisible
-                );
-            }
             break;
         case DirectX12SharedAPIWrapper::E_DescriptorType::UAV:
             D3D12Device->CreateUnorderedAccessView(
@@ -192,15 +170,6 @@ namespace Abytek
                 &Query.D3D12DescriptorDesc.D3D12UAVDesc, 
                 D3D12CPUDescriptorHandle
             );
-            if (_IsShaderVisible)
-            {
-                D3D12Device->CreateUnorderedAccessView(
-                    Query.D3D12DescriptorDesc.D3D12Resource.Get(), 
-                    nullptr, 
-                    &Query.D3D12DescriptorDesc.D3D12UAVDesc, 
-                    D3D12CPUDescriptorHandle_ShaderVisible
-                );
-            }
             break;
         case DirectX12SharedAPIWrapper::E_DescriptorType::RTV:
             D3D12Device->CreateRenderTargetView(
@@ -226,6 +195,17 @@ namespace Abytek
             ABYTEK_ENGINE_RHI_ASSERT(false) << "Unknown init type";
             break;
         }
+        if (_IsShaderVisible)
+        {
+            DirectX12RHIDescriptorManagerQueries::F_Copy CopyQuery;
+            CopyQuery.SrcDescriptorRange.ManagerProxy = ABYTEK_WTHIS();
+            CopyQuery.SrcDescriptorRange.BeginOffset = Query.DescriptorIndex;
+            CopyQuery.SrcDescriptorRange.EndOffset = CopyQuery.SrcDescriptorRange.BeginOffset + 1;
+            CopyQuery.DstDescriptorRange = CopyQuery.SrcDescriptorRange;
+            CopyQuery.SrcIsShaderVisible = false;
+            CopyQuery.DstIsShaderVisible = true;
+            Queues.Copy.Push(CopyQuery);
+        }
     }
     void F_DirectX12RHIDescriptorManagerProxy::FlushCopies()
     {
@@ -241,28 +221,28 @@ namespace Abytek
         DirectX12RHIDescriptorManagerQueries::F_Copy Query;
         while (Queues.Copy.TryPop(Query))
         {
-            ABYTEK_ENGINE_RHI_ASSERT(Query.DestDescriptorRange.Manager == ABYTEK_WTHIS());
-            ABYTEK_ENGINE_RHI_ASSERT(Query.DestDescriptorRange.GetSize() == Query.SrcDescriptorRange.GetSize());
+            ABYTEK_ENGINE_RHI_ASSERT(Query.DstDescriptorRange.ManagerProxy == ABYTEK_WTHIS());
+            ABYTEK_ENGINE_RHI_ASSERT(Query.DstDescriptorRange.GetSize() == Query.SrcDescriptorRange.GetSize());
             
             ++NumCopies;
             DstD3D12CPUDescriptorHandles.push_back(
-                Query.DestDescriptorRange.GetCPUHandle(false)
+                Query.DstDescriptorRange.GetCPUHandle(Query.DstIsShaderVisible)
             );
             SrcD3D12CPUDescriptorHandles.push_back(
-                Query.SrcDescriptorRange.GetCPUHandle(false)
+                Query.SrcDescriptorRange.GetCPUHandle(Query.SrcIsShaderVisible)
             );
-            CopySizes.push_back(Query.DestDescriptorRange.GetSize());
+            CopySizes.push_back(Query.DstDescriptorRange.GetSize());
 
             if (_IsShaderVisible)
             {
                 ++NumCopies;
                 DstD3D12CPUDescriptorHandles.push_back(
-                    Query.DestDescriptorRange.GetCPUHandle(true)
+                    Query.DstDescriptorRange.GetCPUHandle(true)
                 );
                 SrcD3D12CPUDescriptorHandles.push_back(
                     Query.SrcDescriptorRange.GetCPUHandle(false)
                 );
-                CopySizes.push_back(Query.DestDescriptorRange.GetSize());
+                CopySizes.push_back(Query.DstDescriptorRange.GetSize());
             }
         }
         

@@ -73,7 +73,7 @@ namespace Abytek
     class ABYTEK_ENGINE_CORE_API A_ApplicationCore : public A_Program
     {
         ABYTEK_BEGIN_REFLECTOR(A_Program)
-        ABYTEK_END_REFLECTOR(A_ApplicationCore)
+        ABYTEK_END_REFLECTOR(A_ApplicationCore);
         
     public:
         ABYTEK_DECLARE_OBJECT_SINGLETON_CRT(A_ApplicationCore);

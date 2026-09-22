@@ -77,7 +77,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_WorldContext)
-        ABYTEK_END_REFLECTOR(F_RenderPack)
+        ABYTEK_END_REFLECTOR(F_RenderPack);
     
     private:
         TS<F_RenderRegistry> _Registry;

@@ -9,7 +9,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_ApplicationModule)
-        ABYTEK_END_REFLECTOR(F_EmptyModule2)
+        ABYTEK_END_REFLECTOR(F_EmptyModule2);
         
     public:
         ABYTEK_DECLARE_STATIC_APPLICATION_MODULE(F_EmptyModule2);

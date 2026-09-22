@@ -9,7 +9,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(F_RenderPack)
-        ABYTEK_END_REFLECTOR(F_GlobalRenderPack)
+        ABYTEK_END_REFLECTOR(F_GlobalRenderPack);
     
     public:
         static F_Name GetStaticName();

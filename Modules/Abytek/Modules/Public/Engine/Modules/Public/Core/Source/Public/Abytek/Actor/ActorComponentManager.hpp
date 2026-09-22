@@ -30,7 +30,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR(A_ApplicationSubsystem)
-        ABYTEK_END_REFLECTOR(F_ActorComponentManager)
+        ABYTEK_END_REFLECTOR(F_ActorComponentManager);
         
     public:
         ABYTEK_DECLARE_STATIC_APPLICATION_SUBSYSTEM(F_ActorComponentManager);

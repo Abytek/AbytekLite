@@ -13,13 +13,4 @@ namespace Abytek
     {
         return (View << *Value);
     }
-    inline F_FeedbackStatus operator << (F_ArchiveReadWriteView& View, const F_DebugName& Value) noexcept
-    {
-        View << Value.GetMode();
-        if (Value)
-        {
-            ABYTEK_FEEDBACK_STATUS_CHECK(View << F_Text(Value.GetDataP()));
-        }
-        return F_FeedbackStatus::MakeSucceeded();
-    }
 }

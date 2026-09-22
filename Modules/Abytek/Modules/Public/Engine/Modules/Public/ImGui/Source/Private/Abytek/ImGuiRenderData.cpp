@@ -1,4 +1,5 @@
 ﻿#include "Abytek/ImGuiRenderData.hpp"
+#include "Abytek/RHISubmissionQueue.hpp"
 #include "Abytek/DirectX12/RHIEventStack.hpp"
 #include "Abytek/DirectX12/RHIResourceProxy.hpp"
 
@@ -50,7 +51,7 @@ namespace Abytek
         return E_DirectX12RHIExecutionRangeType::USE_COMMAND_QUEUE;
     }
 
-    E_RHIPassClass F_DirectX12ImGuiPass::GetPassClass()
+    E_RHIPassClass F_DirectX12ImGuiPass::GetPassClass() const
     {
         return E_RHIPassClass::GRAPHICS;
     }
@@ -58,7 +59,7 @@ namespace Abytek
     ABYTEK_RA_OBJECT_DEFAULT(F_DirectX12ImGuiPassProxy);
     void F_DirectX12ImGuiPassProxy::Build(const TW_Valid<A_RHIPass>& Pass)
     {
-        A_RHIPassProxy::Build(Pass);
+        BuildPassProxy(Pass);
         A_DirectX12RHIPassProxyExtension::Build(Pass);
         auto CastedPass = Pass.FastCast<F_DirectX12ImGuiPass>();
         _RenderData = CastedPass->GetRenderData();
@@ -289,14 +290,14 @@ namespace Abytek
         }
         
         TS<A_RHIViewport> Viewport;
-        for (const auto& ViewportToIterate : H_RHI::GetMainProcess()->GetViewports())
+        /*for (const auto& ViewportToIterate : H_RHI::GetMainSubmissionQueue()->GetViewports())
         {
             if (ViewportToIterate->GetWindow() == Window)
             {
                 Viewport = ViewportToIterate;
                 break;
             }
-        }
+        }*/
         if (!Viewport)
         {
             return {};
@@ -334,7 +335,7 @@ namespace Abytek
                 {
                     return;
                 }
-                H_RHI::GetMainProcess()->AddSubmissionItem(SubmissionItem);
+                H_RHI::GetMainSubmissionQueue()->AddSubmissionItem(SubmissionItem);
             }
         );
     }

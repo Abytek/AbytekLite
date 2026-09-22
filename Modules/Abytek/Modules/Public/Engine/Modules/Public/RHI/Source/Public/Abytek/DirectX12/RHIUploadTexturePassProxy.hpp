@@ -10,41 +10,6 @@ namespace Abytek
     class F_DirectX12RHICopyUploadTexturePass;
     class F_DirectX12RHIUploadTexturePassProxy;
     
-    class ABYTEK_ENGINE_RHI_API F_DirectX12RHICopyUploadTexturePassProxy : public A_RHIPassProxy, public A_DirectX12RHIPassProxyExtension
-    {
-    private:
-        TS<A_RHIResourceProxy> _TextureProxy;
-        TS<A_RHIResourceProxy> _UploadBufferProxy;
-        U32 _NumSubresources = 0;
-        TF_SmallVector<D3D12_PLACED_SUBRESOURCE_FOOTPRINT, 3> _SubImages_UploadFootprint;
-        
-    public:
-        ABYTEK_FORCE_INLINE const auto& GetTextureProxy() const noexcept
-        {
-            return _TextureProxy;
-        }
-        ABYTEK_FORCE_INLINE const auto& GetUploadBufferProxy() const noexcept
-        {
-            return _UploadBufferProxy;
-        }
-        ABYTEK_FORCE_INLINE auto GetNumSubresources() const noexcept
-        {
-            return _NumSubresources;
-        }
-        ABYTEK_FORCE_INLINE const auto& GetSubImages_UploadFootprint() const noexcept
-        {
-            return _SubImages_UploadFootprint;
-        }
-        
-    public:
-        ABYTEK_RA_DECLARE_OBJECT_CREATABLE(F_DirectX12RHICopyUploadTexturePassProxy);
-        void Build(const TW_Valid<F_DirectX12RHICopyUploadTexturePass>& Pass);
-        void Release() override;
-        
-    public:
-        void Execute(F_DirectX12RHIPassProxyExtensionExecuteParams& ExecuteParams) override;
-    };
-    
     class ABYTEK_ENGINE_RHI_API F_DirectX12RHIUploadTexturePassProxy : public A_RHIUploadTexturePassProxy, public A_DirectX12RHIPassProxyExtension
     {
     private:

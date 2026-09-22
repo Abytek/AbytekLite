@@ -2,6 +2,7 @@
 #include "Abytek/RenderProxy.hpp"
 #include "Abytek/RenderRegistry.hpp"
 #include "Abytek/RenderCoreManager.hpp"
+#include "Abytek/RHISubmissionQueue.hpp"
 #include "Abytek/World/WorldContext.hpp"
 #include "Abytek/Frame/FrameHelper.hpp"
 #include "Abytek/World/WorldContextHelper.hpp"
@@ -58,11 +59,19 @@ namespace Abytek
     void A_Renderable::CreateRenderState()
     {
         _CreatedRenderState = true;
+#ifdef ABYTEK_DEBUG_INFO
+        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
+            [RenderProxy = _RenderProxy, DebugName = ABYTEK_WTHIS().DynamicCast<A_Object>()->GetDebugName()]
+            {
+                RenderProxy->SetDebugName(DebugName);
+            }
+        );
+#endif
         OnCreateRenderState();
         H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
             [RenderProxy = _RenderProxy]
             {
-                RenderProxy->OnCreateRenderState_RenderTask();
+                RenderProxy->OnCreateRenderState_RenderTask(H_RHI::GetMainSubmissionQueue());
             }
         );
     }
@@ -72,9 +81,17 @@ namespace Abytek
         H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
             [RenderProxy = _RenderProxy]
             {
-                RenderProxy->OnDestroyRenderState_RenderTask();
+                RenderProxy->OnDestroyRenderState_RenderTask(H_RHI::GetMainSubmissionQueue());
             }
         );
+#ifdef ABYTEK_DEBUG_INFO
+        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
+            [RenderProxy = _RenderProxy]
+            {
+                RenderProxy->SetDebugName({});
+            }
+        );
+#endif
         _CreatedRenderState = false;
     }
     void A_Renderable::RecreateRenderState()

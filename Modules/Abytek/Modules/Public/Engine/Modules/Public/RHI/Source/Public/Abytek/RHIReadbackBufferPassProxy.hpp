@@ -20,15 +20,7 @@ namespace Abytek
         {
             return _BufferProxy;
         }
-        ABYTEK_FORCE_INLINE auto& InjectBufferProxy() noexcept
-        {
-            return _BufferProxy;
-        }
         ABYTEK_FORCE_INLINE auto GetSizeInBytes() const noexcept
-        {
-            return _SizeInBytes;
-        }
-        ABYTEK_FORCE_INLINE auto& InjectSizeInBytes() noexcept
         {
             return _SizeInBytes;
         }
@@ -36,17 +28,13 @@ namespace Abytek
         {
             return _OffsetInBytes;
         }
-        ABYTEK_FORCE_INLINE auto& InjectOffsetInBytes() noexcept
-        {
-            return _OffsetInBytes;
-        }
         ABYTEK_FORCE_INLINE const auto& GetCallback() const noexcept
         {
             return _Callback;
         }
-        ABYTEK_FORCE_INLINE auto& InjectCallback() noexcept
+        ABYTEK_FORCE_INLINE auto HasWork() const noexcept
         {
-            return _Callback;
+            return _SizeInBytes > 0;
         }
         
     public:

@@ -41,7 +41,7 @@ namespace Abytek
     {
         return false;
     }
-    void A_RHIUploadTexturePass::DetachCopyPass(I_RHISubmissionItemContainer& SubmissionItemContainer)
+    void A_RHIUploadTexturePass::DetachCopyPass(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
         ABYTEK_LOG_FATAL() << "Not supported";
     }

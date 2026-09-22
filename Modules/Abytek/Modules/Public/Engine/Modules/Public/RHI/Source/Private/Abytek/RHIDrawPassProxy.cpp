@@ -19,7 +19,7 @@ namespace Abytek
     ABYTEK_RA_END_OBJECT()
     void A_RHIDrawPassProxy::Build(const TW_Valid<A_RHIDrawPass>& Pass)
     {
-        A_RHIPassProxy::Build(Pass);
+        BuildPassProxy(Pass);
         A_RHIHasGeneralPipelineProxy::Build(Pass);
         _DrawType = Pass->GetDrawType();
         _NonIndexed = Pass->GetNonIndexed();

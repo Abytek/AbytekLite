@@ -1,10 +1,12 @@
 #pragma once
 
 #include "Abytek/Engine.RHI.prerequisites.hpp"
+#include "Abytek/RHICaptureEventState.hpp"
 
 
 namespace Abytek
 {
+    class A_RHISubmissionItemContainer;
     struct I_RHISubmissionItemContainer;
     struct A_RHISubmissionItemLocalCollector;
     class A_RHIProcess;
@@ -15,20 +17,33 @@ namespace Abytek
         friend struct I_RHISubmissionItemContainer;
         
     private:
-#ifdef ABYTEK_ENGINE_RHI_ENABLE_PROFILER
-        F_Vector3_F32 _ProfilerEventColor = F_Vector3_F32::One();
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
+        F_RHICaptureEventState _CaptureEventState;
+        TF_Vector<F_RHICaptureEventState> _StackCaptureEventStates;
 #endif
         
     public:
         virtual TW_Valid<A_RHIProcess> GetProcess() const = 0;
-#ifdef ABYTEK_ENGINE_RHI_ENABLE_PROFILER
-        ABYTEK_FORCE_INLINE const auto& GetProfilerEventColor() const noexcept
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
+        ABYTEK_FORCE_INLINE auto& GetCaptureEventState() noexcept
         {
-            return _ProfilerEventColor;
+            return _CaptureEventState;
         }
-        void SetProfilerEventColor(const F_Vector3_F32& ProfilerEventColor) noexcept
+        ABYTEK_FORCE_INLINE const auto& GetCaptureEventState() const noexcept
         {
-            _ProfilerEventColor = ProfilerEventColor;
+            return _CaptureEventState;
+        }
+        void SetCaptureEventState(const F_RHICaptureEventState& Value) noexcept
+        {
+            _CaptureEventState = Value;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetStackCaptureEventStates() const noexcept
+        {
+            return _StackCaptureEventStates;
+        }
+        void AddStackCaptureEventState(const F_RHICaptureEventState& Value) noexcept
+        {
+            _StackCaptureEventStates.push_back(Value);
         }
 #endif
         
@@ -37,10 +52,15 @@ namespace Abytek
         virtual void Release() override;
 
     protected:
-        virtual void Build();
+        void BuildSubmissionItem();
         
     protected:
-        virtual void OnAddItemsBefore(I_RHISubmissionItemContainer& Container);
-        virtual void OnAddItemsAfter(I_RHISubmissionItemContainer& Container);
+        virtual void OnAddItemsBefore(const TW_Valid<I_RHISubmissionItemContainer>& Container);
+        virtual void OnAddItemsAfter(const TW_Valid<I_RHISubmissionItemContainer>& Container);
+        
+#ifdef ABYTEK_DEBUG_INFO
+    public:
+        void SetDebugName(const F_DebugName& Value) noexcept override;
+#endif
     };
 }

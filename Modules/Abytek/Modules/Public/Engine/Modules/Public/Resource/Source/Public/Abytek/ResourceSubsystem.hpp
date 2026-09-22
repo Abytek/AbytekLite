@@ -15,7 +15,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(F_ResourceManager)
+        ABYTEK_END_REFLECTOR(F_ResourceManager);
         
     private:
         E_FrameParamType _FrameParamType = E_FrameParamType::NUM;
@@ -48,7 +48,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_ApplicationSubsystem)
-        ABYTEK_END_REFLECTOR(F_ResourceSubsystem)
+        ABYTEK_END_REFLECTOR(F_ResourceSubsystem);
 
     public:
         ABYTEK_DECLARE_STATIC_APPLICATION_SUBSYSTEM(F_ResourceSubsystem);

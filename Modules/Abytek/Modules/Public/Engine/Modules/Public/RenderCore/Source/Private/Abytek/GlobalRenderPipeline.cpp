@@ -3,8 +3,8 @@
 
 namespace Abytek
 {
-    ABYTEK_REFLECT(A_GlobalRenderPipeline)
+    ABYTEK_REFLECT(F_GlobalRenderPipeline)
     {
-        ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::A_GlobalRenderPipeline"));
+        ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::F_GlobalRenderPipeline"));
     }
 }

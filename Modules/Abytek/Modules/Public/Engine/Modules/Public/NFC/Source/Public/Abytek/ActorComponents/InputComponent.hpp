@@ -10,7 +10,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_ActorComponent)
-        ABYTEK_END_REFLECTOR(F_InputComponent)
+        ABYTEK_END_REFLECTOR(F_InputComponent);
         
     public:
         friend class F_InputComponentManager;

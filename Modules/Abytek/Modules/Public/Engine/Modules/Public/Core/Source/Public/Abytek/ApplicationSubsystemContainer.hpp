@@ -12,7 +12,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR(F_SubsystemContainer)
-        ABYTEK_END_REFLECTOR(F_ApplicationSubsystemContainer)
+        ABYTEK_END_REFLECTOR(F_ApplicationSubsystemContainer);
         
     public:
         ABYTEK_DECLARE_OBJECT_SINGLETON_CRT(F_ApplicationSubsystemContainer);

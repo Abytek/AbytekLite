@@ -33,7 +33,7 @@ namespace Abytek
     struct F_TextureSetting
     {
         ABYTEK_BEGIN_REFLECTOR(I_Serializable)
-        ABYTEK_END_REFLECTOR(F_TextureSetting)
+        ABYTEK_END_REFLECTOR(F_TextureSetting);
         
         B8 EnableSRV = true;
         B8 EnableUAV = false;
@@ -106,7 +106,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_WorldContext)
-        ABYTEK_END_REFLECTOR(F_Texture)
+        ABYTEK_END_REFLECTOR(F_Texture);
         
     protected:
         TF_Optional<F_TextureImageBulkHeader> _LastImageBulkHeader;

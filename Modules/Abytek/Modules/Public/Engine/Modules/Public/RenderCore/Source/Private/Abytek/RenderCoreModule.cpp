@@ -47,8 +47,8 @@ namespace Abytek
         RegisterStaticType<F_RenderRegistryRuntime>();
         RegisterStaticType<F_RenderPack>();
         RegisterStaticType<F_GlobalRenderPack>();
-        RegisterStaticType<A_GlobalRenderBinding>();
-        RegisterStaticType<A_GlobalRenderPipeline>();
+        RegisterStaticType<F_GlobalRenderBinding>();
+        RegisterStaticType<F_GlobalRenderPipeline>();
     }
 
     void F_RenderCoreModule::OnInit()

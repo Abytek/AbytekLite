@@ -26,7 +26,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(F_RenderRegistryRuntime)
+        ABYTEK_END_REFLECTOR(F_RenderRegistryRuntime);
         
     private:
         TW<F_RenderRegistry> _Registry;

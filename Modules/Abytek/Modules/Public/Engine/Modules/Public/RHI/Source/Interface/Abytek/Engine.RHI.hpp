@@ -64,7 +64,7 @@
 #include "Abytek/RHIPass.hpp"
 #include "Abytek/RHIPassClass.hpp"
 #include "Abytek/RHIGPUWorkClass.hpp"
-#include "Abytek/RHIPassUtilities.hpp"
+#include "Abytek/RHISubmissionUtilities.hpp"
 #include "Abytek/RHIHasGeneralPipeline.hpp"
 #include "Abytek/RHIHasGeneralPipelineProxy.hpp"
 #include "Abytek/RHIClearRTVPass.hpp"

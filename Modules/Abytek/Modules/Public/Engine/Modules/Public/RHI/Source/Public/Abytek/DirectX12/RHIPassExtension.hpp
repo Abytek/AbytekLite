@@ -5,7 +5,7 @@
 #include "Abytek/DirectX12/RHISubmissionItemExtension.hpp"
 #include "Abytek/DirectX12/RHIResource.hpp"
 #include "Abytek/DirectX12/RHIContext.hpp"
-#include "Abytek/DirectX12/RHIProfilerEventState.hpp"
+#include "Abytek/RHICaptureEventState.hpp"
 #include "Abytek/DirectX12/RHIPassBatch.hpp"
 
 
@@ -39,9 +39,9 @@ namespace Abytek
         F_DirectX12RHIResourceBarrierProxySet D3D12ResourceBarrierProxies_Before;
         F_DirectX12RHIResourceBarrierProxySet D3D12ResourceBarrierProxies_After;
         
-#ifdef ABYTEK_ENGINE_RHI_ENABLE_PROFILER
-        TF_SmallVector<F_DirectX12RHIProfilerEventState, 1> ProfilerEventStatesToBegin;
-        TF_SmallVector<F_DirectX12RHIProfilerEventState, 1> ProfilerEventStatesToEnd;
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
+        TF_SmallVector<F_RHICaptureEventState, 1> CaptureEventStatesToBegin;
+        TF_SmallVector<F_RHICaptureEventState, 1> CaptureEventStatesToEnd;
 #endif
     };
     

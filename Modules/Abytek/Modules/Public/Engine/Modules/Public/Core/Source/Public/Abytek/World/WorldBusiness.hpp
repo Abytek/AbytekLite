@@ -11,7 +11,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_WorldContext)
-        ABYTEK_END_REFLECTOR(F_WorldBusiness)
+        ABYTEK_END_REFLECTOR(F_WorldBusiness);
     
     private:
         B8 _BeganPlay = false;

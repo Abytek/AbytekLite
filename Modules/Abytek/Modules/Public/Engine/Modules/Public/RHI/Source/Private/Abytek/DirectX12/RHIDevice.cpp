@@ -12,7 +12,7 @@ namespace Abytek
         A_RAObject::SetDebugName(DebugName);
         if (_D3D12Device)
         {
-            _D3D12Device->SetName(*DebugName);
+            _D3D12Device->SetName(DebugName->c_str());
         }
     }
 #endif

@@ -13,9 +13,9 @@ namespace Abytek
     
     namespace CanvasRendering 
     {
-        struct ABYTEK_ENGINE_NFC_API F_ApplyOfflineTextureBinding : TF_GlobalRenderBinding<F_ApplyOfflineTextureBinding>
+        struct ABYTEK_ENGINE_NFC_API F_ApplyOfflineTextureBinding : F_GlobalRenderBinding
         {
-            ABYTEK_DECLARE_GLOBAL_RENDER_BINDING(F_ApplyOfflineTextureBinding);
+            ABYTEK_GLOBAL_RENDER_BINDING(F_ApplyOfflineTextureBinding, ABYTEK_NAME("Abytek::CanvasRendering::F_ApplyOfflineTextureBinding"));
 
             static F_FeedbackStatus Build(F_Config& Config)
             {
@@ -39,17 +39,17 @@ namespace Abytek
                 return F_FeedbackStatus::MakeSucceeded();
             }
         };
-        struct ABYTEK_ENGINE_NFC_API F_ApplyOfflineTexturePipeline : TF_GlobalRenderPipeline<F_ApplyOfflineTexturePipeline>
+        struct ABYTEK_ENGINE_NFC_API F_ApplyOfflineTexturePipeline : F_GlobalRenderPipeline
         {
-            ABYTEK_DECLARE_GLOBAL_RENDER_PIPELINE(F_ApplyOfflineTexturePipeline);
+            ABYTEK_GLOBAL_RENDER_PIPELINE(F_ApplyOfflineTexturePipeline, ABYTEK_NAME("Abytek::CanvasRendering::F_ApplyOfflineTexturePipeline"));
 
             static F_FeedbackStatus Build(F_Config& Config)
             {
                 Config.Type = E_RHIPipelineStateType::GRAPHICS;
                 Config.Rasterizer.FillMode = E_RHIFillMode::SOLID;
                 Config.Rasterizer.CullMode = E_RHICullMode::NONE;
-                Config.VertexShader = ABYTEK_GLOBAL_SHADER("MainVS", "NFC/CanvasApplyOffscreenTextureVS", E_RHIShaderFrequency::VERTEX);
-                Config.PixelShader = ABYTEK_GLOBAL_SHADER("MainPS", "NFC/CanvasApplyOffscreenTexturePS", E_RHIShaderFrequency::PIXEL);
+                Config.VertexShader = ABYTEK_GLOBAL_SHADER("MainVS", "NFC/Canvas/ApplyOffscreenTextureVS", E_RHIShaderFrequency::VERTEX);
+                Config.PixelShader = ABYTEK_GLOBAL_SHADER("MainPS", "NFC/Canvas/ApplyOffscreenTexturePS", E_RHIShaderFrequency::PIXEL);
                 Config.BindGroups.push_back(
                     F_RHIPipelineStateTemplateBindGroup::Make(
                         F_ApplyOfflineTextureBinding::GetTemplateHashCode()    
@@ -234,28 +234,31 @@ namespace Abytek
         ~F_CanvasRenderProxy() override;
         
     protected:
-        void OnInit_RenderTask() override;
-        void OnRelease_RenderTask() override;
+        void OnInit_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
+        void OnRelease_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
         
     protected:
-        void OnCreateRenderState_RenderTask() override;
-        void OnDestroyRenderState_RenderTask() override;
+        void OnCreateRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
+        void OnDestroyRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
         
     public:
         void ApplyOfflineTexture_RenderTask(
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
             const TS<A_RHIResourceView>& DstRTV,
             const TS<A_RHIResource>& SrcTexture,
             const F_Vector2_U32& Size,
             const F_Vector2_I32& Offset = F_Vector2_I32::Zero()
         );
-        void ClearRTV_RenderTask(
-            const TS<A_RHIResourceView>& RTV,
-            const F_Vector4_F32& ClearColor = F_Vector4_F32::One()
+        void CreateRHIViewport_Window_RenderTask(
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
+            const F_Vector2_U32& NewScaledClientSize
         );
-        void CreateRHIViewport_Window_RenderTask(const F_Vector2_U32& NewScaledClientSize);
-        void ResizeRHIViewport_Window_RenderTask(const F_Vector2_U32& NewScaledClientSize);
-        void FinalizeOutput_RenderTask();
-        void BeginDraw_RenderTask();
-        void EndDraw_RenderTask();
+        void ResizeRHIViewport_Window_RenderTask(
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
+            const F_Vector2_U32& NewScaledClientSize
+        );
+        void FinalizeOutput_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
+        void BeginDraw_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
+        void EndDraw_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
     };
 }

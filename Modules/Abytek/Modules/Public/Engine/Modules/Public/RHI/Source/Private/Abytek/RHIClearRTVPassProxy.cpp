@@ -19,7 +19,7 @@ namespace Abytek
     ABYTEK_RA_END_OBJECT()
     void A_RHIClearRTVPassProxy::Build(const TW_Valid<A_RHIClearRTVPass>& Pass)
     {
-        A_RHIPassProxy::Build(Pass);
+        BuildPassProxy(Pass);
         _RTVProxy = Pass->GetRTV()->GetProxy().FastCast<A_RHIResourceViewProxy>();
         _Color = Pass->GetColor();
     }   

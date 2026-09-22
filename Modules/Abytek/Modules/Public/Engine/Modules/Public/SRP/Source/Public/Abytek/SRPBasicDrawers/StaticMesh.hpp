@@ -4,8 +4,8 @@
 #include "Abytek/GlobalRenderBinding.hpp"
 #include "Abytek/GlobalRenderPipeline.hpp"
 #include "Abytek/Assets/Render/StaticMeshRenderProxy.hpp"
-#include "Abytek/Geometries/Render/RenderGeometryManager.hpp"
-#include "Abytek/RenderBase/RenderView.hpp"
+#include "Abytek/Renderer/RenderGeometry/RenderGeometryStorage.hpp"
+#include "Abytek/Renderer/RenderView.hpp"
 
 
 namespace Abytek
@@ -28,11 +28,11 @@ namespace Abytek
             F_Matrix4x4_F32 InverseTransposeTransformMatrix;
             F_Vector4_F32 Color = { 0.0f, 1.0f, 1.0f, 1.0f };
         };
-        struct ABYTEK_ENGINE_SRP_API F_StaticMeshBinding : TF_GlobalRenderBinding<F_StaticMeshBinding>
+        struct ABYTEK_ENGINE_SRP_API F_StaticMeshBinding : F_GlobalRenderBinding
         {
             ABYTEK_OVERRIDE_PERMUTATION_DOMAIN(F_StaticMeshPermuation_DataType)
             
-            ABYTEK_DECLARE_GLOBAL_RENDER_BINDING(F_StaticMeshBinding);
+            ABYTEK_GLOBAL_RENDER_BINDING(F_StaticMeshBinding, ABYTEK_NAME("Abytek::SRPBasicDrawers::F_StaticMeshBinding"));
             
             static F_FeedbackStatus Build(F_Config& Config)
             {
@@ -64,7 +64,7 @@ namespace Abytek
                 return F_FeedbackStatus::MakeSucceeded();
             }
         };
-        struct ABYTEK_ENGINE_SRP_API F_StaticMeshPipeline : TF_GlobalRenderPipeline<F_StaticMeshPipeline>
+        struct ABYTEK_ENGINE_SRP_API F_StaticMeshPipeline : F_GlobalRenderPipeline
         {
             ABYTEK_DEFINE_PERMUTATION(
                 F_FillMode, 
@@ -75,7 +75,7 @@ namespace Abytek
             );
             ABYTEK_OVERRIDE_PERMUTATION_DOMAIN(F_FillMode, F_StaticMeshPermuation_DataType);
             
-            ABYTEK_DECLARE_GLOBAL_RENDER_PIPELINE(F_StaticMeshPipeline);
+            ABYTEK_GLOBAL_RENDER_PIPELINE(F_StaticMeshPipeline, ABYTEK_NAME("Abytek::SRPBasicDrawers::F_StaticMeshPipeline"));
             
             static F_FeedbackStatus Build(F_Config& Config)
             {
@@ -111,7 +111,7 @@ namespace Abytek
     struct ABYTEK_ENGINE_SRP_API H_SRPStaticMeshDrawer
     {
         static void Render(
-            I_RHISubmissionItemContainer& SubmissionItemContainer,
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
             const TW_Valid<A_RenderView>& View, 
             const TW_Valid<F_StaticMeshRenderProxy> StaticMeshRenderProxy,
             const F_Matrix4x4_F32& StaticMeshTransformMatrix, 

@@ -11,7 +11,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_ApplicationSubsystem)
-        ABYTEK_END_REFLECTOR(F_GlobalTime)
+        ABYTEK_END_REFLECTOR(F_GlobalTime);
 
     public:
         ABYTEK_DECLARE_STATIC_APPLICATION_SUBSYSTEM(F_GlobalTime);

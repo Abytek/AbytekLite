@@ -1,21 +1,25 @@
 ﻿#include "Abytek/SRPRenderer.hpp"
-#include "Abytek/RenderBase/RenderViewFamily.hpp"
-#include "Abytek/RenderBase/RenderView.hpp"
+#include "Abytek/Renderer/RenderViewFamily.hpp"
+#include "Abytek/Renderer/RenderView.hpp"
 #include "Abytek/SRPBasicDrawers/Cube.hpp"
 
 
 namespace Abytek
 {
-    F_SRPRenderer::F_SRPRenderer(const TW_Valid<F_WorldRenderResource>& WorldRenderResource, const F_RendererBuildParams& BuildParams) :
-        A_Renderer(WorldRenderResource, BuildParams)
+    void F_SRPRenderer::Init(
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
+        const F_RendererBuildParams& BuildParams
+    )
     {
+        A_Renderer::Init(SubmissionItemContainer, BuildParams);
     }
-    F_SRPRenderer::~F_SRPRenderer()
+    void F_SRPRenderer::Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
+        A_Renderer::Release(SubmissionItemContainer);
     }
 
-    void F_SRPRenderer::OnRender()
+    void F_SRPRenderer::OnRender(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        A_Renderer::OnRender();
+        A_Renderer::OnRender(SubmissionItemContainer);
     }
 }

@@ -12,7 +12,7 @@ namespace Abytek
     {
     }
 
-    void F_TextureRenderProxy::OnCreateRenderState_RenderTask()
+    void F_TextureRenderProxy::OnCreateRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
         F_RHITextureBuildParams RHITextureBuildParams;
         RHITextureBuildParams.Context = H_RHI::GetMainContext().Weak();
@@ -29,7 +29,7 @@ namespace Abytek
         RHITextureBuildParams.StaticAccess = _Setting.GetRHIResourceStaticAccess();
         _RHITexture = RACreateAndBuildShared<A_RHIResource>(RHITextureBuildParams);
 #ifdef ABYTEK_DEBUG_INFO
-        _RHITexture->SetDebugName(_DebugName);
+        _RHITexture->SetDebugName(GetDebugName());
 #endif
         
         H_Frame::EnqueueCommand<E_FrameParamType::DISPLAY, E_FrameParamType::RENDER>(
@@ -37,11 +37,8 @@ namespace Abytek
             {}    
         );
     }
-    void F_TextureRenderProxy::OnDestroyRenderState_RenderTask()
+    void F_TextureRenderProxy::OnDestroyRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-#ifdef ABYTEK_DEBUG_INFO
-        _DebugName = {};
-#endif
         _ImageSettingMinimal = {};
         _Format = E_RHIFormat::NONE;
         _RHITexture = {};

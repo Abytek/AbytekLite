@@ -9,7 +9,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(A_AssetCooker)
+        ABYTEK_END_REFLECTOR(A_AssetCooker);
 
     private:
         

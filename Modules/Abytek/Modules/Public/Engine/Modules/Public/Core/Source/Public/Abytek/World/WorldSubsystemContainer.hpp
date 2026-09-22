@@ -14,7 +14,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR(F_SubsystemContainer)
-        ABYTEK_END_REFLECTOR(F_WorldSubsystemContainer)
+        ABYTEK_END_REFLECTOR(F_WorldSubsystemContainer);
         
     private:
         TW<F_World> _World;

@@ -10,7 +10,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(F_ProgramUnitContainer)
-        ABYTEK_END_REFLECTOR(F_SubsystemContainer)
+        ABYTEK_END_REFLECTOR(F_SubsystemContainer);
         
     public:
         F_SubsystemContainer(const F_ProgramUnitContainerBuildParams& BuildParams);

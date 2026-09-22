@@ -6,22 +6,31 @@
 
 namespace Abytek
 {
-    void A_RHISubmissionItem::Build()
+    void A_RHISubmissionItem::BuildSubmissionItem()
     {
-        A_RAObject::BuildMinimal();
+        BuildMinimal();
     }
     void A_RHISubmissionItem::Release()
     {
-#ifdef ABYTEK_ENGINE_RHI_ENABLE_PROFILER
-        _ProfilerEventColor = F_Vector3_F32::One();
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
+        _StackCaptureEventStates.clear();
+        _CaptureEventState = {};
 #endif
         A_RAObject::Release();
     }
 
-    void A_RHISubmissionItem::OnAddItemsBefore(I_RHISubmissionItemContainer& Container)
+    void A_RHISubmissionItem::OnAddItemsBefore(const TW_Valid<I_RHISubmissionItemContainer>& Container)
     {
     }
-    void A_RHISubmissionItem::OnAddItemsAfter(I_RHISubmissionItemContainer& Container)
+    void A_RHISubmissionItem::OnAddItemsAfter(const TW_Valid<I_RHISubmissionItemContainer>& Container)
     {
     }
+
+#ifdef ABYTEK_DEBUG_INFO
+    void A_RHISubmissionItem::SetDebugName(const F_DebugName& Value) noexcept
+    {
+        A_RAObject::SetDebugName(Value);
+        _CaptureEventState.Name = Value;
+    }
+#endif
 }

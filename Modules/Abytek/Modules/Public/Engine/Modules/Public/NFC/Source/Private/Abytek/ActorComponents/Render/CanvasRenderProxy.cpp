@@ -6,18 +6,6 @@
 
 namespace Abytek
 {
-    namespace CanvasRendering
-    {
-        ABYTEK_DEFINE_GLOBAL_RENDER_BINDING(F_ApplyOfflineTextureBinding)
-        {
-            ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::CanvasRendering::F_ApplyOfflineTextureBinding"));
-        }
-        ABYTEK_DEFINE_GLOBAL_RENDER_PIPELINE(F_ApplyOfflineTexturePipeline)
-        {
-            ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::CanvasRendering::F_ApplyOfflineTexturePipeline"));
-        }
-    }
-    
     F_CanvasRenderProxy::F_CanvasRenderProxy(const TW_Valid<F_CanvasComponent>& Owner) :
         A_RenderableComponentProxy(Owner)
     {
@@ -26,17 +14,16 @@ namespace Abytek
     {
     }
 
-    void F_CanvasRenderProxy::OnInit_RenderTask()
+    void F_CanvasRenderProxy::OnInit_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
     }
-    void F_CanvasRenderProxy::OnRelease_RenderTask()
+    void F_CanvasRenderProxy::OnRelease_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
     }
 
-    void F_CanvasRenderProxy::OnCreateRenderState_RenderTask()
+    void F_CanvasRenderProxy::OnCreateRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
         auto RHIContext = H_RHI::GetMainContext();
-        auto RHIProcess = H_RHI::GetMainProcess();
         
         if (_OutputTextureRenderProxy_Mono)
         {
@@ -45,6 +32,12 @@ namespace Abytek
             RTVBuildParams.Resource = _OutputTextureRenderProxy_Mono->GetRHITexture();
             RTVBuildParams.Access = F_RHIResourceAccess::MakeRTV();
             _RTV_OutputTexture_Mono = RACreateAndBuildShared<A_RHIResourceView>(RTVBuildParams);
+#ifdef ABYTEK_DEBUG_INFO
+            _RTV_OutputTexture_Mono->SetDebugName(
+                *GetDebugName()
+                + ABYTEK_TEXT(".OutputTextureMono.RTV")
+            );
+#endif
         }
         if (_OutputTextureRenderProxy_StereoLeft)
         {
@@ -53,6 +46,12 @@ namespace Abytek
             RTVBuildParams.Resource = _OutputTextureRenderProxy_StereoLeft->GetRHITexture();
             RTVBuildParams.Access = F_RHIResourceAccess::MakeRTV();
             _RTV_OutputTexture_StereoLeft = RACreateAndBuildShared<A_RHIResourceView>(RTVBuildParams);
+#ifdef ABYTEK_DEBUG_INFO
+            _RTV_OutputTexture_Mono->SetDebugName(
+                *GetDebugName()
+                + ABYTEK_TEXT(".OutputTextureStereoLeft.RTV")
+            );
+#endif
         }
         if (_OutputTextureRenderProxy_StereoRight)
         {
@@ -61,6 +60,12 @@ namespace Abytek
             RTVBuildParams.Resource = _OutputTextureRenderProxy_StereoRight->GetRHITexture();
             RTVBuildParams.Access = F_RHIResourceAccess::MakeRTV();
             _RTV_OutputTexture_StereoRight = RACreateAndBuildShared<A_RHIResourceView>(RTVBuildParams);
+#ifdef ABYTEK_DEBUG_INFO
+            _RTV_OutputTexture_Mono->SetDebugName(
+                *GetDebugName()
+                + ABYTEK_TEXT(".OutputTextureStereoRight.RTV")
+            );
+#endif
         }
         
         if (_RTTextureRenderProxy_Mono)
@@ -70,6 +75,12 @@ namespace Abytek
             RTVBuildParams.Resource = _RTTextureRenderProxy_Mono->GetRHITexture();
             RTVBuildParams.Access = F_RHIResourceAccess::MakeRTV();
             _RTV_RTTexture_Mono = RACreateAndBuildShared<A_RHIResourceView>(RTVBuildParams);
+#ifdef ABYTEK_DEBUG_INFO
+            _RTV_RTTexture_Mono->SetDebugName(
+                *GetDebugName()
+                + ABYTEK_TEXT(".RTTextureMono.RTV")
+            );
+#endif
         }
         if (_RTTextureRenderProxy_StereoLeft)
         {
@@ -78,6 +89,12 @@ namespace Abytek
             RTVBuildParams.Resource = _RTTextureRenderProxy_StereoLeft->GetRHITexture();
             RTVBuildParams.Access = F_RHIResourceAccess::MakeRTV();
             _RTV_RTTexture_StereoLeft = RACreateAndBuildShared<A_RHIResourceView>(RTVBuildParams);
+#ifdef ABYTEK_DEBUG_INFO
+            _RTV_RTTexture_StereoLeft->SetDebugName(
+                *GetDebugName()
+                + ABYTEK_TEXT(".RTTextureStereoLeft.RTV")
+            );
+#endif
         }
         if (_RTTextureRenderProxy_StereoRight)
         {
@@ -86,9 +103,15 @@ namespace Abytek
             RTVBuildParams.Resource = _RTTextureRenderProxy_StereoRight->GetRHITexture();
             RTVBuildParams.Access = F_RHIResourceAccess::MakeRTV();
             _RTV_RTTexture_StereoRight = RACreateAndBuildShared<A_RHIResourceView>(RTVBuildParams);
+#ifdef ABYTEK_DEBUG_INFO
+            _RTV_RTTexture_StereoRight->SetDebugName(
+                *GetDebugName()
+                + ABYTEK_TEXT(".RTTextureStereoRight.RTV")
+            );
+#endif
         }
     }
-    void F_CanvasRenderProxy::OnDestroyRenderState_RenderTask()
+    void F_CanvasRenderProxy::OnDestroyRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
         _CameraRenderProxy = {};
         
@@ -126,14 +149,23 @@ namespace Abytek
     }
 
     void F_CanvasRenderProxy::ApplyOfflineTexture_RenderTask(
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
         const TS<A_RHIResourceView>& DstRTV,
         const TS<A_RHIResource>& SrcTexture,
         const F_Vector2_U32& Size,
         const F_Vector2_I32& Offset
     )
     {
+        ABYTEK_RHI_CAPTURE_EVENT_SCOPE(
+            SubmissionItemContainer,  
+            ABYTEK_TEXT("Abytek::F_CanvasRenderProxy::ApplyOfflineTexture(Canvas = ")
+                + *GetDebugName() 
+                + ABYTEK_TEXT(", DstRTV = ")
+                + *DstRTV->GetDebugName()
+                + ABYTEK_TEXT(")")
+        );
+        
         auto RHIContext = H_RHI::GetMainContext();
-        auto RHIProcess = H_RHI::GetMainProcess();
         
         ABYTEK_ENGINE_RHI_ASSERT(_Format == E_RHIFormat::R8G8B8A8_UNORM);
         {
@@ -158,16 +190,12 @@ namespace Abytek
             );
             BindGroup->Commit();
             
-            auto SubmissionList = RACreateAndBuildShared<A_RHISubmissionList>(H_RHI::GetMainProcess().Weak());
-#ifdef ABYTEK_DEBUG_INFO
-            SubmissionList->SetDebugName(ABYTEK_NAME("SetupCanvasRenderProxy"));
-#endif
             F_RHIViewportScissorConfig ViewportScissorConfig = F_RHIViewportScissorConfig::Make(
                 F_Vector2_F32(Size),
                 F_Vector2_F32(Offset)
             );
-            H_RHIPassUtilities::DrawNonIndexed(
-                *SubmissionList,
+            H_RHISubmissionUtilities::DrawNonIndexed(
+                SubmissionItemContainer,
                 CanvasRendering::F_ApplyOfflineTexturePipeline::Instantiate(
                     GetRenderRegistryRuntime()
                 ).AcquirePipelineState(),
@@ -175,24 +203,12 @@ namespace Abytek
                 ViewportScissorConfig,
                 F_RHIDrawNonIndexedConfig::Make(6)
             );
-            
-            RHIProcess->AddSubmissionItem(SubmissionList);
         }
     }
-    void F_CanvasRenderProxy::ClearRTV_RenderTask(const TS<A_RHIResourceView>& RTV, const F_Vector4_F32& ClearColor)
-    {
-        auto RHIContext = H_RHI::GetMainContext();
-        auto RHIProcess = H_RHI::GetMainProcess();
-        
-        F_RHIClearRTVPassBuildParams BuildParams;
-        BuildParams.Context = RHIContext.Weak();
-        BuildParams.RTV = RTV;
-        BuildParams.Color = ClearColor;
-        auto Pass = RACreateAndBuildShared<A_RHIClearRTVPass>(BuildParams);
-    
-        RHIProcess->AddSubmissionItem(Pass);
-    }
-    void F_CanvasRenderProxy::CreateRHIViewport_Window_RenderTask(const F_Vector2_U32& NewScaledClientSize)
+    void F_CanvasRenderProxy::CreateRHIViewport_Window_RenderTask(
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
+        const F_Vector2_U32& NewScaledClientSize
+    )
     {
         _AspectRatio_Mono = (
             static_cast<F32>(NewScaledClientSize.X)
@@ -206,7 +222,10 @@ namespace Abytek
         ViewportBuildParams.Format = _Format;
         _RHIViewport_Mono = RACreateAndBuildShared<A_RHIViewport>(ViewportBuildParams);
     }
-    void F_CanvasRenderProxy::ResizeRHIViewport_Window_RenderTask(const F_Vector2_U32& NewScaledClientSize)
+    void F_CanvasRenderProxy::ResizeRHIViewport_Window_RenderTask(
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
+        const F_Vector2_U32& NewScaledClientSize
+    )
     {
         _AspectRatio_Mono = (
             static_cast<F32>(NewScaledClientSize.X)
@@ -215,10 +234,12 @@ namespace Abytek
         
         _RHIViewport_Mono->Resize(NewScaledClientSize);
     }
-    void F_CanvasRenderProxy::FinalizeOutput_RenderTask()
+    void F_CanvasRenderProxy::FinalizeOutput_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        auto RHIContext = H_RHI::GetMainContext();
-        auto RHIProcess = H_RHI::GetMainProcess();
+        ABYTEK_RHI_CAPTURE_EVENT_SCOPE(
+            SubmissionItemContainer,  
+            ABYTEK_TEXT("Abytek::F_CanvasRenderProxy::FinalizeOutput(") + *GetDebugName() + ABYTEK_TEXT(")")
+        );
         
         // Output display
         if (_RHIViewport_Mono)
@@ -226,36 +247,48 @@ namespace Abytek
             if (_RTTextureRenderProxy_Mono)
             {
                 ApplyOfflineTexture_RenderTask(
+                    SubmissionItemContainer,
                     _RHIViewport_Mono->GetCurrentBackRenderTargetView(),
                     _RTTextureRenderProxy_Mono->GetRHITexture(),
                     _RHIViewport_Mono->GetSize()
                 );
             }
-            RHIProcess->AddViewport(_RHIViewport_Mono);
+            H_RHISubmissionUtilities::PresentViewport(
+                SubmissionItemContainer,
+                _RHIViewport_Mono
+            );
         }
         if (_RHIViewport_StereoLeft)
         {
             if (_RTTextureRenderProxy_StereoLeft)
             {
                 ApplyOfflineTexture_RenderTask(
+                    SubmissionItemContainer,
                     _RHIViewport_StereoLeft->GetCurrentBackRenderTargetView(),
                     _RTTextureRenderProxy_StereoLeft->GetRHITexture(),
                     _RHIViewport_StereoLeft->GetSize()
                 );
             }
-            RHIProcess->AddViewport(_RHIViewport_StereoLeft);
+            H_RHISubmissionUtilities::PresentViewport(
+                SubmissionItemContainer,
+                _RHIViewport_StereoLeft
+            );
         }
         if (_RHIViewport_StereoRight)
         {
             if (_RTTextureRenderProxy_StereoRight)
             {
                 ApplyOfflineTexture_RenderTask(
+                    SubmissionItemContainer,
                     _RHIViewport_StereoRight->GetCurrentBackRenderTargetView(),
                     _RTTextureRenderProxy_StereoRight->GetRHITexture(),
                     _RHIViewport_StereoRight->GetSize()
                 );
             }
-            RHIProcess->AddViewport(_RHIViewport_StereoRight);
+            H_RHISubmissionUtilities::PresentViewport(
+                SubmissionItemContainer,
+                _RHIViewport_StereoRight
+            );
         }
         
         // Output texture
@@ -264,6 +297,7 @@ namespace Abytek
             if (_RTTextureRenderProxy_Mono)
             {
                 ApplyOfflineTexture_RenderTask(
+                    SubmissionItemContainer,
                     _RTV_OutputTexture_Mono,
                     _RTTextureRenderProxy_Mono->GetRHITexture(),
                     _OutputTextureRenderProxy_Mono->GetSize().StaticPermute<0, 1>()
@@ -275,6 +309,7 @@ namespace Abytek
             if (_RTTextureRenderProxy_StereoLeft)
             {
                 ApplyOfflineTexture_RenderTask(
+                    SubmissionItemContainer,
                     _RTV_OutputTexture_StereoLeft,
                     _RTTextureRenderProxy_StereoLeft->GetRHITexture(),
                     _OutputTextureRenderProxy_StereoLeft->GetSize().StaticPermute<0, 1>()
@@ -286,6 +321,7 @@ namespace Abytek
             if (_RTTextureRenderProxy_StereoRight)
             {
                 ApplyOfflineTexture_RenderTask(
+                    SubmissionItemContainer,
                     _RTV_OutputTexture_StereoRight,
                     _RTTextureRenderProxy_StereoRight->GetRHITexture(),
                     _OutputTextureRenderProxy_StereoRight->GetSize().StaticPermute<0, 1>()
@@ -293,29 +329,49 @@ namespace Abytek
             }
         }
     }
-    void F_CanvasRenderProxy::BeginDraw_RenderTask()
+    void F_CanvasRenderProxy::BeginDraw_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        auto RHIContext = H_RHI::GetMainContext();
-        auto RHIProcess = H_RHI::GetMainProcess();
-        
-        if (_RTV_RTTexture_Mono)
+#ifdef ABYTEK_DEBUG_INFO
+        SubmissionItemContainer->PushAdditionalStackCaptureEventStates(
+            ABYTEK_TEXT("Abytek::F_CanvasRenderProxy::Draw(") + *GetDebugName() + ABYTEK_TEXT(")")
+        );
+#endif
         {
-            ClearRTV_RenderTask(_RTV_RTTexture_Mono, _ClearColor);
-        }
-        if (_RTV_RTTexture_StereoLeft)
-        {
-            ClearRTV_RenderTask(_RTV_RTTexture_StereoLeft, _ClearColor);
-        }
-        if (_RTV_RTTexture_StereoRight)
-        {
-            ClearRTV_RenderTask(_RTV_RTTexture_StereoRight, _ClearColor);
+            ABYTEK_RHI_CAPTURE_EVENT_SCOPE(
+                SubmissionItemContainer,  
+                ABYTEK_TEXT("Abytek::F_CanvasRenderProxy::PrepareNewFrame(") + *GetDebugName() + ABYTEK_TEXT(")")
+            );
+            if (_RTV_RTTexture_Mono)
+            {
+                H_RHISubmissionUtilities::ClearRTV(
+                    SubmissionItemContainer,
+                    _RTV_RTTexture_Mono, 
+                    _ClearColor
+                );
+            }
+            if (_RTV_RTTexture_StereoLeft)
+            {
+                H_RHISubmissionUtilities::ClearRTV(
+                    SubmissionItemContainer,
+                    _RTV_RTTexture_StereoLeft, 
+                    _ClearColor
+                );
+            }
+            if (_RTV_RTTexture_StereoRight)
+            {
+                H_RHISubmissionUtilities::ClearRTV(
+                    SubmissionItemContainer,
+                    _RTV_RTTexture_StereoRight, 
+                    _ClearColor
+                );
+            }
         }
     }
-    void F_CanvasRenderProxy::EndDraw_RenderTask()
+    void F_CanvasRenderProxy::EndDraw_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        auto RHIContext = H_RHI::GetMainContext();
-        auto RHIProcess = H_RHI::GetMainProcess();
-        
-        FinalizeOutput_RenderTask();
+        FinalizeOutput_RenderTask(SubmissionItemContainer);
+#ifdef ABYTEK_DEBUG_INFO
+        SubmissionItemContainer->PopAdditionalStackCaptureEventStates();
+#endif
     }
 }

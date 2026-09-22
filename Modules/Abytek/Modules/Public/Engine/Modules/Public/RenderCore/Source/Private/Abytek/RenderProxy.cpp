@@ -12,17 +12,17 @@ namespace Abytek
     {
     }
 
-    void A_RenderProxy::OnInit_RenderTask()
+    void A_RenderProxy::OnInit_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
     }
-    void A_RenderProxy::OnRelease_RenderTask()
+    void A_RenderProxy::OnRelease_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
     }
 
-    void A_RenderProxy::OnCreateRenderState_RenderTask()
+    void A_RenderProxy::OnCreateRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
     }
-    void A_RenderProxy::OnDestroyRenderState_RenderTask()
+    void A_RenderProxy::OnDestroyRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
     }
 }

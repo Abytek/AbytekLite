@@ -14,7 +14,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR(F_ModuleContainer)
-        ABYTEK_END_REFLECTOR(F_ApplicationModuleContainer)
+        ABYTEK_END_REFLECTOR(F_ApplicationModuleContainer);
         
     public:
         ABYTEK_DECLARE_OBJECT_SINGLETON_CRT(F_ApplicationModuleContainer);

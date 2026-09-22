@@ -19,7 +19,7 @@ namespace Abytek
     ABYTEK_RA_END_OBJECT()
     void A_RHIDispatchComputePassProxy::Build(const TW_Valid<A_RHIDispatchComputePass>& Pass)
     {
-        A_RHIPassProxy::Build(Pass);
+        BuildPassProxy(Pass);
         A_RHIHasGeneralPipelineProxy::Build(Pass);
         _NumThreadGroups = Pass->GetNumThreadGroups();
         if (auto Indirect = Pass->GetIndirect())

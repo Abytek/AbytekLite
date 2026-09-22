@@ -7,58 +7,6 @@
 #ifdef ABYTEK_ENGINE_RHI_ENABLE_DIRECTX12
 namespace Abytek
 {
-    ABYTEK_RA_OBJECT_DEFAULT(F_DirectX12RHICopyUploadTexturePass);
-    void F_DirectX12RHICopyUploadTexturePass::Build(const F_DirectX12RHICopyUploadTexturePassBuildParams& BuildParams)
-    {
-        A_RHIPass::Build(BuildParams);
-        A_DirectX12RHIPassExtension::Build();
-        
-        _UploadPass = BuildParams.UploadPass;
-    }   
-    void F_DirectX12RHICopyUploadTexturePass::Release()
-    {
-        _UploadPass = {};
-        
-        A_DirectX12RHIPassExtension::Release();
-        A_RHIPass::Release();
-    }
-
-    TS_Valid<A_RHIPassProxy> F_DirectX12RHICopyUploadTexturePass::CreateProxy()
-    {
-        return RACreateAndBuildShared<F_DirectX12RHICopyUploadTexturePassProxy>(ABYTEK_WTHIS());
-    }
-
-    void F_DirectX12RHICopyUploadTexturePass::AppendSubresourceBindings(F_DirectX12RHISubresourceBindingSet& SubresourceBindingSet)
-    {
-        A_DirectX12RHIPassExtension::AppendSubresourceBindings(SubresourceBindingSet);
-        
-        auto TransientUploadBuffer = _UploadPass->GetTransientUploadBufferRange().GetBuffer();
-        auto Texture = _UploadPass->GetTexture();
-        auto NumSubresources = _UploadPass->GetNumSubresources();
-        
-        SubresourceBindingSet.push_back(
-            F_DirectX12RHISubresourceBinding::MakeCore(
-                F_DirectX12RHISubresourceReference::Make(
-                    TransientUploadBuffer.Weak(),
-                    0
-                ),
-                F_RHIResourceAccess::MakeCopySrc()
-            )
-        );
-        for (U32 SubresourceIndex = 0; SubresourceIndex < NumSubresources; ++SubresourceIndex)
-        {
-            SubresourceBindingSet.push_back(
-                F_DirectX12RHISubresourceBinding::MakeCore(
-                    F_DirectX12RHISubresourceReference::Make(
-                        Texture.Weak(),
-                        SubresourceIndex
-                    ),
-                    F_RHIResourceAccess::MakeCopyDest()
-                )
-            );
-        }
-    }
-    
     void F_DirectX12RHIUploadTexturePass::Build(const F_RHIUploadTexturePassBuildParams& BuildParams)
     {
         A_RHIUploadTexturePass::Build(BuildParams);
@@ -150,7 +98,7 @@ namespace Abytek
             }
         }
         
-        _TransientUploadBufferRange = Context->GetTransientUploadBufferManager()->Allocate(
+        _TransientUploadBufferRange = Context->GetTransientUploadBufferManager_V2()->Allocate(
               D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT - 1
               + UploadSizeInBytes
         );
@@ -165,14 +113,18 @@ namespace Abytek
             SubImageFootprint.Offset += _TransientUploadBufferRange.BeginOffsetInBytes;
         }
         
-        F_DirectX12RHICopyUploadTexturePassBuildParams CopyPassBuildParams;
-        CopyPassBuildParams.Context = Context;
-        CopyPassBuildParams.UploadPass = ABYTEK_WTHIS();
-        _CopyPass = RACreateAndBuildShared<F_DirectX12RHICopyUploadTexturePass>(CopyPassBuildParams);
+        for (U32 SubresourceIndex = 0; SubresourceIndex < _NumSubresources; ++SubresourceIndex)
+        {
+            const auto& SubImage_Bytes = _SubImages_Bytes[SubresourceIndex];
+            const auto& SubImage_UploadFootprint = _SubImages_UploadFootprint[SubresourceIndex];
+            _TransientUploadBufferRange.Upload(
+                SubImage_Bytes,
+                  SubImage_UploadFootprint.Offset - _TransientUploadBufferRange.BeginOffsetInBytes
+            );
+        }
     }   
     void F_DirectX12RHIUploadTexturePass::Release()
     {
-        _CopyPass = {};
         _SubImages_UploadFootprint = {};
         _NumSubresources = 0;
         _TransientUploadBufferRange = {};
@@ -190,44 +142,26 @@ namespace Abytek
                     _TransientUploadBufferRange.GetBuffer().Weak(),
                     0
                 ),
-                F_RHIResourceAccess::MakeUpload()
+                F_RHIResourceAccess::MakeCopySrc()
             )
         );
+        for (U32 SubresourceIndex = 0; SubresourceIndex < _NumSubresources; ++SubresourceIndex)
+        {
+            SubresourceBindingSet.push_back(
+                F_DirectX12RHISubresourceBinding::MakeCore(
+                    F_DirectX12RHISubresourceReference::Make(
+                        GetTexture().Weak(),
+                        SubresourceIndex
+                    ),
+                    F_RHIResourceAccess::MakeCopyDest()
+                )
+            );
+        }
     }
 
     E_DirectX12RHIPassBatchType F_DirectX12RHIUploadTexturePass::GetPassBatchType()
     {
-        return E_DirectX12RHIPassBatchType::CPU_SYNC;
+        return E_DirectX12RHIPassBatchType::GPU;
     }
-
-    void F_DirectX12RHIUploadTexturePass::OnAddItemsAfter(I_RHISubmissionItemContainer& Container)
-    {
-        if (_CopyPass)
-        {
-            Container.AddSubmissionItem(_CopyPass);
-        }
-    }
-
-    B8 F_DirectX12RHIUploadTexturePass::CanDetachCopyPass()
-    {
-        return static_cast<B8>(_CopyPass);
-    }
-    void F_DirectX12RHIUploadTexturePass::DetachCopyPass(I_RHISubmissionItemContainer& SubmissionItemContainer)
-    {
-        ABYTEK_ENGINE_RHI_ASSERT(_CopyPass) << "Cannot detach copy pass";
-        SubmissionItemContainer.AddSubmissionItem(_CopyPass);
-        _CopyPass = {};
-    }
-
-#ifdef ABYTEK_DEBUG_INFO
-    void F_DirectX12RHIUploadTexturePass::SetDebugName(const F_DebugName& Value) noexcept
-    {
-        A_RHIUploadTexturePass::SetDebugName(Value);
-        if (_CopyPass)
-        {
-            _CopyPass->SetDebugName(F_Name(ToText(*GetDebugName()) + ABYTEK_TEXT(".CopyPass")));
-        }
-    }
-#endif
 }
 #endif

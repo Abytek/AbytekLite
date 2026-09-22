@@ -2,12 +2,12 @@
 #include "Abytek/ActorComponents/Render/CanvasRenderProxy.hpp"
 #include "Abytek/Assets/Render/TextureRenderProxy.hpp"
 #include "Abytek/Frame/FrameHelper.hpp"
-#include "Abytek/RenderBase/RenderScene.hpp"
-#include "Abytek/RenderBase/RenderViewFamily.hpp"
-#include "Abytek/RenderBase/RenderView.hpp"
-#include "Abytek/RenderBase/Renderer.hpp"
-#include "Abytek/RenderBase/RenderObjectFactory.hpp"
-#include "Abytek/RenderBase/WorldRenderResource.hpp"
+#include "Abytek/Renderer/RenderScene.hpp"
+#include "Abytek/Renderer/RenderViewFamily.hpp"
+#include "Abytek/Renderer/RenderView.hpp"
+#include "Abytek/Renderer/Renderer.hpp"
+#include "Abytek/Renderer/RenderObjectFactory.hpp"
+#include "Abytek/Renderer/WorldRenderResource.hpp"
 
 
 namespace Abytek
@@ -20,14 +20,7 @@ namespace Abytek
     {
     }
 
-    void F_CameraRenderProxy::OnInit_RenderTask()
-    {
-    }
-    void F_CameraRenderProxy::OnRelease_RenderTask()
-    {
-    }
-
-    void F_CameraRenderProxy::OnCreateRenderState_RenderTask()
+    void F_CameraRenderProxy::OnCreateRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
         auto Scene = GetWorldRenderResource()->GetScene();
         auto RenderObjectFactory = GetRenderObjectFactory();
@@ -36,14 +29,28 @@ namespace Abytek
         ViewFamilyBuildParams.CanvasRenderProxy = _CanvasRenderProxy;
         ViewFamilyBuildParams.CameraRenderProxy = ABYTEK_WTHIS();
         ViewFamilyBuildParams.Scene = Scene.Weak();
-        _ViewFamily = RenderObjectFactory->CreateViewFamily(ViewFamilyBuildParams);
+        _ViewFamily = RenderObjectFactory->CreateViewFamily();
+#ifdef ABYTEK_DEBUG_INFO
+        _ViewFamily->SetDebugName(
+            *GetDebugName()
+            + ABYTEK_TEXT(".ViewFamily")
+        );
+#endif
+        _ViewFamily->Init(SubmissionItemContainer, ViewFamilyBuildParams);
         
         F_RendererBuildParams RendererBuildParams;
         RendererBuildParams.Scene = Scene.Weak();
         RendererBuildParams.ViewFamily = _ViewFamily;
-        _Renderer = RenderObjectFactory->CreateRenderer(RendererBuildParams);
+        _Renderer = RenderObjectFactory->CreateRenderer();
+#ifdef ABYTEK_DEBUG_INFO
+        _Renderer->SetDebugName(
+            *GetDebugName()
+            + ABYTEK_TEXT(".Renderer")
+        );
+#endif
+        _Renderer->Init(SubmissionItemContainer, RendererBuildParams);
     }
-    void F_CameraRenderProxy::OnDestroyRenderState_RenderTask()
+    void F_CameraRenderProxy::OnDestroyRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
         _ProjectionOptions = {};
         _ViewMatrix_StereoRight = Identity<F_Matrix4x4_F32>();
@@ -54,15 +61,19 @@ namespace Abytek
         _CanvasRenderProxy = {};
     }
 
-    void F_CameraRenderProxy::OnDraw_RenderTask()
+    void F_CameraRenderProxy::OnDraw_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        _ViewFamily->BeginFrame();
-        _Renderer->Render();
-        _ViewFamily->EndFrame();
+        _ViewFamily->BeginFrame(SubmissionItemContainer);
+        _Renderer->Render(SubmissionItemContainer);
+        _ViewFamily->EndFrame(SubmissionItemContainer);
     }
 
-    void F_CameraRenderProxy::Draw_RenderTask()
+    void F_CameraRenderProxy::Draw_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        OnDraw_RenderTask();
+        ABYTEK_RHI_CAPTURE_EVENT_SCOPE(
+            SubmissionItemContainer,  
+            ABYTEK_TEXT("Abytek::F_CameraRenderProxy::Draw(") + *GetDebugName() + ABYTEK_TEXT(")")
+        );
+        OnDraw_RenderTask(SubmissionItemContainer);
     }
 }

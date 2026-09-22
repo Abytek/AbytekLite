@@ -43,19 +43,18 @@ namespace Abytek
     public:
         ABYTEK_RA_DECLARE_OBJECT_CREATABLE(A_RHIReadbackTexturePass);
         virtual void Build(const F_RHIReadbackTexturePassBuildParams& BuildParams);
-        virtual void Release() override;
+        void Release() override;
         
     public:
-        virtual E_RHIPassClass GetPassClass() override
+        E_RHIPassClass GetPassClass() const override
         {
             return E_RHIPassClass::BLIT;
         }
         
     public:
-        virtual TS_Valid<A_RHIPassProxy> CreateProxy() override;
+        TS_Valid<A_RHIPassProxy> CreateProxy() override;
         
     public:
-        virtual B8 CanDetachCopyPass();
-        virtual void DetachCopyPass(I_RHISubmissionItemContainer& SubmissionItemContainer);
+        F_RHIReadbackTextureCallback MoveCallback();
     };
 }

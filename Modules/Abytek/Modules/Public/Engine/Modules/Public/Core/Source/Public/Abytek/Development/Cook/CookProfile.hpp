@@ -13,7 +13,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR()
-        ABYTEK_END_REFLECTOR(F_CookProfile)
+        ABYTEK_END_REFLECTOR(F_CookProfile);
         
     public:
         static TW<F_CookProfile> _Main;

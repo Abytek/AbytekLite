@@ -31,7 +31,7 @@ namespace Abytek
             []
             {
                 auto RHIContext = H_RHI::GetMainContext();
-                auto RHIProcess = H_RHI::GetMainProcess();
+                auto RHIProcess = H_RHI::GetMainSubmissionQueue();
                 
                 U32 NumElements = 16;
                 
@@ -43,7 +43,7 @@ namespace Abytek
                 BufferBuildParams.AccessCapabilities = F_RHIResourceAccess::MakeSRVCapabilities();
                 auto Buffer = RACreateAndBuildShared<A_RHIResource>(BufferBuildParams);
                 
-                auto SubmissionList = RACreateAndBuildShared<A_RHISubmissionList>(RHIProcess);
+                auto SubmissionList = RACreateAndBuildShared<A_RHISubmissionList>(RHIProcess.Weak());
                 SubmissionList->SetDebugName(ABYTEK_DEBUG_NAME("Main"));
                 
                 U32* DataPtr = H_Frame::GetArena(E_FrameParamType::RENDER)->AllocateData<U32>(NumElements);
@@ -52,7 +52,7 @@ namespace Abytek
                     DataPtr[Idx] = Idx;
                 }
                 
-                H_RHIPassUtilities::UploadBuffer(
+                H_RHISubmissionUtilities::UploadBuffer(
                     SubmissionList,
                     { (const U8*)(DataPtr), (const U8*)(DataPtr + NumElements) },
                     Buffer,
@@ -60,7 +60,7 @@ namespace Abytek
                     ABYTEK_DEBUG_NAME("UploadBuffer")
                 );
                 
-                H_RHIPassUtilities::ReadbackBuffer(
+                H_RHISubmissionUtilities::ReadbackBuffer(
                     SubmissionList,
                     [NumElements](const F_RHIBufferDataView& BufferDataView)
                     {

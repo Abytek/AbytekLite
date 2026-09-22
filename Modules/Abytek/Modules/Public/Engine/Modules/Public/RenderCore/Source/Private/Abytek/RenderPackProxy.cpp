@@ -12,17 +12,10 @@ namespace Abytek
     {
     }
 
-    void F_RenderPackProxy::OnInit_RenderTask()
+    void F_RenderPackProxy::OnCreateRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
     }
-    void F_RenderPackProxy::OnRelease_RenderTask()
-    {
-    }
-
-    void F_RenderPackProxy::OnCreateRenderState_RenderTask()
-    {
-    }
-    void F_RenderPackProxy::OnDestroyRenderState_RenderTask()
+    void F_RenderPackProxy::OnDestroyRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
         _TemplateRuntimes = {};
         _RegistryRuntime = {};

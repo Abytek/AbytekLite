@@ -9,7 +9,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_RenderableComponent)
-        ABYTEK_END_REFLECTOR(A_PrimitiveComponent)
+        ABYTEK_END_REFLECTOR(A_PrimitiveComponent);
     
     private:
         B8 _IsEnabled = true;

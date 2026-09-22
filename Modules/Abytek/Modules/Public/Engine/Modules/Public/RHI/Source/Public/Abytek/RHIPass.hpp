@@ -2,6 +2,7 @@
 
 #include "Abytek/RHISubmissionItem.hpp"
 #include "Abytek/RHIPassClass.hpp"
+#include "Abytek/RHIPassPosition.hpp"
 #include "Abytek/RHIGPUWorkClass.hpp"
 
 
@@ -24,6 +25,7 @@ namespace Abytek
         TW<A_RHIProcess> _Process;
         E_RHIGPUWorkClass _GPUWorkClass = E_RHIGPUWorkClass::NONE;
         E_RHIPassClass _PassClass = E_RHIPassClass::NONE;
+        E_RHIPassPosition _PassPosition = E_RHIPassPosition::NONE;
         
     public:
         ABYTEK_FORCE_INLINE const auto& GetContextProxy() const noexcept
@@ -42,13 +44,17 @@ namespace Abytek
         {
             return _PassClass;
         }
+        ABYTEK_FORCE_INLINE auto GetPassPosition() const noexcept
+        {
+            return _PassPosition;
+        }
         
     public:
         ABYTEK_RA_DECLARE_OBJECT(A_RHIPassProxy);
         virtual void Release() override;
         
     protected:
-        void Build(const TW_Valid<A_RHIPass>& Pass);
+        void BuildPassProxy(const TW_Valid<A_RHIPass>& Pass);
     };
     
     class ABYTEK_ENGINE_RHI_API A_RHIPass : public A_RHISubmissionItem
@@ -70,10 +76,11 @@ namespace Abytek
     public:
         ABYTEK_RA_DECLARE_OBJECT(A_RHIPass);
         virtual void Build(const F_RHIPassBuildParams& BuildParams);
-        virtual void Release() override;
+        void Release() override;
         
     public:
-        virtual E_RHIPassClass GetPassClass();
+        virtual E_RHIPassClass GetPassClass() const;
+        virtual E_RHIPassPosition GetPassPosition() const;
         
     public:
         virtual TS_Valid<A_RHIPassProxy> CreateProxy();

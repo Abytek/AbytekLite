@@ -40,9 +40,9 @@ namespace Abytek
         TF_Vector<TF_Function<F_FeedbackStatus(TF_Vector<TS<A_RHITemplate>>& OutTemplates)>> Commands;
         TF_Set<F_RHITemplateHashCode> TemplateHashCodesToCompile;
         
-        TF_Vector<TF_ReflectionTypeHandle<A_GlobalRenderBinding>> GlobalRenderBindingTypes;
+        TF_Vector<TF_ReflectionTypeHandle<F_GlobalRenderBinding>> GlobalRenderBindingTypes;
         {
-            auto BaseSubsystemType = TF_ReflectionTypeHandle<A_GlobalRenderBinding>(F_ReflectionContext::GetGlobal());
+            auto BaseSubsystemType = TF_ReflectionTypeHandle<F_GlobalRenderBinding>(F_ReflectionContext::GetGlobal());
             ABYTEK_ENGINE_NFC_ASSERT(BaseSubsystemType);
             F_ApplicationModuleContainer::GetInstance()->ForEachUnit(
                 [&BaseSubsystemType, &GlobalRenderBindingTypes](const TW_Valid<F_ProgramUnit>& Unit)
@@ -64,20 +64,20 @@ namespace Abytek
         for (const auto& Type : GlobalRenderBindingTypes)
         {
             const auto& Metadata = Type->GetMetadata();
-            auto MetadataElementName = A_GlobalRenderBinding::GetMetadataElementName_BuildCommandsAndCompilationSet();
+            auto MetadataElementName = F_GlobalRenderBinding::GetMetadataElementName_BuildCommandsAndCompilationSet();
             ABYTEK_ENGINE_RENDER_CORE_ASSERT(Metadata.HasElement(MetadataElementName))
                 << ABYTEK_TEXT("Not found BuildCommandsAndCompilationSet metadata element in global render binding type: ")
                 << *Type->GetFullName();
             const auto& MetadataElement = Metadata.Get(MetadataElementName);
-            const auto& CastedMetadataElement = AnyCast<A_GlobalRenderBinding::F_Metadata_BuildCommandsAndCompilationSet>(MetadataElement);
+            const auto& CastedMetadataElement = AnyCast<F_GlobalRenderBinding::F_Metadata_BuildCommandsAndCompilationSet>(MetadataElement);
             ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
                 CastedMetadataElement(ABYTEK_STHIS(), SerializableEnvironment, RenderPackTemplateMap, Commands, TemplateHashCodesToCompile)
             );
         }
             
-        TF_Vector<TF_ReflectionTypeHandle<A_GlobalRenderPipeline>> GlobalRenderPipelineTypes;
+        TF_Vector<TF_ReflectionTypeHandle<F_GlobalRenderPipeline>> GlobalRenderPipelineTypes;
         {
-            auto BaseSubsystemType = TF_ReflectionTypeHandle<A_GlobalRenderPipeline>(F_ReflectionContext::GetGlobal());
+            auto BaseSubsystemType = TF_ReflectionTypeHandle<F_GlobalRenderPipeline>(F_ReflectionContext::GetGlobal());
             ABYTEK_ENGINE_NFC_ASSERT(BaseSubsystemType);
             F_ApplicationModuleContainer::GetInstance()->ForEachUnit(
                 [&BaseSubsystemType, &GlobalRenderPipelineTypes](const TW_Valid<F_ProgramUnit>& Unit)
@@ -99,12 +99,12 @@ namespace Abytek
         for (const auto& Type : GlobalRenderPipelineTypes)
         {
             const auto& Metadata = Type->GetMetadata();
-            auto MetadataElementName = A_GlobalRenderPipeline::GetMetadataElementName_BuildCommandsAndCompilationSet();
+            auto MetadataElementName = F_GlobalRenderPipeline::GetMetadataElementName_BuildCommandsAndCompilationSet();
             ABYTEK_ENGINE_RENDER_CORE_ASSERT(Metadata.HasElement(MetadataElementName))
                 << ABYTEK_TEXT("Not found BuildCommandsAndCompilationSet metadata element in global render pipeline type: ")
                 << *Type->GetFullName();
             const auto& MetadataElement = Metadata.Get(MetadataElementName);
-            const auto& CastedMetadataElement = AnyCast<A_GlobalRenderPipeline::F_Metadata_BuildCommandsAndCompilationSet>(MetadataElement);
+            const auto& CastedMetadataElement = AnyCast<F_GlobalRenderPipeline::F_Metadata_BuildCommandsAndCompilationSet>(MetadataElement);
             ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
                 CastedMetadataElement(ABYTEK_STHIS(), SerializableEnvironment, RenderPackTemplateMap, Commands, TemplateHashCodesToCompile)
             );

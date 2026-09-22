@@ -10,7 +10,7 @@ namespace Abytek
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(F_Level)
-        ABYTEK_END_REFLECTOR(F_SimpleSRPSampleLevel)
+        ABYTEK_END_REFLECTOR(F_SimpleSRPSampleLevel);
         
     public:
         F_SimpleSRPSampleLevel(const F_SerializableObjectInitParams& InitParams);

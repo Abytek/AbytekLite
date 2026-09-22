@@ -38,6 +38,10 @@ namespace Abytek
         _FinalPromise->SetDebugName(ABYTEK_DEBUG_NAME("RHIProcess::FinalPromise"));
 #endif
             
+#ifdef ABYTEK_DEBUG_INFO
+        _CaptureEventState = F_RHICaptureEventState::Make(ABYTEK_DEBUG_NAME("Abytek::RHIProcess"));
+#endif
+        
         _Stage.store(E_RHIProcessStage::COMPILE, boost::memory_order_release);
 #ifdef ABYTEK_DEBUG_INFO
         _ZoneName = ABYTEK_TEXT("BeginCompile::Before");
@@ -49,29 +53,19 @@ namespace Abytek
 #ifdef ABYTEK_DEBUG_INFO
         _ZoneName = ABYTEK_TEXT("BeginCompile::After");
 #endif
-        
-        _UploadSubmissionList = RACreateAndBuildShared<A_RHISubmissionList>(ABYTEK_WTHIS());
-        _UploadCopySubmissionList = RACreateAndBuildShared<A_RHISubmissionList>(ABYTEK_WTHIS());
-        _ReadbackSubmissionList = RACreateAndBuildShared<A_RHISubmissionList>(ABYTEK_WTHIS());
-        _ReadbackCopySubmissionList = RACreateAndBuildShared<A_RHISubmissionList>(ABYTEK_WTHIS());
-#ifdef ABYTEK_DEBUG_INFO
-        _UploadSubmissionList->SetDebugName(ABYTEK_DEBUG_NAME("RHIUpload"));   
-        _UploadCopySubmissionList->SetDebugName(ABYTEK_DEBUG_NAME("RHIUploadCopy"));   
-        _ReadbackSubmissionList->SetDebugName(ABYTEK_DEBUG_NAME("RHIReadback"));   
-        _ReadbackCopySubmissionList->SetDebugName(ABYTEK_DEBUG_NAME("RHIReadbackCopy"));   
-#endif
     }
     void A_RHIProcess::Release()
     {        
         _IsFirstFlush = true;
         
 #ifdef ABYTEK_DEBUG_INFO
+        _CaptureEventState = {};
+#endif
+        
+#ifdef ABYTEK_DEBUG_INFO
         _ZoneName = ABYTEK_TEXT("None");
 #endif
         _Stage.store(E_RHIProcessStage::NONE, boost::memory_order_release);
-        
-        _CurrentSection_EndViewportIndex = 0;
-        _CurrentSection_BeginViewportIndex = 0;
         
         _CurrentSection_EndRootSubmissionItemIndex = 0;
         _CurrentSection_BeginRootSubmissionItemIndex = 0;
@@ -101,7 +95,6 @@ namespace Abytek
     void A_RHIProcess::PostCompile(E_RHIProcessFlushFlag Flags)
     {
         _CurrentSection_EndRootSubmissionItemIndex = _CurrentSection_BeginRootSubmissionItemIndex;
-        _CurrentSection_EndViewportIndex = _CurrentSection_BeginViewportIndex;
     }
 
     void A_RHIProcess::CleanCompile()
@@ -121,13 +114,6 @@ namespace Abytek
 #ifdef ABYTEK_DEBUG_INFO
         _ZoneName = ABYTEK_TEXT("Release_RootSubmissionItems::After");
 #endif
-        
-        _Viewports = {};
-        
-        _ReadbackCopySubmissionList = {};
-        _ReadbackSubmissionList = {};
-        _UploadCopySubmissionList = {};
-        _UploadSubmissionList = {};
     }
     void A_RHIProcess::_FlushPostCompileCommands()
     {
@@ -194,6 +180,10 @@ namespace Abytek
 
     TS_Unmanaged<F_TaskPromise> A_RHIProcess::Flush(E_RHIProcessFlushFlag Flags)
     {
+        if (Flags == E_RHIProcessFlushFlag::NONE)
+        {
+            return {};
+        }
         return H_TaskUtilities::Schedule(
             [RAThis = ABYTEK_STHIS(), this, Flags]()
             {
@@ -265,7 +255,6 @@ namespace Abytek
                     }
                     H_TaskUtilities::Switch();
                     _Contexts = {};
-                    _Viewports = {};
 #ifdef ABYTEK_DEBUG_INFO
                     _ZoneName = ABYTEK_TEXT("EndCompile::After");
 #endif
@@ -336,33 +325,38 @@ namespace Abytek
         );
     }
 
-    void A_RHIProcess::OnAddFrontSubmissionList(const TS_Valid<A_RHISubmissionList>& SubmissionList)
+    void A_RHIProcess::OnAddFrontSubmissionList(const TS<A_RHISubmissionList>& SubmissionList)
     {
         TF_ScopeLock<F_SpinLock> _(_QueueLock);
+        ABYTEK_ENGINE_RHI_ASSERT(_IsFirstFlush) << "Cannot add front submission list before first flush";
         ++_CurrentSection_EndRootSubmissionItemIndex;
         _RootSubmissionItems.insert(_RootSubmissionItems.begin() + _CurrentSection_BeginRootSubmissionItemIndex, SubmissionList);
     }
-    void A_RHIProcess::OnAddBackSubmissionItem(const TS_Valid<A_RHISubmissionItem>& SubmissionItem)
+    void A_RHIProcess::OnAddBackSubmissionItem(const TS<A_RHISubmissionItem>& SubmissionItem)
     {
         TF_ScopeLock<F_SpinLock> _(_QueueLock);
         ++_CurrentSection_EndRootSubmissionItemIndex;
         _RootSubmissionItems.push_back(SubmissionItem);
     }
 
-    void A_RHIProcess::AddViewport(const TS_Valid<A_RHIViewport>& Viewport)
+    TS<A_RHISubmissionList> A_RHIProcess::OnAddChild(E_RHISubmissionListOrder Order, const F_DebugName& DebugName)
     {
-        TF_ScopeLock<F_SpinLock> _(_QueueLock);
-        if (
-            std::find(
-                _Viewports.begin(),    
-                _Viewports.end(),
-                Viewport
-            )    
-            == _Viewports.end()
-        )
+        auto Result = RACreateAndBuildShared<A_RHISubmissionList>(ABYTEK_WTHIS(), Order);
+#ifdef ABYTEK_DEBUG_INFO
+        if (DebugName)
         {
-            _Viewports.push_back(Viewport);
-            ++_CurrentSection_EndViewportIndex;
+            Result->SetDebugName(DebugName);
         }
+#endif
+        AddSubmissionItem(Result);
+        return Result;
     }
+
+#ifdef ABYTEK_DEBUG_INFO
+    void A_RHIProcess::SetDebugName(const F_DebugName& Value) noexcept
+    {
+        A_RAObject::SetDebugName(Value);
+        _CaptureEventState.Name = Value;
+    }
+#endif
 }

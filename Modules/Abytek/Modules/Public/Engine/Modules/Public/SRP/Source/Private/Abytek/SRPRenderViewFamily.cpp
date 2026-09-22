@@ -3,11 +3,15 @@
 
 namespace Abytek
 {
-    F_SRPRenderViewFamily::F_SRPRenderViewFamily(const TW_Valid<F_WorldRenderResource>& WorldRenderResource, const F_RenderViewFamilyBuildParams& BuildParams) :
-        A_RenderViewFamily(WorldRenderResource, BuildParams)
+    void F_SRPRenderViewFamily::Init(
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
+        const F_RenderViewFamilyBuildParams& BuildParams
+    )
     {
+        A_RenderViewFamily::Init(SubmissionItemContainer, BuildParams);
     }
-    F_SRPRenderViewFamily::~F_SRPRenderViewFamily()
+    void F_SRPRenderViewFamily::Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
+        A_RenderViewFamily::Release(SubmissionItemContainer);
     }
 }

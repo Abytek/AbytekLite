@@ -8,7 +8,7 @@
 namespace Abytek
 {
     class F_RHIConstantDataPage;
-    struct I_RHISubmissionItemContainer;
+    class A_RHISubmissionItemContainer;
     class A_RHIResourceProxy;
     
     struct F_RHIConstantDataRangeProxy
@@ -51,13 +51,7 @@ namespace Abytek
         TS_Valid<A_RHIResource> GetBuffer() const;
         TS_Valid<A_RHIResourceView> CreateCBV() const;
         void Upload(
-            I_RHISubmissionItemContainer& SubmissionItemContainer,
-            const F_RHIBufferDataView& BufferDataView,
-            const F_DebugName& DebugName = {}
-        ) const;
-        void Upload(
-            I_RHISubmissionItemContainer& CPUSubmissionItemContainer,
-            I_RHISubmissionItemContainer& GPUSubmissionItemContainer,
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
             const F_RHIBufferDataView& BufferDataView,
             const F_DebugName& DebugName = {}
         ) const;
@@ -66,18 +60,24 @@ namespace Abytek
     
     struct F_RHIConstantDataPageBuildParams : F_RHIContextChildBuildParams
     {
+        U32 Index = 0;
         Sz SizeInBytes = 0;
     };
     
     class ABYTEK_ENGINE_RHI_API F_RHIConstantDataPage : public A_RHIContextChild
     {
     private:
+        U32 _Index = 0;
         Sz _SizeInBytes = 0;
         TS<A_RHIResource> _Buffer;
         
         F_LinearAllocationDistributor _Distributor;
         
     public:
+        ABYTEK_FORCE_INLINE auto GetIndex() const noexcept
+        {
+            return _Index;
+        }
         ABYTEK_FORCE_INLINE auto GetSizeInBytes() const noexcept
         {
             return _SizeInBytes;

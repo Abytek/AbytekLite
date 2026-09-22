@@ -2,11 +2,12 @@
 
 #include "Abytek/Engine.RHI.prerequisites.hpp"
 #include "Abytek/RHISubmissionItemContainerInterface.hpp"
+#include "Abytek/RHIProcessFlushFlag.hpp"
+#include "Abytek/RHICaptureEventState.hpp"
 
 
 namespace Abytek
 {
-    class A_RHIViewport;
     class A_RHIContext;
     class A_RHIContextProxy;
     class A_RHISubmissionItem;
@@ -17,15 +18,6 @@ namespace Abytek
     using F_RHIProcessPostExecuteCommand = TF_Function<void()>;
     using F_RHIProcessFlushExecuteDataCommand = TF_Function<void()>;
     using F_RHIProcessFlushProcessDataCommand = TF_Function<void()>;
-    
-    enum class E_RHIProcessFlushFlag
-    {
-        NONE = 0x0,
-        COMPILE = 0x1,
-        EXECUTE = 0x2 | COMPILE,
-        
-        DEFAULT = EXECUTE
-    };
     
     enum class E_RHIProcessStage : U8
     {
@@ -56,15 +48,6 @@ namespace Abytek
         U32 _CurrentSection_BeginRootSubmissionItemIndex = 0;
         U32 _CurrentSection_EndRootSubmissionItemIndex = 0;
         
-        TF_Vector<TS<A_RHIViewport>> _Viewports;
-        U32 _CurrentSection_BeginViewportIndex = 0;
-        U32 _CurrentSection_EndViewportIndex = 0;
-        
-        TS<A_RHISubmissionList> _UploadSubmissionList;
-        TS<A_RHISubmissionList> _UploadCopySubmissionList;
-        TS<A_RHISubmissionList> _ReadbackSubmissionList;
-        TS<A_RHISubmissionList> _ReadbackCopySubmissionList;
-        
         TF_ConcurrentQueue<F_RHIProcessPostCompileCommand> _PostCompileCommands;
         TF_ConcurrentQueue<F_RHIProcessFlushCompileDataCommand> _FlushCompileDataCommands;
         TF_ConcurrentQueue<F_RHIProcessPreExecuteCommand> _PreExecuteCommands;
@@ -85,6 +68,10 @@ namespace Abytek
         
 #ifdef ABYTEK_DEBUG_INFO
         F_Text _ZoneName;
+#endif
+        
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
+        F_RHICaptureEventState _CaptureEventState;
 #endif
         
     public:
@@ -120,36 +107,6 @@ namespace Abytek
             return _CurrentSection_EndRootSubmissionItemIndex;
         }
         
-        ABYTEK_FORCE_INLINE const auto& GetViewports() const noexcept
-        {
-            return _Viewports;
-        }
-        ABYTEK_FORCE_INLINE auto GetCurrentSection_BeginViewportIndex() const noexcept
-        {
-            return _CurrentSection_BeginViewportIndex;
-        }
-        ABYTEK_FORCE_INLINE auto GetCurrentSection_EndViewportIndex() const noexcept
-        {
-            return _CurrentSection_EndViewportIndex;
-        }
-        
-        ABYTEK_FORCE_INLINE const auto& GetUploadSubmissionList() const noexcept
-        {
-            return _UploadSubmissionList;
-        }
-        ABYTEK_FORCE_INLINE const auto& GetUploadCopySubmissionList() const noexcept
-        {
-            return _UploadCopySubmissionList;
-        }
-        ABYTEK_FORCE_INLINE const auto& GetReadbackSubmissionList() const noexcept
-        {
-            return _ReadbackSubmissionList;
-        }
-        ABYTEK_FORCE_INLINE const auto& GetReadbackCopySubmissionList() const noexcept
-        {
-            return _ReadbackCopySubmissionList;
-        }
-        
         ABYTEK_FORCE_INLINE auto GetArena() const noexcept
         {
             return _Arena.Weak();
@@ -177,6 +134,21 @@ namespace Abytek
         {
             return _Stage.load(boost::memory_order_acquire);
         }
+        
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
+        ABYTEK_FORCE_INLINE auto& GetCaptureEventState() noexcept
+        {
+            return _CaptureEventState;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetCaptureEventState() const noexcept
+        {
+            return _CaptureEventState;
+        }
+        void SetCaptureEventState(const F_RHICaptureEventState& Value) noexcept
+        {
+            _CaptureEventState = Value;
+        }
+#endif
         
     public:
         static AU32 _StaticCounter;
@@ -266,10 +238,15 @@ namespace Abytek
         }
         
     protected:
-        void OnAddFrontSubmissionList(const TS_Valid<A_RHISubmissionList>& SubmissionList) override;
-        void OnAddBackSubmissionItem(const TS_Valid<A_RHISubmissionItem>& SubmissionItem) override;
+        void OnAddFrontSubmissionList(const TS<A_RHISubmissionList>& SubmissionList) override;
+        void OnAddBackSubmissionItem(const TS<A_RHISubmissionItem>& SubmissionItem) override;
         
+    protected:
+        TS<A_RHISubmissionList> OnAddChild(E_RHISubmissionListOrder Order, const F_DebugName& DebugName) override;
+        
+#ifdef ABYTEK_DEBUG_INFO
     public:
-        void AddViewport(const TS_Valid<A_RHIViewport>& Viewport);
+        void SetDebugName(const F_DebugName& Value) noexcept override;
+#endif
     };
 }

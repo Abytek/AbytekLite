@@ -14,7 +14,7 @@ namespace Abytek
         
     public:
         ABYTEK_BEGIN_REFLECTOR(F_Subsystem)
-        ABYTEK_END_REFLECTOR(A_ApplicationSubsystem)
+        ABYTEK_END_REFLECTOR(A_ApplicationSubsystem);
         
     public:
         static F_Name GetStartupUpdateFunctionName();

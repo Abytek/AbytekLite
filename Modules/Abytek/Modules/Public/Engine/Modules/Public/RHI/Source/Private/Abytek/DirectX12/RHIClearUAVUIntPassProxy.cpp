@@ -1,4 +1,6 @@
 #include "Abytek/DirectX12/RHIClearUAVUIntPassProxy.hpp"
+
+#include "Abytek/DirectX12/RHIDescriptorManagerProxy.hpp"
 #include "Abytek/DirectX12/RHIResourceProxy.hpp"
 #include "Abytek/DirectX12/RHIResourceViewProxy.hpp"
 
@@ -34,6 +36,10 @@ namespace Abytek
         D3D12_GPU_DESCRIPTOR_HANDLE UAVGPUDescriptorHandle = CastedUAV->GetDescriptorRange().GetGPUHandle();
         D3D12_CPU_DESCRIPTOR_HANDLE UAVCPUDescriptorHandle = CastedUAV->GetDescriptorRange().GetCPUHandle(false);
         
+        H_DirectX12RHIDescriptorManagerProxy::PopulateCommandList(
+            ExecuteParams,
+            GetContextProxy().WithValidation()
+        );
         ExecuteParams.D3D12CommandList->ClearUnorderedAccessViewUint(
               UAVGPUDescriptorHandle,
               UAVCPUDescriptorHandle,
