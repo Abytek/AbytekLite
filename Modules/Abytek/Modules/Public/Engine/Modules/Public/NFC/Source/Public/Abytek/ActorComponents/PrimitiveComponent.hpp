@@ -36,8 +36,16 @@ namespace Abytek
         void OnDestroyRenderState() override;
         TS<A_RenderProxy> CreateRenderProxy() override;
         
+    protected:
+        virtual void OnEnable();
+        virtual void OnDisable();
+        
     public:
-        B8 Enable();
-        B8 Disable();
+        void Enable();
+        void Disable();
+        
+    private:
+        void _Enable_Impl();
+        void _Disable_Impl();
     };
 }

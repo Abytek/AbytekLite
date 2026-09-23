@@ -166,11 +166,11 @@ namespace Abytek
                 {
                     DestroyRenderState();
                 }
+                _IsRenderStateDirty = false;
                 if (IsRenderable())
                 {
                     CreateRenderState();
                 }
-                _IsRenderStateDirty = false;
             }
         );
     }

@@ -1,0 +1,7 @@
+#pragma once
+
+#ifdef ABYTEK_RENDER_GEOMETRY_ENABLE_MULTIPLE_PAGES
+#define ABYTEK_RENDER_GEOMETRY_GET_RESOURCE() RenderGeometryPages
+#else
+#define ABYTEK_RENDER_GEOMETRY_GET_RESOURCE() RenderGeometryPage_Single
+#endif

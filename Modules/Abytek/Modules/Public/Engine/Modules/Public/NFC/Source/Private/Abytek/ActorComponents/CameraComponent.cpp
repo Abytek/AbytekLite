@@ -2,8 +2,8 @@
 #include "Abytek/ActorComponents/CameraComponentManager.hpp"
 #include "Abytek/ActorComponents/CanvasComponent.hpp"
 #include "Abytek/ActorComponents/SceneComponent.hpp"
-#include "Abytek/ActorComponents/Render/CameraRenderProxy.hpp"
-#include "Abytek/ActorComponents/Render/CanvasRenderProxy.hpp"
+#include "Abytek/ActorComponents/Render/CameraComponentRenderProxy.hpp"
+#include "Abytek/ActorComponents/Render/CanvasComponentRenderProxy.hpp"
 #include "Abytek/Renderer/RenderScene.hpp"
 #include "Abytek/Frame/FrameHelper.hpp"
 
@@ -73,14 +73,14 @@ namespace Abytek
         
         if (_IsEnabled)
         {
-            _ActualEnable();
+            _Enable_Impl();
         }
     }
     void F_CameraComponent::OnUnregisterComponent()
     {
         if (_IsEnabled)
         {
-            _ActualDisable();
+            _Disable_Impl();
         }
         
         F_CanvasComponentManager::GetInstance()->Events.OnUnregisterComponent.RemoveListener(
@@ -106,11 +106,11 @@ namespace Abytek
         
         H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
             [
-                RenderProxy = GetRenderProxy().FastCast<F_CameraRenderProxy>(),
-                CanvasRenderProxy = _CanvasComponent->GetRenderProxy().FastCast<F_CanvasRenderProxy>()
+                RenderProxy = GetRenderProxy().FastCast<F_CameraComponentRenderProxy>(),
+                CanvasComponentRenderProxy = _CanvasComponent->GetRenderProxy().FastCast<F_CanvasComponentRenderProxy>()
             ]
             {
-                RenderProxy->_CanvasRenderProxy = CanvasRenderProxy.Weak();
+                RenderProxy->_CanvasComponentRenderProxy = CanvasComponentRenderProxy.Weak();
             }
         );
         
@@ -122,7 +122,7 @@ namespace Abytek
     }
     TS<A_RenderProxy> F_CameraComponent::CreateRenderProxy()
     {
-        return TS<F_CameraRenderProxy>()(ABYTEK_WTHIS());
+        return TS<F_CameraComponentRenderProxy>()(ABYTEK_WTHIS());
     }
 
     void F_CameraComponent::OnEnable()
@@ -141,7 +141,7 @@ namespace Abytek
         _IsEnabled = true;
         if (IsRegistered() && !HasSerializableFlags(E_SerializableObjectFlag::CDO))
         {
-            _ActualEnable();
+            _Enable_Impl();
         }
     }
     void F_CameraComponent::Disable()
@@ -153,16 +153,16 @@ namespace Abytek
         _IsEnabled = false;
         if (IsRegistered() && !HasSerializableFlags(E_SerializableObjectFlag::CDO))
         {
-            _ActualDisable();
+            _Disable_Impl();
         }
     }
 
-    void F_CameraComponent::_ActualEnable()
+    void F_CameraComponent::_Enable_Impl()
     {
         ChangeCanvasComponentToDefault();
         OnEnable();
     }
-    void F_CameraComponent::_ActualDisable()
+    void F_CameraComponent::_Disable_Impl()
     {
         OnDisable();
         ChangeCanvasComponent({});
@@ -261,7 +261,7 @@ namespace Abytek
         {
             H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                 [
-                    RenderProxy = GetRenderProxy().FastCast<F_CameraRenderProxy>(),
+                    RenderProxy = GetRenderProxy().FastCast<F_CameraComponentRenderProxy>(),
                     CachedValue = Value
                 ]
                 {
@@ -277,7 +277,7 @@ namespace Abytek
         {
             H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                 [
-                    RenderProxy = GetRenderProxy().FastCast<F_CameraRenderProxy>(),
+                    RenderProxy = GetRenderProxy().FastCast<F_CameraComponentRenderProxy>(),
                     CachedValue = Value
                 ]
                 {
@@ -293,7 +293,7 @@ namespace Abytek
         {
             H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                 [
-                    RenderProxy = GetRenderProxy().FastCast<F_CameraRenderProxy>(),
+                    RenderProxy = GetRenderProxy().FastCast<F_CameraComponentRenderProxy>(),
                     CachedValue = Value
                 ]
                 {
@@ -309,7 +309,7 @@ namespace Abytek
         {
             H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                 [
-                    RenderProxy = GetRenderProxy().FastCast<F_CameraRenderProxy>(),
+                    RenderProxy = GetRenderProxy().FastCast<F_CameraComponentRenderProxy>(),
                     CachedValue = Value
                 ]
                 {
@@ -327,7 +327,7 @@ namespace Abytek
     {
         H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
             [
-                RenderProxy = GetRenderProxy().FastCast<F_CameraRenderProxy>()
+                RenderProxy = GetRenderProxy().FastCast<F_CameraComponentRenderProxy>()
             ]
             {
                 RenderProxy->Draw_RenderTask(H_RHI::GetMainSubmissionQueue());
@@ -369,7 +369,7 @@ namespace Abytek
     {
         H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
             [
-                RenderProxy = GetRenderProxy().FastCast<F_CameraRenderProxy>(),
+                RenderProxy = GetRenderProxy().FastCast<F_CameraComponentRenderProxy>(),
                 CachedViewMatrix_Mono = GetViewMatrix_Mono(),
                 CachedViewMatrix_StereoLeft = GetViewMatrix_StereoLeft(),
                 CachedViewMatrix_StereoRight = GetViewMatrix_StereoRight(),

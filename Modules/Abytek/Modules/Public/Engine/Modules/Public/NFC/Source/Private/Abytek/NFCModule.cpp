@@ -8,7 +8,7 @@
 
 #include "Abytek/ActorComponents/CanvasComponent.hpp"
 #include "Abytek/ActorComponents/CanvasComponentManager.hpp"
-#include "Abytek/ActorComponents/Render/CanvasRenderProxy.hpp"
+#include "Abytek/ActorComponents/Render/CanvasComponentRenderProxy.hpp"
 
 #include "Abytek/ActorComponents/CameraComponent.hpp"
 #include "Abytek/ActorComponents/CameraComponentManager.hpp"

@@ -1,7 +1,7 @@
 #include "Abytek/Renderer/RenderViewFamily.hpp"
 #include "Abytek/Renderer/RenderObjectFactory.hpp"
-#include "Abytek/ActorComponents/Render/CanvasRenderProxy.hpp"
-#include "Abytek/ActorComponents/Render/CameraRenderProxy.hpp"
+#include "Abytek/ActorComponents/Render/CanvasComponentRenderProxy.hpp"
+#include "Abytek/ActorComponents/Render/CameraComponentRenderProxy.hpp"
 
 
 namespace Abytek
@@ -13,10 +13,10 @@ namespace Abytek
     {
         InitMinimal(SubmissionItemContainer);
         
-        _CanvasRenderProxy = BuildParams.CanvasRenderProxy;
-        _CameraRenderProxy = BuildParams.CameraRenderProxy;
+        _CanvasComponentRenderProxy = BuildParams.CanvasComponentRenderProxy;
+        _CameraComponentRenderProxy = BuildParams.CameraComponentRenderProxy;
         _Scene = BuildParams.Scene;
-        switch (_CanvasRenderProxy->GetTopology())
+        switch (_CanvasComponentRenderProxy->GetTopology())
         {
         case E_CanvasTopology::MONO:
             {
@@ -27,11 +27,11 @@ namespace Abytek
                     | E_RenderViewFlag::PRIMARY
                     | E_RenderViewFlag::MONO
                 );
-                ViewBuildParams.ProjectionOptions = _CameraRenderProxy->GetProjectionOptions();
-                ViewBuildParams.Resolution = _CanvasRenderProxy->GetResolution_Mono();
-                ViewBuildParams.AspectRatio = _CanvasRenderProxy->GetAspectRatio_Mono();
-                ViewBuildParams.ViewMatrix = _CameraRenderProxy->GetViewMatrix_Mono();
-                ViewBuildParams.RTV = _CanvasRenderProxy->GetRTV_RTTexture_Mono();
+                ViewBuildParams.ProjectionOptions = _CameraComponentRenderProxy->GetProjectionOptions();
+                ViewBuildParams.Resolution = _CanvasComponentRenderProxy->GetResolution_Mono();
+                ViewBuildParams.AspectRatio = _CanvasComponentRenderProxy->GetAspectRatio_Mono();
+                ViewBuildParams.ViewMatrix = _CameraComponentRenderProxy->GetViewMatrix_Mono();
+                ViewBuildParams.RTV = _CanvasComponentRenderProxy->GetRTV_RTTexture_Mono();
                 auto View = GetRenderObjectFactory()->CreateView();
 #ifdef ABYTEK_DEBUG_INFO
                 View->SetDebugName(
@@ -52,11 +52,11 @@ namespace Abytek
                     | E_RenderViewFlag::PRIMARY
                     | E_RenderViewFlag::STEREO_LEFT
                 );
-                ViewLeftBuildParams.ProjectionOptions = _CameraRenderProxy->GetProjectionOptions();
-                ViewLeftBuildParams.Resolution = _CanvasRenderProxy->GetResolution_StereoLeft();
-                ViewLeftBuildParams.AspectRatio = _CanvasRenderProxy->GetAspectRatio_StereoLeft();
-                ViewLeftBuildParams.ViewMatrix = _CameraRenderProxy->GetViewMatrix_StereoLeft();
-                ViewLeftBuildParams.RTV = _CanvasRenderProxy->GetRTV_RTTexture_StereoLeft();
+                ViewLeftBuildParams.ProjectionOptions = _CameraComponentRenderProxy->GetProjectionOptions();
+                ViewLeftBuildParams.Resolution = _CanvasComponentRenderProxy->GetResolution_StereoLeft();
+                ViewLeftBuildParams.AspectRatio = _CanvasComponentRenderProxy->GetAspectRatio_StereoLeft();
+                ViewLeftBuildParams.ViewMatrix = _CameraComponentRenderProxy->GetViewMatrix_StereoLeft();
+                ViewLeftBuildParams.RTV = _CanvasComponentRenderProxy->GetRTV_RTTexture_StereoLeft();
                 auto ViewLeft = GetRenderObjectFactory()->CreateView();
                 ViewLeft->Init(SubmissionItemContainer, ViewLeftBuildParams);
 #ifdef ABYTEK_DEBUG_INFO
@@ -74,11 +74,11 @@ namespace Abytek
                     | E_RenderViewFlag::PRIMARY
                     | E_RenderViewFlag::STEREO_RIGHT
                 );
-                ViewRightBuildParams.ProjectionOptions = _CameraRenderProxy->GetProjectionOptions();
-                ViewRightBuildParams.Resolution = _CanvasRenderProxy->GetResolution_StereoRight();
-                ViewRightBuildParams.AspectRatio = _CanvasRenderProxy->GetAspectRatio_StereoRight();
-                ViewRightBuildParams.ViewMatrix = _CameraRenderProxy->GetViewMatrix_StereoRight();
-                ViewRightBuildParams.RTV = _CanvasRenderProxy->GetRTV_RTTexture_StereoRight();
+                ViewRightBuildParams.ProjectionOptions = _CameraComponentRenderProxy->GetProjectionOptions();
+                ViewRightBuildParams.Resolution = _CanvasComponentRenderProxy->GetResolution_StereoRight();
+                ViewRightBuildParams.AspectRatio = _CanvasComponentRenderProxy->GetAspectRatio_StereoRight();
+                ViewRightBuildParams.ViewMatrix = _CameraComponentRenderProxy->GetViewMatrix_StereoRight();
+                ViewRightBuildParams.RTV = _CanvasComponentRenderProxy->GetRTV_RTTexture_StereoRight();
                 auto ViewRight = GetRenderObjectFactory()->CreateView();
                 ViewRight->Init(SubmissionItemContainer, ViewRightBuildParams);
 #ifdef ABYTEK_DEBUG_INFO
@@ -91,7 +91,7 @@ namespace Abytek
             }
             break;
         default:
-            ABYTEK_LOG_FATAL() << "Invalid canvas topology: " << static_cast<U32>(_CanvasRenderProxy->GetTopology());
+            ABYTEK_LOG_FATAL() << "Invalid canvas topology: " << static_cast<U32>(_CanvasComponentRenderProxy->GetTopology());
             break;
         }
     }
@@ -104,8 +104,8 @@ namespace Abytek
         _Views = {};
         
         _Scene = {};
-        _CameraRenderProxy = {};
-        _CanvasRenderProxy = {};
+        _CameraComponentRenderProxy = {};
+        _CanvasComponentRenderProxy = {};
         
         A_RenderObject::Release(SubmissionItemContainer);
     }
@@ -121,24 +121,24 @@ namespace Abytek
         {
             if (View->HasFlags(E_RenderViewFlag::MONO))
             {
-                View->SetResolution(_CanvasRenderProxy->GetResolution_Mono());
-                View->SetAspectRatio(_CanvasRenderProxy->GetAspectRatio_Mono());
-                View->SetViewMatrix(_CameraRenderProxy->GetViewMatrix_Mono());
-                View->SetRTV(_CanvasRenderProxy->GetRTV_RTTexture_Mono());
+                View->SetResolution(_CanvasComponentRenderProxy->GetResolution_Mono());
+                View->SetAspectRatio(_CanvasComponentRenderProxy->GetAspectRatio_Mono());
+                View->SetViewMatrix(_CameraComponentRenderProxy->GetViewMatrix_Mono());
+                View->SetRTV(_CanvasComponentRenderProxy->GetRTV_RTTexture_Mono());
             }
             if (View->HasFlags(E_RenderViewFlag::STEREO_LEFT))
             {
-                View->SetResolution(_CanvasRenderProxy->GetResolution_StereoLeft());
-                View->SetAspectRatio(_CanvasRenderProxy->GetAspectRatio_StereoLeft());
-                View->SetViewMatrix(_CameraRenderProxy->GetViewMatrix_StereoLeft());
-                View->SetRTV(_CanvasRenderProxy->GetRTV_RTTexture_StereoLeft());
+                View->SetResolution(_CanvasComponentRenderProxy->GetResolution_StereoLeft());
+                View->SetAspectRatio(_CanvasComponentRenderProxy->GetAspectRatio_StereoLeft());
+                View->SetViewMatrix(_CameraComponentRenderProxy->GetViewMatrix_StereoLeft());
+                View->SetRTV(_CanvasComponentRenderProxy->GetRTV_RTTexture_StereoLeft());
             }
             if (View->HasFlags(E_RenderViewFlag::STEREO_RIGHT))
             {
-                View->SetResolution(_CanvasRenderProxy->GetResolution_StereoRight());
-                View->SetAspectRatio(_CanvasRenderProxy->GetAspectRatio_StereoRight());
-                View->SetViewMatrix(_CameraRenderProxy->GetViewMatrix_StereoRight());
-                View->SetRTV(_CanvasRenderProxy->GetRTV_RTTexture_StereoRight());
+                View->SetResolution(_CanvasComponentRenderProxy->GetResolution_StereoRight());
+                View->SetAspectRatio(_CanvasComponentRenderProxy->GetAspectRatio_StereoRight());
+                View->SetViewMatrix(_CameraComponentRenderProxy->GetViewMatrix_StereoRight());
+                View->SetRTV(_CanvasComponentRenderProxy->GetRTV_RTTexture_StereoRight());
             }
             View->BeginFrame(SubmissionItemContainer);
         }

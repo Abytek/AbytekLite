@@ -1,13 +1,13 @@
 module CubeVS;
 
 import Abytek.SRP.BasicDrawers.CubeCommon;
-import Abytek.NFC.RenderView;
+import Abytek.Renderer.RenderView;
 
-ConstantBuffer<Abytek::NFC::RenderView::F_UniformData> ViewUniformData;
-ConstantBuffer<Abytek::SRP::BasicDrawers::Cube::F_UniformData> CubeUniformData;
+ConstantBuffer<Abytek::F_RenderViewUniformData> ViewUniformData;
+ConstantBuffer<Abytek::F_SRPBasicCubeUniformData> CubeUniformData;
 
 [shader("vertex")]
-Abytek::SRP::BasicDrawers::Cube::F_PSInput MainVS(Abytek::SRP::BasicDrawers::Cube::F_VSInput VSInput)
+Abytek::F_SRPBasicCubePSInput MainVS(Abytek::F_SRPBasicCubeVSInput VSInput)
 {
     // 36 vertices = 6 faces * 2 triangles * 3 vertices
     static const float3 LocalPositions[] =
@@ -67,7 +67,7 @@ Abytek::SRP::BasicDrawers::Cube::F_PSInput MainVS(Abytek::SRP::BasicDrawers::Cub
         float3(-1.0f, -1.0f, 1.0f),
     };
 
-    Abytek::SRP::BasicDrawers::Cube::F_PSInput PSInput;
+    Abytek::F_SRPBasicCubePSInput PSInput;
 
     float3 LocalPosition = LocalPositions[VSInput.VertexId];
     float3 WorldPosition = mul(CubeUniformData.TransformMatrix, float4(LocalPosition, 1.0f)).xyz;

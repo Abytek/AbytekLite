@@ -2,10 +2,10 @@ module StaticMeshPS;
 
 import Abytek.SRP.BasicDrawers.StaticMeshCommon;
 
-ConstantBuffer<Abytek::SRP::BasicDrawers::StaticMesh::F_UniformData> StaticMeshUniformData;
+ConstantBuffer<Abytek::F_SRPBasicStaticMeshUniformData> StaticMeshUniformData;
 
 [shader("fragment")]
-float4 MainPS(Abytek::SRP::BasicDrawers::StaticMesh::F_PSInput PSInput) : SV_Target0
+float4 MainPS(Abytek::F_SRPBasicStaticMeshPSInput PSInput) : SV_Target0
 {
     float3 Lighting = lerp(
         float3(0.3f, 0.3f, 0.3f),

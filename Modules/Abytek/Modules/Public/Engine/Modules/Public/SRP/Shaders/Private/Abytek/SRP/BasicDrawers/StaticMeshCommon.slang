@@ -1,13 +1,13 @@
 module StaticMeshCommon;
 
-namespace Abytek::SRP::BasicDrawers::StaticMesh
+namespace Abytek
 {
-    public struct F_VSInput
+    public struct F_SRPBasicStaticMeshVSInput
     {
         public uint VertexId : SV_VertexID;
     };
 
-    public struct F_PSInput
+    public struct F_SRPBasicStaticMeshPSInput
     {
         public float4 ClipPosition : SV_Position;
         public float3 WorldPosition : POSITION;
@@ -16,7 +16,7 @@ namespace Abytek::SRP::BasicDrawers::StaticMesh
         public uint TriangleId : TRIANGLE_ID;
     };
 
-    public struct F_UniformData
+    public struct F_SRPBasicStaticMeshUniformData
     {
         public float4x4 TransformMatrix;
         public float4x4 InverseTransposeTransformMatrix;

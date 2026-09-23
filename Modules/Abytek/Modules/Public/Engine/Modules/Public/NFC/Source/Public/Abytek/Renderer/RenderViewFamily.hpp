@@ -6,33 +6,33 @@
 
 namespace Abytek
 {
-    class F_CanvasRenderProxy;
-    class F_CameraRenderProxy;
+    class F_CanvasComponentRenderProxy;
+    class F_CameraComponentRenderProxy;
     class A_RenderScene;
     class A_RenderView;
 
     struct F_RenderViewFamilyBuildParams
     {
-        TW<F_CanvasRenderProxy> CanvasRenderProxy;
-        TW<F_CameraRenderProxy> CameraRenderProxy;
+        TW<F_CanvasComponentRenderProxy> CanvasComponentRenderProxy;
+        TW<F_CameraComponentRenderProxy> CameraComponentRenderProxy;
         TW<A_RenderScene> Scene;
     };
     class ABYTEK_ENGINE_NFC_API A_RenderViewFamily : public A_RenderObject
     {
     private:
-        TW<F_CanvasRenderProxy> _CanvasRenderProxy;
-        TW<F_CameraRenderProxy> _CameraRenderProxy;
+        TW<F_CanvasComponentRenderProxy> _CanvasComponentRenderProxy;
+        TW<F_CameraComponentRenderProxy> _CameraComponentRenderProxy;
         TW<A_RenderScene> _Scene;
         TF_Vector<TS<A_RenderView>> _Views;
         
     public:
-        ABYTEK_FORCE_INLINE const auto& GetCanvasRenderProxy() const noexcept
+        ABYTEK_FORCE_INLINE const auto& GetCanvasComponentRenderProxy() const noexcept
         {
-            return _CanvasRenderProxy;
+            return _CanvasComponentRenderProxy;
         }
-        ABYTEK_FORCE_INLINE const auto& GetCameraRenderProxy() const noexcept
+        ABYTEK_FORCE_INLINE const auto& GetCameraComponentRenderProxy() const noexcept
         {
-            return _CameraRenderProxy;
+            return _CameraComponentRenderProxy;
         }
         ABYTEK_FORCE_INLINE const auto& GetScene() const noexcept
         {

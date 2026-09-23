@@ -163,8 +163,8 @@ namespace Abytek
         void Disable();
         
     private:
-        void _ActualEnable();
-        void _ActualDisable();
+        void _Enable_Impl();
+        void _Disable_Impl();
         
     protected:
         virtual void OnBindCanvasComponent();

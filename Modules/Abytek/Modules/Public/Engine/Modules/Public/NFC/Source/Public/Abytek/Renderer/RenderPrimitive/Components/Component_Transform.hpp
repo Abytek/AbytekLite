@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "Abytek/Engine.NFC.prerequisites.hpp"
-#include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveCommon.hpp"
 #include "Abytek/Renderer/GPUData/GPUDataComponentType.hpp"
 
 

@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "Abytek/Engine.NFC.prerequisites.hpp"
-#include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveCommon.hpp"
+#include "Abytek/Renderer/RenderMesh/RenderMeshHandle.hpp"
 #include "Abytek/Renderer/GPUData/GPUDataComponentType.hpp"
 
 
@@ -17,7 +17,7 @@ namespace Abytek
                 ABYTEK_NAME("Abytek::RenderPrimitive::F_Component_MeshHandle")
             );
             
-            F_RenderPrimitiveMeshHandle Handle = INVALID_RENDER_PRIMITIVE_MESH_HANDLE;
+            F_RenderMeshHandle Handle = INVALID_RENDER_MESH_HANDLE;
         };
     }
 }

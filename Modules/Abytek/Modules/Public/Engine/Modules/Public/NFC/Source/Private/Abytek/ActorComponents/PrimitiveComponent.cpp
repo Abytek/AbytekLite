@@ -19,10 +19,20 @@ namespace Abytek
     void A_PrimitiveComponent::OnRegisterComponent()
     {
         A_RenderableComponent::OnRegisterComponent();
+        
+        if (_IsEnabled)
+        {
+            _Enable_Impl();
+        }
     }
 
     void A_PrimitiveComponent::OnUnregisterComponent()
     {
+        if (_IsEnabled)
+        {
+            _Disable_Impl();
+        }
+        
         A_RenderableComponent::OnUnregisterComponent();
     }
 
@@ -44,16 +54,44 @@ namespace Abytek
         return {};
     }
 
-    B8 A_PrimitiveComponent::Enable()
+    void A_PrimitiveComponent::OnEnable()
     {
-        B8 Result = _IsEnabled;
-        _IsEnabled = true;
-        return Result;
     }
-    B8 A_PrimitiveComponent::Disable()
+    void A_PrimitiveComponent::OnDisable()
     {
-        B8 Result = _IsEnabled;
+    }
+
+    void A_PrimitiveComponent::Enable()
+    {
+        if (_IsEnabled)
+        {
+            return;
+        }
+        _IsEnabled = true;
+        if (IsRegistered() && !HasSerializableFlags(E_SerializableObjectFlag::CDO))
+        {
+            _Enable_Impl();
+        }
+    }
+    void A_PrimitiveComponent::Disable()
+    {
+        if (!_IsEnabled)
+        {
+            return;
+        }
         _IsEnabled = false;
-        return Result;
+        if (IsRegistered() && !HasSerializableFlags(E_SerializableObjectFlag::CDO))
+        {
+            _Disable_Impl();
+        }
+    }
+
+    void A_PrimitiveComponent::_Enable_Impl()
+    {
+        OnEnable();
+    }
+    void A_PrimitiveComponent::_Disable_Impl()
+    {
+        OnDisable();
     }
 }

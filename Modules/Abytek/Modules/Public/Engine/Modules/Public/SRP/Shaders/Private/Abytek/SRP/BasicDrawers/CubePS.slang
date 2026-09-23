@@ -2,10 +2,10 @@ module CubePS;
 
 import Abytek.SRP.BasicDrawers.CubeCommon;
 
-ConstantBuffer<Abytek::SRP::BasicDrawers::Cube::F_UniformData> CubeUniformData;
+ConstantBuffer<Abytek::F_SRPBasicCubeUniformData> CubeUniformData;
 
 [shader("fragment")]
-float4 MainPS(Abytek::SRP::BasicDrawers::Cube::F_PSInput PSInputput) : SV_Target0
+float4 MainPS(Abytek::F_SRPBasicCubePSInput PSInputput) : SV_Target0
 {
     return CubeUniformData.Color;
 }

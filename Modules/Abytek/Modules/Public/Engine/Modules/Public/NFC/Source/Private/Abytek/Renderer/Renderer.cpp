@@ -1,7 +1,7 @@
 ﻿#include "Abytek/Renderer/Renderer.hpp"
 #include "Abytek/Renderer/RenderViewFamily.hpp"
 #include "Abytek/Renderer/RenderView.hpp"
-#include "Abytek/ActorComponents/Render/CanvasRenderProxy.hpp"
+#include "Abytek/ActorComponents/Render/CanvasComponentRenderProxy.hpp"
 
 
 namespace Abytek

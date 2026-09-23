@@ -2,7 +2,6 @@
 
 #include "Abytek/Engine.NFC.prerequisites.hpp"
 #include "Abytek/Renderer/RenderObject.hpp"
-#include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveCommon.hpp"
 #include "Abytek/Renderer/RenderPrimitive/Components/Component_Transform.hpp"
 #include "Abytek/Renderer/RenderPrimitive/Components/Component_InverseTransposeTransform.hpp"
 #include "Abytek/Renderer/RenderPrimitive/Components/Component_MeshHandle.hpp"
@@ -16,7 +15,7 @@ namespace Abytek
     struct F_RenderPrimitiveSetBuildParams
     {
         TW<F_RenderPrimitiveManager> Manager;
-        U32 Num = 0;
+        U32 Num = 1;
     };
     class ABYTEK_ENGINE_NFC_API F_RenderPrimitiveSet final : public A_RenderObject
     {

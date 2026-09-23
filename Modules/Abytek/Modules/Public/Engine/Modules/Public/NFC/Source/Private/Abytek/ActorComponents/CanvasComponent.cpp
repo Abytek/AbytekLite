@@ -2,8 +2,8 @@
 #include "Abytek/ActorComponents/CameraComponent.hpp"
 #include "Abytek/ApplicationUpdateFunction.hpp"
 #include "Abytek/ActorComponents/CanvasComponentManager.hpp"
-#include "Abytek/ActorComponents/Render/CameraRenderProxy.hpp"
-#include "Abytek/ActorComponents/Render/CanvasRenderProxy.hpp"
+#include "Abytek/ActorComponents/Render/CameraComponentRenderProxy.hpp"
+#include "Abytek/ActorComponents/Render/CanvasComponentRenderProxy.hpp"
 #include "Abytek/Assets/Texture.hpp"
 #include "Abytek/Assets/Render/TextureRenderProxy.hpp"
 #include "Abytek/WindowManager.hpp"
@@ -297,7 +297,7 @@ namespace Abytek
         
         H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
             [
-                RenderProxy = GetRenderProxy().FastCast<F_CanvasRenderProxy>(), 
+                RenderProxy = GetRenderProxy().FastCast<F_CanvasComponentRenderProxy>(), 
                 Format = _Format,
                 Resolution_Mono = _Resolution_Mono,
                 Resolution_StereoLeft = _Resolution_StereoLeft,
@@ -354,7 +354,7 @@ namespace Abytek
                         {
                             return;
                         }
-                        auto RenderProxy = GetRenderProxy().FastCast<F_CanvasRenderProxy>();
+                        auto RenderProxy = GetRenderProxy().FastCast<F_CanvasComponentRenderProxy>();
                         H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                             [
                                 RenderProxy, 
@@ -475,7 +475,7 @@ namespace Abytek
         {
             H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                 [
-                    RenderProxy = GetRenderProxy().FastCast<F_CanvasRenderProxy>(), 
+                    RenderProxy = GetRenderProxy().FastCast<F_CanvasComponentRenderProxy>(), 
                     Window = _Window
                 ]
                 {
@@ -484,7 +484,7 @@ namespace Abytek
             );
             H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                 [
-                    RenderProxy = GetRenderProxy().FastCast<F_CanvasRenderProxy>(), 
+                    RenderProxy = GetRenderProxy().FastCast<F_CanvasComponentRenderProxy>(), 
                     ScaledClientSize = _Window->GetScaledClientSize()
                 ]
                 {
@@ -497,7 +497,7 @@ namespace Abytek
         {
             H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                 [
-                    RenderProxy = GetRenderProxy().FastCast<F_CanvasRenderProxy>(), 
+                    RenderProxy = GetRenderProxy().FastCast<F_CanvasComponentRenderProxy>(), 
                     TextureRenderProxy = _OutputTexture_Mono->GetRenderProxy().FastCast<F_TextureRenderProxy>()
                 ]
                 {
@@ -509,7 +509,7 @@ namespace Abytek
         {
             H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                 [
-                    RenderProxy = GetRenderProxy().FastCast<F_CanvasRenderProxy>(), 
+                    RenderProxy = GetRenderProxy().FastCast<F_CanvasComponentRenderProxy>(), 
                     TextureRenderProxy = _OutputTexture_StereoLeft->GetRenderProxy().FastCast<F_TextureRenderProxy>()
                 ]
                 {
@@ -521,7 +521,7 @@ namespace Abytek
         {
             H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                 [
-                    RenderProxy = GetRenderProxy().FastCast<F_CanvasRenderProxy>(), 
+                    RenderProxy = GetRenderProxy().FastCast<F_CanvasComponentRenderProxy>(), 
                     TextureRenderProxy = _OutputTexture_StereoRight->GetRenderProxy().FastCast<F_TextureRenderProxy>()
                 ]
                 {
@@ -532,7 +532,7 @@ namespace Abytek
         
         H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
             [
-                RenderProxy = GetRenderProxy().FastCast<F_CanvasRenderProxy>(), 
+                RenderProxy = GetRenderProxy().FastCast<F_CanvasComponentRenderProxy>(), 
                 OutputMode = _OutputMode,
                 PresentationMode = _PresentationMode,
                 Topology = _Topology
@@ -548,7 +548,7 @@ namespace Abytek
         {
             H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                 [
-                    RenderProxy = GetRenderProxy().FastCast<F_CanvasRenderProxy>(), 
+                    RenderProxy = GetRenderProxy().FastCast<F_CanvasComponentRenderProxy>(), 
                     TextureRenderProxy = _RTTexture_Mono->GetRenderProxy().FastCast<F_TextureRenderProxy>()
                 ]
                 {
@@ -560,7 +560,7 @@ namespace Abytek
         {
             H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                 [
-                    RenderProxy = GetRenderProxy().FastCast<F_CanvasRenderProxy>(), 
+                    RenderProxy = GetRenderProxy().FastCast<F_CanvasComponentRenderProxy>(), 
                     TextureRenderProxy = _RTTexture_StereoLeft->GetRenderProxy().FastCast<F_TextureRenderProxy>()
                 ]
                 {
@@ -572,7 +572,7 @@ namespace Abytek
         {
             H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                 [
-                    RenderProxy = GetRenderProxy().FastCast<F_CanvasRenderProxy>(), 
+                    RenderProxy = GetRenderProxy().FastCast<F_CanvasComponentRenderProxy>(), 
                     TextureRenderProxy = _RTTexture_StereoRight->GetRenderProxy().FastCast<F_TextureRenderProxy>()
                 ]
                 {
@@ -585,11 +585,11 @@ namespace Abytek
         {
             H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                 [
-                    RenderProxy = GetRenderProxy().FastCast<F_CanvasRenderProxy>(),
-                    CameraRenderProxy = _CameraComponent->GetRenderProxy().FastCast<F_CameraRenderProxy>()
+                    RenderProxy = GetRenderProxy().FastCast<F_CanvasComponentRenderProxy>(),
+                    CameraComponentRenderProxy = _CameraComponent->GetRenderProxy().FastCast<F_CameraComponentRenderProxy>()
                 ]
                 {
-                    RenderProxy->_CameraRenderProxy = CameraRenderProxy;
+                    RenderProxy->_CameraComponentRenderProxy = CameraComponentRenderProxy;
                 }
             );
             
@@ -621,7 +621,7 @@ namespace Abytek
     }
     TS<A_RenderProxy> F_CanvasComponent::CreateRenderProxy()
     {
-        return TS<F_CanvasRenderProxy>()(ABYTEK_WTHIS());
+        return TS<F_CanvasComponentRenderProxy>()(ABYTEK_WTHIS());
     }
 
     void F_CanvasComponent::SetTitle(const F_Text& Value)
@@ -655,7 +655,7 @@ namespace Abytek
         if (auto RenderProxy = GetRenderProxy())
         {
             H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
-                [CachedRenderProxy = RenderProxy.FastCast<F_CanvasRenderProxy>(), ClearColor = _ClearColor]
+                [CachedRenderProxy = RenderProxy.FastCast<F_CanvasComponentRenderProxy>(), ClearColor = _ClearColor]
                 {
                     CachedRenderProxy->_ClearColor = ClearColor;
                 }
@@ -736,14 +736,14 @@ namespace Abytek
         }
         
         H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
-            [CachedRenderProxy = GetRenderProxy().FastCast<F_CanvasRenderProxy>()]
+            [CachedRenderProxy = GetRenderProxy().FastCast<F_CanvasComponentRenderProxy>()]
             {
                 CachedRenderProxy->BeginDraw_RenderTask(H_RHI::GetMainSubmissionQueue());
             }
         );
         OnDraw();
         H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
-            [CachedRenderProxy = GetRenderProxy().FastCast<F_CanvasRenderProxy>()]
+            [CachedRenderProxy = GetRenderProxy().FastCast<F_CanvasComponentRenderProxy>()]
             {
                 CachedRenderProxy->EndDraw_RenderTask(H_RHI::GetMainSubmissionQueue());
             }

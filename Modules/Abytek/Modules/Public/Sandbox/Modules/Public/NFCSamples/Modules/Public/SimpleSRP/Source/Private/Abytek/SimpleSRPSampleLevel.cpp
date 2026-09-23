@@ -1,7 +1,7 @@
 #include "Abytek/SimpleSRPSampleLevel.hpp"
 #include "Abytek/SampleSpectatorComponent.hpp"
 #include "Abytek/Actor/Actor.hpp"
-#include "Abytek/ActorComponents/Render/CameraRenderProxy.hpp"
+#include "Abytek/ActorComponents/Render/CameraComponentRenderProxy.hpp"
 #include "Abytek/ActorComponents/CanvasComponent.hpp"
 #include "Abytek/World/WorldContextHelper.hpp"
 #include "Abytek/Assets/StaticMesh.hpp"
@@ -81,12 +81,12 @@ namespace Abytek
             {
                 auto WorldRenderResource = F_WorldRenderResource::Get_MainTask(ABYTEK_WTHIS());
                 auto StaticMeshRenderProxy = StaticMesh->GetRenderProxy().StaticCast<F_StaticMeshRenderProxy>();
-                auto CameraRenderProxy = CameraComponent->GetRenderProxy().StaticCast<F_CameraRenderProxy>();
+                auto CameraComponentRenderProxy = CameraComponent->GetRenderProxy().StaticCast<F_CameraComponentRenderProxy>();
                 
                 H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                     [=]
                     {
-                        auto Renderer = CameraRenderProxy->GetRenderer();
+                        auto Renderer = CameraComponentRenderProxy->GetRenderer();
                         Renderer->PostRenderQueue.Push(
                             [=](const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
                             {

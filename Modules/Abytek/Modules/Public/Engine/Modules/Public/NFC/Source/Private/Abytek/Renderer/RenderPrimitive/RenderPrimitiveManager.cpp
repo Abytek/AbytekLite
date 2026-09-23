@@ -1,9 +1,4 @@
 ﻿#include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveManager.hpp"
-#include "Abytek/Renderer/RenderPrimitive/Components/Component_Transform.hpp"
-#include "Abytek/Renderer/RenderPrimitive/Components/Component_InverseTransposeTransform.hpp"
-#include "Abytek/Renderer/RenderPrimitive/Components/Component_MeshHandle.hpp"
-#include "Abytek/Renderer/GPUData/GPUData.hpp"
-#include "Abytek/Renderer/GPUData/GPUDataInstanceSet.hpp"
 #include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveSet.hpp"
 
 

@@ -1,5 +1,5 @@
 #include "Abytek/Renderer/RenderView.hpp"
-#include "Abytek/ActorComponents/Render/CameraRenderProxy.hpp"
+#include "Abytek/ActorComponents/Render/CameraComponentRenderProxy.hpp"
 
 
 namespace Abytek
