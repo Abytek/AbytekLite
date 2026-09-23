@@ -4,16 +4,29 @@
 #include "Abytek/GlobalRenderPipeline.hpp"
 #include "Abytek/Renderer/RenderPrimitive/Components/Component_Transform.hpp"
 #include "Abytek/Renderer/RenderPrimitive/Components/Component_InverseTransposeTransform.hpp"
+#include "Abytek/Renderer/RenderPrimitive/Components/Component_MeshHandle.hpp"
+#include "Abytek/Renderer/GPUData/GPUData.hpp"
 
 
 namespace Abytek
 {
     class A_RenderScene;
-    class F_GPUData;
     class F_RenderPrimitiveSet;
     
     namespace RenderPrimitive
     {
+        struct F_Data
+        {
+            ABYTEK_GPU_DATA(
+                F_Data, 
+                ABYTEK_NAME("RenderPrimitive"),
+                ABYTEK_NAME("Abytek::RenderPrimitive::F_Data"),
+                F_Component_Transform,
+                F_Component_InverseTransposeTransform,
+                F_Component_MeshHandle
+            );
+        };
+        
         struct F_DemoPipeline : F_GlobalRenderPipeline
         {
             ABYTEK_GLOBAL_RENDER_PIPELINE(F_DemoPipeline, ABYTEK_NAME("Abytek::RenderPrimitive::F_DemoPipeline"));
@@ -21,16 +34,12 @@ namespace Abytek
             static F_FeedbackStatus Build(F_Config& Config)
             {
                 Config.Type = E_RHIPipelineStateType::COMPUTE;
-                Config.ComputeShader = ABYTEK_GLOBAL_SHADER("MainCS", "NFC/RenderPrimitive/DemoCS", E_RHIShaderFrequency::COMPUTE);
-                Config.BindGroups.push_back(
-                    F_RHIPipelineStateTemplateBindGroup::Make(
-                        F_Component_Transform::F_SRVBinding::GetTemplateHashCode()    
-                    )
+                Config.ComputeShader = ABYTEK_GLOBAL_SHADER("MainCS", "Abytek/NFC/RenderPrimitive/DemoCS", E_RHIShaderFrequency::COMPUTE);
+                ABYTEK_FEEDBACK_STATUS_CHECK(
+                    F_Component_Transform::AddBindGroupToPipelineStateTemplate<F_Data>(Config)    
                 );
-                Config.BindGroups.push_back(
-                    F_RHIPipelineStateTemplateBindGroup::Make(
-                        F_Component_InverseTransposeTransform::F_UAVBinding::GetTemplateHashCode()    
-                    )
+                ABYTEK_FEEDBACK_STATUS_CHECK(
+                    F_Component_InverseTransposeTransform::AddBindGroupToPipelineStateTemplate<F_Data>(Config, F_RHIResourceAccess::MakeUAV())    
                 );
                 GPUData::SetupCompileParams(Config);
                 return F_FeedbackStatus::MakeSucceeded();

@@ -81,8 +81,12 @@ namespace Abytek
         H_RHISubmissionUtilities::ClearUAVUInt(
             SubmissionItemContainer,
             _OpaqueVisibilityUAV,
-            ClearValue,
-            ABYTEK_DEBUG_NAME("Abytek::SRP::ClearOpaqueVisibilityBuffer")
+            ClearValue
+#ifdef ABYTEK_DEBUG_INFO
+            , ABYTEK_TEXT("Abytek::SRP::ClearOpaqueVisibilityBuffer(")
+            + *GetDebugName()
+            + ABYTEK_TEXT(")")
+#endif
         );
     }
 }

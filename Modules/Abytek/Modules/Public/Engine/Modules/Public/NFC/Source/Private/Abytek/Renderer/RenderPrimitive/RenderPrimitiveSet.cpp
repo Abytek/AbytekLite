@@ -18,7 +18,13 @@ namespace Abytek
         F_GPUDataInstanceSetBuildParams GPUDataInstanceSetBuildParams;
         GPUDataInstanceSetBuildParams.GPUData = _Manager->GetGPUData().Weak();
         GPUDataInstanceSetBuildParams.Num = _Num;
+#ifdef ABYTEK_DEBUG_INFO
+        _GPUDataInstanceSet = F_GPUDataInstanceSet::CreateAndInit_WithDebugName(
+            *GetDebugName()
+            + ABYTEK_TEXT(".GPUDataInstanceSet"),
+#else
         _GPUDataInstanceSet = F_GPUDataInstanceSet::CreateAndInit(
+#endif
             GetWorldRenderResource(),
             SubmissionItemContainer, 
             GPUDataInstanceSetBuildParams

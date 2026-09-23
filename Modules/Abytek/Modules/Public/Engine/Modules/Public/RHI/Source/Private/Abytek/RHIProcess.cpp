@@ -26,6 +26,7 @@ namespace Abytek
         _Contexts = BuildParams.Contexts;
         
         _EnableDriverDebugger = F_RHISubsystem::GetInstance()->GetConsoleVariable_EnableDriverDebugger()->GetValue();
+        _EnablePassSorting = F_RHISubsystem::GetInstance()->GetConsoleVariable_EnablePassSorting()->GetValue();
             
         _Arena = TU_Unmanaged<F_Arena>()(Sz(0x10000));
             
@@ -81,6 +82,7 @@ namespace Abytek
         ABYTEK_ENGINE_RHI_ASSERT(_FlushExecuteDataCommands.GetSize() == 0) << "PostExecuteCommands was not flushed";
         ABYTEK_ENGINE_RHI_ASSERT(_ContextProxies.size() == 0) << "ContextProxies was not flushed";
         ABYTEK_ENGINE_RHI_ASSERT(_Contexts.size() == 0) << "Contexts was not flushed";
+        _EnablePassSorting = false;
         _EnableDriverDebugger = false;
         _Counter = ~U32(0);
         A_RAObject::Release();

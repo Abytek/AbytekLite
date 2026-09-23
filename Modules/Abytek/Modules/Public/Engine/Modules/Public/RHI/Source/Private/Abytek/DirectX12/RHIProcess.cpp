@@ -1,6 +1,7 @@
 #include "Abytek/DirectX12/RHIProcess.hpp"
 #include "Abytek/RHISubmissionUtilities.hpp"
 #include "Abytek/RHISubmissionList.hpp"
+#include "Abytek/RHISubsystem.hpp"
 #include "Abytek/DirectX12/RHIPlacedResourceManagerProxy.hpp"
 #include "Abytek/DirectX12/RHIBindGroupProxy.hpp"
 #include "Abytek/DirectX12/RHICommandListManager.hpp"
@@ -1804,37 +1805,41 @@ namespace Abytek
         auto& PassExtensions_SortedByDependencyScore = CompileSectionData.PassExtensions_SortedByDependencyScore;
         
         PassExtensions_SortedByDependencyScore = PassExtensions;
-        boost::sort(
-            PassExtensions_SortedByDependencyScore,
-            [](const TW<A_DirectX12RHIPassExtension>& A, const TW<A_DirectX12RHIPassExtension>& B)
-            {
-                const auto& ProcessData_PassExtension_A = A->GetProcessData_PassExtension();
-                const auto& ProcessData_PassExtension_B = B->GetProcessData_PassExtension();
-                
-                auto PassBatchType_A = A->GetPassBatchType();
-                auto PassBatchType_B = B->GetPassBatchType();
-                
-                // Main compare
-                if (ProcessData_PassExtension_A->DependencyScore != ProcessData_PassExtension_B->DependencyScore)
+        
+        if (GetEnablePassSorting())
+        {
+            boost::sort(
+                PassExtensions_SortedByDependencyScore,
+                [](const TW<A_DirectX12RHIPassExtension>& A, const TW<A_DirectX12RHIPassExtension>& B)
                 {
-                    return (ProcessData_PassExtension_A->DependencyScore < ProcessData_PassExtension_B->DependencyScore);
-                }
+                    const auto& ProcessData_PassExtension_A = A->GetProcessData_PassExtension();
+                    const auto& ProcessData_PassExtension_B = B->GetProcessData_PassExtension();
                 
-                // Command queue splits optimization
-                if (ProcessData_PassExtension_A->CommandQueue != ProcessData_PassExtension_B->CommandQueue)
-                {
-                    return ProcessData_PassExtension_A->CommandQueue < ProcessData_PassExtension_B->CommandQueue;
-                }
+                    auto PassBatchType_A = A->GetPassBatchType();
+                    auto PassBatchType_B = B->GetPassBatchType();
                 
-                // Pass batch type splits optimization
-                if (PassBatchType_A != PassBatchType_B)
-                {
-                    return PassBatchType_A < PassBatchType_B;
-                }
+                    // Main compare
+                    if (ProcessData_PassExtension_A->DependencyScore != ProcessData_PassExtension_B->DependencyScore)
+                    {
+                        return (ProcessData_PassExtension_A->DependencyScore < ProcessData_PassExtension_B->DependencyScore);
+                    }
                 
-                return A.GetObjectRawP() < B.GetObjectRawP();
-            }
-        );
+                    // Command queue splits optimization
+                    if (ProcessData_PassExtension_A->CommandQueue != ProcessData_PassExtension_B->CommandQueue)
+                    {
+                        return ProcessData_PassExtension_A->CommandQueue < ProcessData_PassExtension_B->CommandQueue;
+                    }
+                
+                    // Pass batch type splits optimization
+                    if (PassBatchType_A != PassBatchType_B)
+                    {
+                        return PassBatchType_A < PassBatchType_B;
+                    }
+                
+                    return A->GetProcessData_PassExtension()->GlobalIndex < A->GetProcessData_PassExtension()->GlobalIndex;
+                }
+            );
+        }
         
         U32 NumPassExtensions = static_cast<U32>(PassExtensions.size());
         for (U32 PassExtensionIndex = 0; PassExtensionIndex < NumPassExtensions; ++PassExtensionIndex)

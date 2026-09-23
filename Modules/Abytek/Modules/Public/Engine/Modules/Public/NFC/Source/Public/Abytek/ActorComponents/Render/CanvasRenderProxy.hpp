@@ -48,8 +48,8 @@ namespace Abytek
                 Config.Type = E_RHIPipelineStateType::GRAPHICS;
                 Config.Rasterizer.FillMode = E_RHIFillMode::SOLID;
                 Config.Rasterizer.CullMode = E_RHICullMode::NONE;
-                Config.VertexShader = ABYTEK_GLOBAL_SHADER("MainVS", "NFC/Canvas/ApplyOffscreenTextureVS", E_RHIShaderFrequency::VERTEX);
-                Config.PixelShader = ABYTEK_GLOBAL_SHADER("MainPS", "NFC/Canvas/ApplyOffscreenTexturePS", E_RHIShaderFrequency::PIXEL);
+                Config.VertexShader = ABYTEK_GLOBAL_SHADER("MainVS", "Abytek/NFC/Canvas/ApplyOffscreenTextureVS", E_RHIShaderFrequency::VERTEX);
+                Config.PixelShader = ABYTEK_GLOBAL_SHADER("MainPS", "Abytek/NFC/Canvas/ApplyOffscreenTexturePS", E_RHIShaderFrequency::PIXEL);
                 Config.BindGroups.push_back(
                     F_RHIPipelineStateTemplateBindGroup::Make(
                         F_ApplyOfflineTextureBinding::GetTemplateHashCode()    

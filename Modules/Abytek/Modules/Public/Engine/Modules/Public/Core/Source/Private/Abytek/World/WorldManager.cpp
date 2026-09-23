@@ -89,6 +89,7 @@ namespace Abytek
         // Create main world
         {
             F_WorldConfig WorldConfig;
+            WorldConfig.Name = ABYTEK_NAME("Abytek::MainWorld");
             WorldConfig.Flags = E_WorldFlag::DEFAULT | E_WorldFlag::MAIN;
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
             if (_ConsoleVariable_CookMode->GetValue())

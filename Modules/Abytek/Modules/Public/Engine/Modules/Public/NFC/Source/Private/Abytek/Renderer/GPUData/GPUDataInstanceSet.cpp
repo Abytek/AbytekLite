@@ -34,13 +34,30 @@ namespace Abytek
 
     void F_GPUDataInstanceSet::UploadComponents(U32 ComponentIndex, const void* DataPtr)
     {
+        ABYTEK_ENGINE_NFC_ASSERT(_GPUData->IsUpdatePhase()) << "Cannot update instance sets outside update phase";
         ABYTEK_ENGINE_NFC_ASSERT(_Allocation) << "Cannot upload component on GPU data instance set having invalid allocation";
         const auto& Allocation = *_Allocation;
         auto Process = H_RHI::GetMainProcess();
         auto ComponentSizeInBytes = _GPUData->GetComponentIndexToSizeInBytes()[ComponentIndex];
+        auto ComponentClass = _GPUData->GetComponentIndexToClass()[ComponentIndex];
+        
+        U32 NumUpload = 0;
+        switch (ComponentClass)
+        {
+        case E_GPUDataComponentTypeClass::PER_INSTANCE:
+            NumUpload = _Num;
+            break;
+        case E_GPUDataComponentTypeClass::PER_INSTANCE_SET:
+            NumUpload = 1;
+            break;
+        default:
+            ABYTEK_LOG_FATAL() << "Unknown class: " << static_cast<TF_UInt<sizeof(E_GPUDataComponentTypeClass)>>(ComponentClass);
+            break;
+        }
+        
         auto CachedData = Process->GetArena()->CacheData({
             ((const U8*)DataPtr),
-            ((const U8*)DataPtr) + _Num * ComponentSizeInBytes,
+            ((const U8*)DataPtr) + NumUpload * ComponentSizeInBytes,
         });
         for (auto& UploadCandidate : _UploadCandidates)
         {

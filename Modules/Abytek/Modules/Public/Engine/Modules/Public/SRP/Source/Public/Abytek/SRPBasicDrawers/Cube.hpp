@@ -65,8 +65,8 @@ namespace Abytek
                         F_CubeBinding::GetTemplateHashCode()
                     )
                 );
-                Config.VertexShader = ABYTEK_GLOBAL_SHADER("MainVS", "SRP/BasicDrawers/CubeVS", E_RHIShaderFrequency::VERTEX);
-                Config.PixelShader = ABYTEK_GLOBAL_SHADER("MainPS", "SRP/BasicDrawers/CubePS", E_RHIShaderFrequency::PIXEL);
+                Config.VertexShader = ABYTEK_GLOBAL_SHADER("MainVS", "Abytek/SRP/BasicDrawers/CubeVS", E_RHIShaderFrequency::VERTEX);
+                Config.PixelShader = ABYTEK_GLOBAL_SHADER("MainPS", "Abytek/SRP/BasicDrawers/CubePS", E_RHIShaderFrequency::PIXEL);
                 return F_FeedbackStatus::MakeSucceeded();
             }
         };

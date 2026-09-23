@@ -13,7 +13,7 @@ namespace Abytek
         {
             ABYTEK_GPU_DATA_COMPONENT_TYPE(
                 F_Component_Transform, 
-                ABYTEK_NAME("Transform"), 
+                ABYTEK_NAME("Transform"),
                 ABYTEK_NAME("Abytek::RenderPrimitive::F_Component_Transform")
             );
             

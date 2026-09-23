@@ -3,7 +3,6 @@
 #include "Abytek/Renderer/RenderPrimitive/Components/Component_InverseTransposeTransform.hpp"
 #include "Abytek/Renderer/RenderPrimitive/Components/Component_MeshHandle.hpp"
 #include "Abytek/Renderer/GPUData/GPUData.hpp"
-#include "Abytek/Renderer/RenderScene.hpp"
 #include "Abytek/Renderer/GPUData/GPUDataInstanceSet.hpp"
 #include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveSet.hpp"
 
@@ -19,27 +18,17 @@ namespace Abytek
         
         _Scene = BuildParams.Scene;
         
-        F_GPUDataBuildParams GPUDataBuildParams;
-        GPUDataBuildParams.Scene = _Scene;
-        GPUDataBuildParams.ComponentTypes.push_back(
-            F_GPUDataComponentTypeConfig::Make<RenderPrimitive::F_Component_Transform>(
-                GetRenderRegistryRuntime()    
-            )    
+        _GPUData = F_GPUData::Create(GetWorldRenderResource());
+#ifdef ABYTEK_DEBUG_INFO
+        _GPUData->SetDebugName(
+            *GetDebugName()
+            + ABYTEK_TEXT(".GPUData")
         );
-        GPUDataBuildParams.ComponentTypes.push_back(
-            F_GPUDataComponentTypeConfig::Make<RenderPrimitive::F_Component_InverseTransposeTransform>(
-                GetRenderRegistryRuntime()    
-            )    
-        );
-        GPUDataBuildParams.ComponentTypes.push_back(
-            F_GPUDataComponentTypeConfig::Make<RenderPrimitive::F_Component_MeshHandle>(
-                GetRenderRegistryRuntime()    
-            )    
-        );
-        _GPUData = F_GPUData::CreateAndInit(
-            GetWorldRenderResource(),
-            SubmissionItemContainer, 
-            GPUDataBuildParams
+#endif
+        RenderPrimitive::F_Data::Init(
+            SubmissionItemContainer,
+            _GPUData,
+            _Scene
         );
         
         _ComponentIndex_Transform = _GPUData->GetComponentTypeIndex<RenderPrimitive::F_Component_Transform>();

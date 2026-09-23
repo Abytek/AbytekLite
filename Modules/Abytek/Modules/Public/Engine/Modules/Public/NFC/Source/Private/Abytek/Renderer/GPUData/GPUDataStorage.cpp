@@ -136,6 +136,8 @@ namespace Abytek
         _GlobalSRVBindGroups = {};
         _GlobalUAVBindGroups = {};
         
+        auto DataName = _GPUData->GetName();
+        
         const auto& RHIFeatureSupports = GetRHIFeatureSupports();
         
         const auto& ComponentTypes = _GPUData->GetComponentTypes();
@@ -144,7 +146,11 @@ namespace Abytek
         {
             const auto& ComponentType = ComponentTypes[Idx];
             
-            auto SlotName = F_GPUDataComponentType::GetBindGroupSlotName(ComponentType->GetName(), RHIFeatureSupports);
+            auto SlotName = F_GPUDataComponentType::GetBindGroupSlotName(
+                DataName, 
+                ComponentType->GetName(), 
+                RHIFeatureSupports
+            );
             
             auto GlobalSRVBindGroup = ComponentType->GetSRVBinding().CreateBindGroup();
             ABYTEK_ENGINE_NFC_ASSERT(GlobalSRVBindGroup->HasSlot(SlotName));

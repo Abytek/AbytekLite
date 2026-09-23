@@ -21,9 +21,11 @@ namespace Abytek
             AlignSize(BuildParams.SizeInBytes, BuildParams.AlignmentInBytes)
         );
         _AlignmentInBytes = BuildParams.AlignmentInBytes;
+        _Class = BuildParams.Class;
     }
     void F_GPUDataComponentType::Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
+        _Class = E_GPUDataComponentTypeClass::NONE;
         _AlignmentInBytes = 0;
         _SizeInBytes = 0;
         _UAVBinding = {};

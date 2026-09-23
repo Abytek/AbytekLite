@@ -93,8 +93,8 @@ namespace Abytek
                         F_DrawLineBinding::GetTemplateHashCode()
                     )
                 );
-                Config.VertexShader = ABYTEK_GLOBAL_SHADER("MainVS", "MathRenderer2D/DrawLineVS", E_RHIShaderFrequency::VERTEX);
-                Config.PixelShader = ABYTEK_GLOBAL_SHADER("MainPS", "MathRenderer2D/DrawLinePS", E_RHIShaderFrequency::PIXEL);
+                Config.VertexShader = ABYTEK_GLOBAL_SHADER("MainVS", "Abytek/MathRenderer2D/DrawLineVS", E_RHIShaderFrequency::VERTEX);
+                Config.PixelShader = ABYTEK_GLOBAL_SHADER("MainPS", "Abytek/MathRenderer2D/DrawLinePS", E_RHIShaderFrequency::PIXEL);
                 return F_FeedbackStatus::MakeSucceeded();
             }
         };

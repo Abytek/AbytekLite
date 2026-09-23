@@ -20,32 +20,32 @@ namespace Abytek
         
         F_RenderGeometryStorageBuildParams GeometryStorageBuildParams;
         GeometryStorageBuildParams.Scene = ABYTEK_WTHIS();
+#ifdef ABYTEK_DEBUG_INFO
+        _GeometryStorage = F_RenderGeometryStorage::CreateAndInit_WithDebugName(
+            *GetDebugName()
+            + ABYTEK_TEXT(".GeometryStorage"),
+#else
         _GeometryStorage = F_RenderGeometryStorage::CreateAndInit(
+#endif
             GetWorldRenderResource(),
             SubmissionItemContainer, 
             GeometryStorageBuildParams
         );
-#ifdef ABYTEK_DEBUG_INFO
-        _GeometryStorage->SetDebugName(
-            *GetDebugName()
-            + ABYTEK_TEXT(".GeometryStorage")
-        );
-#endif
         
         {
             F_RenderPrimitiveManagerBuildParams PrimitiveManagerBuildParams;
             PrimitiveManagerBuildParams.Scene = ABYTEK_WTHIS();
+#ifdef ABYTEK_DEBUG_INFO
+            _PrimitiveManager = F_RenderPrimitiveManager::CreateAndInit_WithDebugName(
+                *GetDebugName()
+                + ABYTEK_TEXT(".PrimitiveManager"),
+#else
             _PrimitiveManager = F_RenderPrimitiveManager::CreateAndInit(
+#endif
                 GetWorldRenderResource(),
                 SubmissionItemContainer, 
                 PrimitiveManagerBuildParams
             );
-#ifdef ABYTEK_DEBUG_INFO
-            _PrimitiveManager->SetDebugName(
-                *GetDebugName()
-                + ABYTEK_TEXT(".PrimitiveManager")
-            );
-#endif
         }
     }
     void A_RenderScene::Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)

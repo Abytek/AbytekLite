@@ -132,6 +132,11 @@ namespace Abytek
         F_RenderGeometryAllocationStructure_Simple& OutGeometryAllocationStructure
     )
     {
+        ABYTEK_RHI_CAPTURE_EVENT_SCOPE(
+            SubmissionItemContainer,
+            ABYTEK_NAME("Abytek::F_RenderGeometryStorage::AddMeshData_Simple")
+        );
+        
         U32 SizeInBytes = 0;
         
         F_RenderGeometryAllocationStructure_Simple GeometryAllocationStructure;
@@ -168,7 +173,8 @@ namespace Abytek
                     (const U8*)(MeshDataView.Indices.data() + MeshDataView.Indices.size()) 
                 ),
                 GeometryAllocation->Page->GetRHIBuffer(),
-                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.Indices_LocalOffsetInBytes
+                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.Indices_LocalOffsetInBytes,
+                ABYTEK_NAME("Indices")
             );
             H_RHISubmissionUtilities::UploadBuffer(
                 SubmissionItemContainer,
@@ -177,7 +183,8 @@ namespace Abytek
                     (const U8*)(MeshDataView.Positions.data() + MeshDataView.Positions.size()) 
                 ),
                 GeometryAllocation->Page->GetRHIBuffer(),
-                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.Positions_LocalOffsetInBytes
+                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.Positions_LocalOffsetInBytes,
+                ABYTEK_NAME("Positions")
             );
             H_RHISubmissionUtilities::UploadBuffer(
                 SubmissionItemContainer,
@@ -186,7 +193,8 @@ namespace Abytek
                     (const U8*)(MeshDataView.Normals.data() + MeshDataView.Normals.size()) 
                 ),
                 GeometryAllocation->Page->GetRHIBuffer(),
-                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.Normals_LocalOffsetInBytes
+                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.Normals_LocalOffsetInBytes,
+                ABYTEK_NAME("Normals")
             );
             H_RHISubmissionUtilities::UploadBuffer(
                 SubmissionItemContainer,
@@ -195,7 +203,8 @@ namespace Abytek
                     (const U8*)(MeshDataView.TangentsAndSigns.data() + MeshDataView.TangentsAndSigns.size()) 
                 ),
                 GeometryAllocation->Page->GetRHIBuffer(),
-                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.TangentsAndSigns_LocalOffsetInBytes
+                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.TangentsAndSigns_LocalOffsetInBytes,
+                ABYTEK_NAME("TangentsAndSigns")
             );
             H_RHISubmissionUtilities::UploadBuffer(
                 SubmissionItemContainer,
@@ -204,7 +213,8 @@ namespace Abytek
                     (const U8*)(MeshDataView.UVs.data() + MeshDataView.UVs.size()) 
                 ),
                 GeometryAllocation->Page->GetRHIBuffer(),
-                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.UVs_LocalOffsetInBytes
+                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.UVs_LocalOffsetInBytes,
+                ABYTEK_NAME("UVs")
             );
             
             OutGeometryAllocation = *GeometryAllocation;

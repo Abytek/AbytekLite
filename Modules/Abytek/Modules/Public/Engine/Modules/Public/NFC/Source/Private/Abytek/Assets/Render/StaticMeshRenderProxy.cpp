@@ -18,6 +18,13 @@ namespace Abytek
 
     void F_StaticMeshRenderProxy::OnCreateRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
+        ABYTEK_RHI_CAPTURE_EVENT_SCOPE(
+            SubmissionItemContainer,
+            ABYTEK_TEXT("Abytek::F_StaticMeshRenderProxy::CreateRenderState(")
+            + *GetDebugName()
+            + ABYTEK_TEXT(")")
+        );
+        
         auto RHIContext = H_RHI::GetMainContext();
         
         if (_DataType == E_StaticMeshDataType::SIMPLE)
@@ -32,7 +39,14 @@ namespace Abytek
                 const auto& SimpleData = SimpleDataList[Idx];
                 F_StaticMeshResource_Simple Resource;
                 Resource.Index = Idx;
-                if (GeometryStorage->AddMeshData_Simple(SubmissionItemContainer, SimpleData, Resource.GeometryAllocation, Resource.GeometryAllocationStructure))
+                if (
+                    GeometryStorage->AddMeshData_Simple(
+                        SubmissionItemContainer, 
+                        SimpleData, 
+                        Resource.GeometryAllocation, 
+                        Resource.GeometryAllocationStructure
+                    )
+                )
                 {
                     _ResourceList_Simple.push_back(Resource);
                 }

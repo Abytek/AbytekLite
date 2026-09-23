@@ -39,6 +39,7 @@ namespace Abytek
         TF_Vector<TW<A_RHIContext>> _Contexts;
         
         B8 _EnableDriverDebugger = false;
+        B8 _EnablePassSorting = false;
         
         TF_Vector<TS<A_RHIContextProxy>> _ContextProxies;
         
@@ -87,6 +88,10 @@ namespace Abytek
         ABYTEK_FORCE_INLINE auto GetEnableDriverDebugger() const noexcept
         {
             return _EnableDriverDebugger;
+        }
+        ABYTEK_FORCE_INLINE auto GetEnablePassSorting() const noexcept
+        {
+            return _EnablePassSorting;
         }
         
         ABYTEK_FORCE_INLINE const auto& GetContextProxies() const noexcept

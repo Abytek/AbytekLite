@@ -93,6 +93,7 @@ namespace Abytek
         RegisterStaticType<RenderPrimitive::F_Component_Transform>();
         RegisterStaticType<RenderPrimitive::F_Component_InverseTransposeTransform>();
         RegisterStaticType<RenderPrimitive::F_Component_MeshHandle>();
+        RegisterStaticType<RenderPrimitive::F_Data>();
         RegisterStaticType<RenderPrimitive::F_DemoPipeline>();
         
         RegisterStaticType<F_Texture>();

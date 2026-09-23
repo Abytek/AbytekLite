@@ -1,0 +1,85 @@
+#pragma once
+
+import Abytek.NFC.GPUData.Common;
+
+#define ABYTEK_GPU_DATA_GET_BUFFER_TYPE(DataName, ComponentTypeName) ___F_Abytek_GPUDataBuffer___DATA___##DataName##___COMPONENT_TYPE___##ComponentTypeName
+#define ABYTEK_GPU_DATA_GET_COMPONENT_TYPE_STRUCT(DataName, ComponentTypeName) ___H_Abytek_GPUDataComponentTypeStruct___DATA___##DataName##___COMPONENT_TYPE___##ComponentTypeName
+#ifdef ABYTEK_GPU_DATA_ENABLE_MULTIPLE_PAGES
+#define ABYTEK_GPU_DATA_GET_RESOURCE(DataName, ComponentTypeName) ___Abytek_GPUDataPages___DATA___##DataName##___COMPONENT_TYPE___##ComponentTypeName
+#else
+#define ABYTEK_GPU_DATA_GET_RESOURCE(DataName, ComponentTypeName) ___Abytek_GPUDataPageSingle___DATA___##DataName##___COMPONENT_TYPE___##ComponentTypeName
+#endif
+
+#ifdef ABYTEK_GPU_DATA_ENABLE_MULTIPLE_PAGES
+#define ABYTEK_GPU_DATA_GET_PAGE(DataName, ComponentTypeName, ...) ABYTEK_GPU_DATA_GET_RESOURCE(DataName, ComponentTypeName) [Abytek::NFC::GPUData::GetPageIndexFromInstanceAddress(__VA_ARGS__)]
+#else
+#define ABYTEK_GPU_DATA_GET_PAGE(DataName, ComponentTypeName, ...) ABYTEK_GPU_DATA_GET_RESOURCE(DataName, ComponentTypeName)
+#endif
+
+#define ABYTEK_GPU_DATA_DEFINE_COMPONENT_TYPE_STRUCT_RO(DataName, ComponentTypeName, ...)                                                              \
+    public struct ABYTEK_GPU_DATA_GET_COMPONENT_TYPE_STRUCT(DataName, ComponentTypeName)                                                                      \
+    {                                                                                                                                                  \
+        public typealias F_Value = __VA_ARGS__;                                                                                                        \
+        public static uint GetSizeInBytes()                                                                                                            \
+        {                                                                                                                                              \
+            return ABYTEK_GPU_DATA_COMPONENT_TYPE_SIZE_IN_BYTES_##ComponentTypeName;                                                                   \
+        }                                                                                                                                              \
+        public static uint GetAlignmentInBytes()                                                                                                       \
+        {                                                                                                                                              \
+            return ABYTEK_GPU_DATA_COMPONENT_TYPE_ALIGNMENT_IN_BYTES_##ComponentTypeName;                                                              \
+        }                                                                                                                                              \
+        public static ABYTEK_GPU_DATA_GET_BUFFER_TYPE(DataName, ComponentTypeName) GetPage(Abytek::NFC::GPUData::F_InstanceAddress InstanceAddress)    \
+        {                                                                                                                                              \
+            return ABYTEK_GPU_DATA_GET_PAGE(DataName, ComponentTypeName, InstanceAddress);                                                             \
+        }                                                                                                                                              \
+        public static F_Value Load<F_Value>(Abytek::NFC::GPUData::F_InstanceAddress InstanceAddress)                                                   \
+        {                                                                                                                                              \
+            return GetPage(InstanceAddress).Load<F_Value>(Abytek::NFC::GPUData::GetLocalIndexFromInstanceAddress(InstanceAddress) * GetSizeInBytes()); \
+        }                                                                                                                                              \
+    };
+
+#define ABYTEK_GPU_DATA_DEFINE_COMPONENT_TYPE_STRUCT_RW(DataName, ComponentTypeName, ...)                                                               \
+    public struct ABYTEK_GPU_DATA_GET_COMPONENT_TYPE_STRUCT(DataName, ComponentTypeName)                                                                       \
+    {                                                                                                                                                   \
+        public typealias F_Value = __VA_ARGS__;                                                                                                         \
+        public static uint GetSizeInBytes()                                                                                                             \
+        {                                                                                                                                               \
+            return ABYTEK_GPU_DATA_COMPONENT_TYPE_SIZE_IN_BYTES_##ComponentTypeName;                                                                    \
+        }                                                                                                                                               \
+        public static uint GetAlignmentInBytes()                                                                                                        \
+        {                                                                                                                                               \
+            return ABYTEK_GPU_DATA_COMPONENT_TYPE_ALIGNMENT_IN_BYTES_##ComponentTypeName;                                                               \
+        }                                                                                                                                               \
+        public static ABYTEK_GPU_DATA_GET_BUFFER_TYPE(DataName, ComponentTypeName) GetPage(Abytek::NFC::GPUData::F_InstanceAddress InstanceAddress)     \
+        {                                                                                                                                               \
+            return ABYTEK_GPU_DATA_GET_PAGE(DataName, ComponentTypeName, InstanceAddress);                                                              \
+        }                                                                                                                                               \
+        public static F_Value Load(Abytek::NFC::GPUData::F_InstanceAddress InstanceAddress)                                                             \
+        {                                                                                                                                               \
+            return GetPage(InstanceAddress).Load<F_Value>(Abytek::NFC::GPUData::GetLocalIndexFromInstanceAddress(InstanceAddress) * GetSizeInBytes());  \
+        }                                                                                                                                               \
+        public static void Store(Abytek::NFC::GPUData::F_InstanceAddress InstanceAddress, F_Value Value)                                                \
+        {                                                                                                                                               \
+            GetPage(InstanceAddress).Store<F_Value>(Abytek::NFC::GPUData::GetLocalIndexFromInstanceAddress(InstanceAddress) * GetSizeInBytes(), Value); \
+        }                                                                                                                                               \
+    };
+
+#ifdef ABYTEK_GPU_DATA_ENABLE_MULTIPLE_PAGES
+#define ABYTEK_GPU_DATA_DEFINE_COMPONENT_TYPE_RW(DataName, ComponentTypeName, ...)                       \
+    ABYTEK_GPU_DATA_DEFINE_COMPONENT_TYPE_STRUCT_RW(DataName, ComponentTypeName, __VA_ARGS__)            \
+    public typealias ABYTEK_GPU_DATA_GET_BUFFER_TYPE(DataName, ComponentTypeName) = RWByteAddressBuffer; \
+    public ABYTEK_GPU_DATA_GET_BUFFER_TYPE(DataName, ComponentTypeName) ABYTEK_GPU_DATA_GET_RESOURCE(DataName, ComponentTypeName)[];
+#define ABYTEK_GPU_DATA_DEFINE_COMPONENT_TYPE_RO(DataName, ComponentTypeName, ...)                     \
+    ABYTEK_GPU_DATA_DEFINE_COMPONENT_TYPE_STRUCT_RO(DataName, ComponentTypeName, __VA_ARGS__)          \
+    public typealias ABYTEK_GPU_DATA_GET_BUFFER_TYPE(DataName, ComponentTypeName) = ByteAddressBuffer; \
+    public ABYTEK_GPU_DATA_GET_BUFFER_TYPE(DataName, ComponentTypeName) ABYTEK_GPU_DATA_GET_RESOURCE(DataName, ComponentTypeName)[];
+#else
+#define ABYTEK_GPU_DATA_DEFINE_COMPONENT_TYPE_RW(DataName, ComponentTypeName, ...)                       \
+    ABYTEK_GPU_DATA_DEFINE_COMPONENT_TYPE_STRUCT_RW(DataName, ComponentTypeName, __VA_ARGS__)            \
+    public typealias ABYTEK_GPU_DATA_GET_BUFFER_TYPE(DataName, ComponentTypeName) = RWByteAddressBuffer; \
+    public ABYTEK_GPU_DATA_GET_BUFFER_TYPE(DataName, ComponentTypeName) ABYTEK_GPU_DATA_GET_RESOURCE(DataName, ComponentTypeName);
+#define ABYTEK_GPU_DATA_DEFINE_COMPONENT_TYPE_RO(DataName, ComponentTypeName, ...)                     \
+    ABYTEK_GPU_DATA_DEFINE_COMPONENT_TYPE_STRUCT_RO(DataName, ComponentTypeName, __VA_ARGS__)          \
+    public typealias ABYTEK_GPU_DATA_GET_BUFFER_TYPE(DataName, ComponentTypeName) = ByteAddressBuffer; \
+    public ABYTEK_GPU_DATA_GET_BUFFER_TYPE(DataName, ComponentTypeName) ABYTEK_GPU_DATA_GET_RESOURCE(DataName, ComponentTypeName);
+#endif 

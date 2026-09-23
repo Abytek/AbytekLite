@@ -98,8 +98,8 @@ namespace Abytek
                         RenderGeometry::F_GlobalSRVBinding::GetTemplateHashCode()
                     )
                 );
-                Config.VertexShader = ABYTEK_GLOBAL_SHADER("MainVS", "SRP/BasicDrawers/StaticMeshVS", E_RHIShaderFrequency::VERTEX);
-                Config.PixelShader = ABYTEK_GLOBAL_SHADER("MainPS", "SRP/BasicDrawers/StaticMeshPS", E_RHIShaderFrequency::PIXEL);
+                Config.VertexShader = ABYTEK_GLOBAL_SHADER("MainVS", "Abytek/SRP/BasicDrawers/StaticMeshVS", E_RHIShaderFrequency::VERTEX);
+                Config.PixelShader = ABYTEK_GLOBAL_SHADER("MainPS", "Abytek/SRP/BasicDrawers/StaticMeshPS", E_RHIShaderFrequency::PIXEL);
                 RenderGeometry::SetupCompileParams(
                     Config
                 );

@@ -40,6 +40,7 @@ namespace Abytek
         
         TW<TF_ConsoleVariable<TF_Vector<F_Name>>> _ConsoleVariable_APINames;
         TW<TF_ConsoleVariable<B8>> _ConsoleVariable_EnableDriverDebugger;
+        TW<TF_ConsoleVariable<B8>> _ConsoleVariable_EnablePassSorting;
         TW<TF_ConsoleVariable<U64>> _ConsoleVariable_CaptureFrameIndex;
         
         TS<A_RHIContext> _MainRHIContext;
@@ -74,6 +75,10 @@ namespace Abytek
         ABYTEK_FORCE_INLINE const auto& GetConsoleVariable_EnableDriverDebugger() const noexcept
         {
             return _ConsoleVariable_EnableDriverDebugger;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetConsoleVariable_EnablePassSorting() const noexcept
+        {
+            return _ConsoleVariable_EnablePassSorting;
         }
         ABYTEK_FORCE_INLINE const auto& GetConsoleVariable_CaptureFrameIndex() const noexcept
         {

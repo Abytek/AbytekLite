@@ -141,6 +141,15 @@ namespace Abytek
                 false
 #endif
         );
+        _ConsoleVariable_EnablePassSorting = RegisterConsoleVariable(
+            ABYTEK_NAME("Abytek.RHI.EnablePassSorting"),
+            ABYTEK_TEXT(""),
+#if defined(ABYTEK_DEBUG) || defined(ABYTEK_ENGINE_RHI_ENABLE_DRIVER_DEBUGGER)
+                false
+#else
+                true
+#endif
+        );
         _ConsoleVariable_CaptureFrameIndex = RegisterConsoleVariable(
             ABYTEK_NAME("Abytek.RHI.CaptureFrameIndex"),
             ABYTEK_TEXT(""),

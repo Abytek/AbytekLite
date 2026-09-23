@@ -16,6 +16,7 @@ namespace Abytek
         InitMinimal(SubmissionItemContainer);
         
         _Scene = BuildParams.Scene;
+        _Name = BuildParams.Name;
         
         for (const auto& ComponentTypeConfig : BuildParams.ComponentTypes)
         {
@@ -30,6 +31,7 @@ namespace Abytek
             _ComponentTypes.push_back(ComponentType);
             _ComponentIndexToSizeInBytes.push_back(ComponentTypeConfig.SizeInBytes);
             _ComponentIndexToAlignmentInBytes.push_back(ComponentTypeConfig.AlignmentInBytes);
+            _ComponentIndexToClass.push_back(ComponentTypeConfig.Class);
         }
         
         F_GPUDataStorageBuildParams StorageBuildParams;
@@ -56,6 +58,7 @@ namespace Abytek
         }
         _ComponentTypes = {};
         
+        _Name = {};
         _Scene = {};
         
         A_RenderObject::Release(SubmissionItemContainer);
@@ -66,6 +69,7 @@ namespace Abytek
         _CriticalSection(
             [this, &SubmissionItemContainer]
             {
+                _IsUpdatePhase.test_and_set(boost::memory_order_release);
                 _Storage->BeginUpdate(SubmissionItemContainer);
             }
         );
@@ -76,6 +80,7 @@ namespace Abytek
             [this, &SubmissionItemContainer]
             {
                 _Storage->EndUpdate(SubmissionItemContainer);
+                _IsUpdatePhase.clear(boost::memory_order_release);
             }
         );
     }
@@ -84,6 +89,7 @@ namespace Abytek
         _CriticalSection(
             [this, &SubmissionItemContainer]
             {
+                _IsPostUpdatePhase.test_and_set(boost::memory_order_release);
                 _FlushDirtyInstanceSets(SubmissionItemContainer);
                 _Storage->BeginPostUpdate(SubmissionItemContainer);
             }
@@ -95,6 +101,7 @@ namespace Abytek
             [this, &SubmissionItemContainer]
             {
                 _Storage->EndPostUpdate(SubmissionItemContainer);
+                _IsPostUpdatePhase.clear(boost::memory_order_release);
             }
         );
     }
@@ -104,6 +111,7 @@ namespace Abytek
         _CriticalSection(
             [this, &InstanceSet]
             {
+                ABYTEK_ENGINE_NFC_ASSERT(_IsUpdatePhase.test(boost::memory_order_acquire)) << "Cannot register instance sets outside update phase";
                 _InstanceSets.insert(InstanceSet);
             }
         );
@@ -113,6 +121,7 @@ namespace Abytek
         _CriticalSection(
             [this, &InstanceSet]
             {
+                ABYTEK_ENGINE_NFC_ASSERT(_IsUpdatePhase.test(boost::memory_order_acquire)) << "Cannot unregister instance sets outside update phase";
                 _InstanceSets.erase(_InstanceSets.find(InstanceSet));
             }
         );
@@ -123,6 +132,7 @@ namespace Abytek
         _CriticalSection(
             [this, &InstanceSet]
             {
+                ABYTEK_ENGINE_NFC_ASSERT(_IsUpdatePhase.test(boost::memory_order_acquire)) << "Cannot add dirty instance sets outside update phase";
                 _DirtyInstanceSets.insert(InstanceSet);
             }
         );
