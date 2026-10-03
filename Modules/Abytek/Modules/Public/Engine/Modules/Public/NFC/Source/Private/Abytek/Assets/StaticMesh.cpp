@@ -48,8 +48,8 @@ namespace Abytek
         {
         case E_StaticMeshDataType::SIMPLE:
             {
-                TF_Vector<F_SimpleMeshData> Data;
-                if (LoadSimpleDataList(Data))
+                F_SimpleMeshData Data;
+                if (LoadSimpleData(Data))
                 {
                     ABYTEK_FEEDBACK_STATUS_CHECK(Params.MainView << true);
             
@@ -72,8 +72,8 @@ namespace Abytek
             break;
         case E_StaticMeshDataType::ECMS:
             {
-                TF_Vector<F_ECMSMeshData> Data;
-                if (LoadECMSDataList(Data))
+                F_ECMSMeshData Data;
+                if (LoadECMSData(Data))
                 {
                     ABYTEK_FEEDBACK_STATUS_CHECK(Params.MainView << true);
             
@@ -155,9 +155,9 @@ namespace Abytek
         if (Environment == GetEnvironment())
         {
             _LastSimpleDataBulkHeader = _TempSerializationData_LastSimpleDataBulkHeader;
-            _NewSimpleDataList = {};
+            _NewSimpleData = {};
             _LastECMSDataBulkHeader = _TempSerializationData_LastECMSDataBulkHeader;
-            _NewECMSDataList = {};
+            _NewECMSData = {};
         }
         _TempSerializationData_LastSimpleDataBulkHeader = {};
         _TempSerializationData_LastECMSDataBulkHeader = {};
@@ -171,9 +171,9 @@ namespace Abytek
         }
         return (
             (static_cast<B8>(_LastSimpleDataBulkHeader) && GetPackageName()) 
-            || static_cast<B8>(_NewSimpleDataList)
+            || static_cast<B8>(_NewSimpleData)
             || (static_cast<B8>(_LastECMSDataBulkHeader) && GetPackageName()) 
-            || static_cast<B8>(_NewECMSDataList)
+            || static_cast<B8>(_NewECMSData)
         );
     }
 
@@ -196,18 +196,18 @@ namespace Abytek
         {
         case E_StaticMeshDataType::SIMPLE:
             {
-                TF_Vector<F_SimpleMeshData> SimpleDataList;
-                B8 Status = LoadSimpleDataList(SimpleDataList);
+                F_SimpleMeshData SimpleData;
+                B8 Status = LoadSimpleData(SimpleData);
                 ABYTEK_ENGINE_NFC_ASSERT(Status) << "Failed to load simple data while being renderable";
                 H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                     [
                         RenderProxy = GetRenderProxy().FastCast<F_StaticMeshRenderProxy>(), 
-                        CachedSimpleDataList = ABYTEK_MOVE(SimpleDataList),
+                        CachedSimpleData = ABYTEK_MOVE(SimpleData),
                         CachedSetting = ABYTEK_MOVE(_Setting)
                     ]() mutable
                     {
-                        RenderProxy->_TempSimpleDataList = TS_Unmanaged<TF_Vector<F_SimpleMeshData>>()(
-                            ABYTEK_MOVE(CachedSimpleDataList)    
+                        RenderProxy->_TempSimpleData = TS_Unmanaged<F_SimpleMeshData>()(
+                            ABYTEK_MOVE(CachedSimpleData)    
                         );
                         RenderProxy->_Setting = ABYTEK_MOVE(CachedSetting);
                     }
@@ -216,18 +216,18 @@ namespace Abytek
             break;
         case E_StaticMeshDataType::ECMS:
             {
-                TF_Vector<F_ECMSMeshData> ECMSDataList;
-                B8 Status = LoadECMSDataList(ECMSDataList);
+                F_ECMSMeshData ECMSData;
+                B8 Status = LoadECMSData(ECMSData);
                 ABYTEK_ENGINE_NFC_ASSERT(Status) << "Failed to load ECMS data while being renderable";
                 H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
                     [
                         RenderProxy = GetRenderProxy().FastCast<F_StaticMeshRenderProxy>(), 
-                        CachedECMSDataList = ABYTEK_MOVE(ECMSDataList),
+                        CachedECMSData = ABYTEK_MOVE(ECMSData),
                         CachedSetting = ABYTEK_MOVE(_Setting)
                     ]() mutable
                     {
-                        RenderProxy->_TempECMSDataList = TS_Unmanaged<TF_Vector<F_ECMSMeshData>>()(
-                            ABYTEK_MOVE(CachedECMSDataList)    
+                        RenderProxy->_TempECMSData = TS_Unmanaged<F_ECMSMeshData>()(
+                            ABYTEK_MOVE(CachedECMSData)    
                         );
                         RenderProxy->_Setting = ABYTEK_MOVE(CachedSetting);
                     }
@@ -244,7 +244,7 @@ namespace Abytek
 
     namespace Internal::StaticMesh::Simple
     {
-        F_FeedbackStatus Decode(const TF_Span<const U8>& Bytes, TF_Vector<F_SimpleMeshData>& OutSimpleDataList)
+        F_FeedbackStatus Decode(const TF_Span<const U8>& Bytes, const F_StaticMeshSourceDecodeConfig& Config, TF_Vector<F_SimpleMeshData>& OutSimpleDataList)
         {
 #ifdef ABYTEK_ENGINE_NFC_ENABLE_ASSIMP
             {
@@ -270,7 +270,13 @@ namespace Abytek
             return F_FeedbackStatus::MakeSucceeded();
         }
     }
-    void F_StaticMesh::Import(const TF_Span<const U8>& Bytes, const F_StaticMeshImportConfig& Config, const TF_Optional<F_StaticMeshSetting>& Setting)
+
+    F_FeedbackStatus F_StaticMesh::SourceDecode(const TF_Span<const U8>& Bytes, const F_StaticMeshSourceDecodeConfig& Config, TF_Vector<F_SimpleMeshData>& OutSimpleDataList)
+    {
+        return Internal::StaticMesh::Simple::Decode(Bytes, Config, OutSimpleDataList);
+    }
+    
+    void F_StaticMesh::Import(const TF_Span<const U8>& Bytes, const F_StaticMeshSourceImportConfig& Config, const TF_Optional<F_StaticMeshSetting>& Setting)
     {
         switch (Config.DataType)
         {
@@ -278,32 +284,28 @@ namespace Abytek
             {
                 TF_Vector<F_SimpleMeshData> SimpleDataList;
                 ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
-                    Internal::StaticMesh::Simple::Decode(Bytes, SimpleDataList)  
+                    SourceDecode(Bytes, Config.Decode, SimpleDataList)  
                 );
-                Import(SimpleDataList, Setting);
+                Import(SimpleDataList[0], Setting);
             }
             break;
         case E_StaticMeshDataType::ECMS:
             {
                 TF_Vector<F_SimpleMeshData> SimpleDataList;
                 ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
-                    Internal::StaticMesh::Simple::Decode(Bytes, SimpleDataList)  
+                    SourceDecode(Bytes, Config.Decode, SimpleDataList)  
                 );
-                TF_Vector<F_ECMSMeshData> ECMSDataList;
-                for (const auto& SimpleData : SimpleDataList)
-                {
-                    ECMSDataList.push_back(
-                        F_ECMSMeshData::From(SimpleData)
-                    );
-                }
-                Import(ECMSDataList, Setting);
+                ABYTEK_LOG_INFO() << "Building ECMS static mesh data: " << GetPath();
+                F_ECMSMeshData ECMSData = F_ECMSMeshData::From(SimpleDataList[0]);
+                ABYTEK_LOG_INFO() << "Built ECMS static mesh data: " << GetPath();
+                Import(ECMSData, Setting);
             }
             break;
         default:
             ABYTEK_LOG_FATAL() << "Unknown mesh data type: " << static_cast<U32>(Config.DataType);
         }
     }
-    void F_StaticMesh::Import(const F_Text& FilePath, const F_StaticMeshImportConfig& Config, const TF_Optional<F_StaticMeshSetting>& Setting)
+    void F_StaticMesh::Import(const F_Text& FilePath, const F_StaticMeshSourceImportConfig& Config, const TF_Optional<F_StaticMeshSetting>& Setting)
     {
         F_Text AbsoluteFilePath;
         ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
@@ -320,10 +322,10 @@ namespace Abytek
             Setting
         );
     }
-    void F_StaticMesh::Import(const TF_Vector<F_SimpleMeshData>& SimpleDataList, const TF_Optional<F_StaticMeshSetting>& Setting)
+    void F_StaticMesh::Import(const F_SimpleMeshData& SimpleData, const TF_Optional<F_StaticMeshSetting>& Setting)
     {
         _DataType = E_StaticMeshDataType::SIMPLE;
-        _NewSimpleDataList = SimpleDataList;
+        _NewSimpleData = SimpleData;
         if (Setting)
         {
             _Setting = *Setting;
@@ -331,10 +333,10 @@ namespace Abytek
         MarkPackageDirty();
         RecreateRenderState();
     }
-    void F_StaticMesh::Import(const TF_Vector<F_ECMSMeshData>& ECMSDataList, const TF_Optional<F_StaticMeshSetting>& Setting)
+    void F_StaticMesh::Import(const F_ECMSMeshData& ECMSData, const TF_Optional<F_StaticMeshSetting>& Setting)
     {
         _DataType = E_StaticMeshDataType::ECMS;
-        _NewECMSDataList = ECMSDataList;
+        _NewECMSData = ECMSData;
         if (Setting)
         {
             _Setting = *Setting;
@@ -350,12 +352,12 @@ namespace Abytek
         RecreateRenderState();
     }
 
-    B8 F_StaticMesh::LoadSimpleDataList(TF_Vector<F_SimpleMeshData>& OutData)
+    B8 F_StaticMesh::LoadSimpleData(F_SimpleMeshData& OutData)
     {
         ABYTEK_ENGINE_NFC_ASSERT(_DataType == E_StaticMeshDataType::SIMPLE);
-        if (_NewSimpleDataList)
+        if (_NewSimpleData)
         {
-            OutData = *_NewSimpleDataList;
+            OutData = *_NewSimpleData;
             return true;
         }
         if (!_LastSimpleDataBulkHeader)
@@ -384,12 +386,12 @@ namespace Abytek
         );
         return true;
     }
-    B8 F_StaticMesh::LoadECMSDataList(TF_Vector<F_ECMSMeshData>& OutData)
+    B8 F_StaticMesh::LoadECMSData(F_ECMSMeshData& OutData)
     {
         ABYTEK_ENGINE_NFC_ASSERT(_DataType == E_StaticMeshDataType::ECMS);
-        if (_NewECMSDataList)
+        if (_NewECMSData)
         {
-            OutData = *_NewECMSDataList;
+            OutData = *_NewECMSData;
             return true;
         }
         if (!_LastECMSDataBulkHeader)

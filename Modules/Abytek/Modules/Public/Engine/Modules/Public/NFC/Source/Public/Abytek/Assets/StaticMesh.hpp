@@ -47,17 +47,22 @@ namespace Abytek
         ABYTEK_END_REFLECTOR(F_StaticMeshSetting);
     };
     
-    enum class E_StaticMeshImportFlag : U8
+    enum class E_StaticMeshSourceDecodeFlag : U8
     {
         NONE = 0x0,
         DEFAULT = NONE
     };
-    ABYTEK_DEFINE_FLAG_OPERATORS(E_StaticMeshImportFlag);
+    ABYTEK_DEFINE_FLAG_OPERATORS(E_StaticMeshSourceDecodeFlag);
     
-    struct F_StaticMeshImportConfig
+    struct F_StaticMeshSourceDecodeConfig
+    {
+        E_StaticMeshSourceDecodeFlag Flags = E_StaticMeshSourceDecodeFlag::DEFAULT;
+    };
+    
+    struct F_StaticMeshSourceImportConfig
     {
         E_StaticMeshDataType DataType = E_StaticMeshDataType::DEFAULT;
-        E_StaticMeshImportFlag Flags = E_StaticMeshImportFlag::DEFAULT;
+        F_StaticMeshSourceDecodeConfig Decode;
     };
     
     class ABYTEK_ENGINE_NFC_API F_StaticMesh : public A_WorldContext, public A_Renderable, public I_Cookable
@@ -70,8 +75,8 @@ namespace Abytek
         E_StaticMeshDataType _DataType = E_StaticMeshDataType::NONE;
         TF_Optional<F_StaticMeshDataBulkHeader> _LastSimpleDataBulkHeader;
         TF_Optional<F_StaticMeshDataBulkHeader> _LastECMSDataBulkHeader;
-        TF_Optional<TF_Vector<F_SimpleMeshData>> _NewSimpleDataList;
-        TF_Optional<TF_Vector<F_ECMSMeshData>> _NewECMSDataList;
+        TF_Optional<F_SimpleMeshData> _NewSimpleData;
+        TF_Optional<F_ECMSMeshData> _NewECMSData;
         
         TF_Optional<F_StaticMeshDataBulkHeader> _TempSerializationData_LastSimpleDataBulkHeader;
         TF_Optional<F_StaticMeshDataBulkHeader> _TempSerializationData_LastECMSDataBulkHeader;
@@ -91,13 +96,13 @@ namespace Abytek
         {
             return _LastECMSDataBulkHeader;
         }
-        ABYTEK_FORCE_INLINE const auto& GetNewSimpleDataList() const noexcept
+        ABYTEK_FORCE_INLINE const auto& GetNewSimpleData() const noexcept
         {
-            return _NewSimpleDataList;
+            return _NewSimpleData;
         }
-        ABYTEK_FORCE_INLINE const auto& GetNewECMSDataList() const noexcept
+        ABYTEK_FORCE_INLINE const auto& GetNewECMSData() const noexcept
         {
-            return _NewECMSDataList;
+            return _NewECMSData;
         }
         
         ABYTEK_FORCE_INLINE const auto& GetSetting() const noexcept
@@ -129,16 +134,19 @@ namespace Abytek
         void OnDestroyRenderState() override;
         
     public:
-        void Import(const TF_Span<const U8>& Bytes, const F_StaticMeshImportConfig& Config = {}, const TF_Optional<F_StaticMeshSetting>& Setting = {});
-        void Import(const F_Text& FilePath, const F_StaticMeshImportConfig& Config = {}, const TF_Optional<F_StaticMeshSetting>& Setting = {});
-        void Import(const TF_Vector<F_SimpleMeshData>& SimpleDataList, const TF_Optional<F_StaticMeshSetting>& Setting = {});
-        void Import(const TF_Vector<F_ECMSMeshData>& ECMSDataList, const TF_Optional<F_StaticMeshSetting>& Setting = {});
+        static F_FeedbackStatus SourceDecode(const TF_Span<const U8>& Bytes, const F_StaticMeshSourceDecodeConfig& Config, TF_Vector<F_SimpleMeshData>& OutSimpleDataList);
+        
+    public:
+        void Import(const TF_Span<const U8>& Bytes, const F_StaticMeshSourceImportConfig& Config = {}, const TF_Optional<F_StaticMeshSetting>& Setting = {});
+        void Import(const F_Text& FilePath, const F_StaticMeshSourceImportConfig& Config = {}, const TF_Optional<F_StaticMeshSetting>& Setting = {});
+        void Import(const F_SimpleMeshData& SimpleData, const TF_Optional<F_StaticMeshSetting>& Setting = {});
+        void Import(const F_ECMSMeshData& ECMSData, const TF_Optional<F_StaticMeshSetting>& Setting = {});
         
     public:
         void UpdateSetting(const F_StaticMeshSetting& Setting);
         
     public:
-        B8 LoadSimpleDataList(TF_Vector<F_SimpleMeshData>& OutData);
-        B8 LoadECMSDataList(TF_Vector<F_ECMSMeshData>& OutData);
+        B8 LoadSimpleData(F_SimpleMeshData& OutData);
+        B8 LoadECMSData(F_ECMSMeshData& OutData);
     };
 }

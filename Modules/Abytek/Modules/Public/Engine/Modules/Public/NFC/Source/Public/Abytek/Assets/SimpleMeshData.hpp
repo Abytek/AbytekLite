@@ -16,7 +16,6 @@ namespace Abytek
     {
         using F_Allocator = __F_Allocator;
         
-        U32 MaterialIndex = 0;
         ContainerTemplates::TF_Vector<U32, TF_RebindAllocator<U32, F_Allocator>> Indices;
         ContainerTemplates::TF_Vector<F_Vector3_F32, TF_RebindAllocator<F_Vector3_F32, F_Allocator>> Positions;
         ContainerTemplates::TF_Vector<F_Vector3_F32, TF_RebindAllocator<F_Vector3_F32, F_Allocator>> Normals;
@@ -45,7 +44,6 @@ namespace Abytek
         
         friend F_FeedbackStatus operator << (F_ArchiveReadWriteView& View, const TF_SimpleMeshData& Value)
         {
-            ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.MaterialIndex);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.Indices);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.Positions);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.Normals);
@@ -55,7 +53,6 @@ namespace Abytek
         }
         friend F_FeedbackStatus operator >> (F_ArchiveReadOnlyView& View, TF_SimpleMeshData& Value)
         {
-            ABYTEK_FEEDBACK_STATUS_CHECK(View >> Value.MaterialIndex);
             ABYTEK_FEEDBACK_STATUS_CHECK(View >> Value.Indices);
             ABYTEK_FEEDBACK_STATUS_CHECK(View >> Value.Positions);
             ABYTEK_FEEDBACK_STATUS_CHECK(View >> Value.Normals);
@@ -70,7 +67,6 @@ namespace Abytek
     {
         static constexpr B8 EnableWrite = false;
         
-        U32 MaterialIndex = 0;
         TF_Span<
             std::conditional_t<
                 EnableWrite,
@@ -132,7 +128,6 @@ namespace Abytek
         
         friend F_FeedbackStatus operator << (F_ArchiveReadWriteView& View, const TF_SimpleMeshDataView& Value)
         {
-            ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.MaterialIndex);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.Indices);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.Positions);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.Normals);
@@ -147,7 +142,6 @@ namespace Abytek
     {
         static constexpr B8 EnableWrite = true;
         
-        U32 MaterialIndex = 0;
         TF_Span<
             std::conditional_t<
                 EnableWrite,
@@ -209,7 +203,6 @@ namespace Abytek
         
         friend F_FeedbackStatus operator << (F_ArchiveReadWriteView& View, const TF_SimpleMeshDataView& Value)
         {
-            ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.MaterialIndex);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.Indices);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.Positions);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.Normals);
@@ -222,7 +215,6 @@ namespace Abytek
     template <typename __F_Allocator>
     template <B8 __EnableWrite2>
     TF_SimpleMeshData<__F_Allocator>::TF_SimpleMeshData(const TF_SimpleMeshDataView<__EnableWrite2>& X) :
-        MaterialIndex(X.MaterialIndex),
         Indices(X.Indices.begin(), X.Indices.end()),
         Positions(X.Positions.begin(), X.Positions.end()),
         Normals(X.Normals.begin(), X.Normals.end()),
@@ -234,8 +226,6 @@ namespace Abytek
     template <B8 __EnableWrite2>
     TF_SimpleMeshData<__F_Allocator>& TF_SimpleMeshData<__F_Allocator>::operator = (const TF_SimpleMeshDataView<__EnableWrite2>& X)
     {
-        MaterialIndex = X.MaterialIndex;
-        
         using F_Indices = decltype(Indices);
         Indices = F_Indices(X.Indices.begin(), X.Indices.end());
         
@@ -255,7 +245,6 @@ namespace Abytek
 
     template <typename __F_Allocator2>
     TF_SimpleMeshDataView<false>::TF_SimpleMeshDataView(const TF_SimpleMeshData<__F_Allocator2>& X) :
-        MaterialIndex(X.MaterialIndex),
         Indices(X.Indices),
         Positions(X.Positions),
         Normals(X.Normals),
@@ -265,9 +254,7 @@ namespace Abytek
     }
     template <typename __F_Allocator2>
     TF_SimpleMeshDataView<false>& TF_SimpleMeshDataView<false>::operator = (const TF_SimpleMeshData<__F_Allocator2>& X)
-    {
-        MaterialIndex = X.MaterialIndex;
-        Indices = X.Indices;
+    {Indices = X.Indices;
         Positions = X.Positions;
         Normals = X.Normals;
         TangentsAndSigns = X.TangentsAndSigns;
@@ -276,7 +263,6 @@ namespace Abytek
     }
     template <typename __F_Allocator2>
     TF_SimpleMeshDataView<true>::TF_SimpleMeshDataView(TF_SimpleMeshData<__F_Allocator2>& X) :
-        MaterialIndex(X.MaterialIndex),
         Indices(X.Indices),
         Positions(X.Positions),
         Normals(X.Normals),
@@ -286,9 +272,7 @@ namespace Abytek
     }
     template <typename __F_Allocator2>
     TF_SimpleMeshDataView<true>& TF_SimpleMeshDataView<true>::operator = (TF_SimpleMeshData<__F_Allocator2>& X)
-    {
-        MaterialIndex = X.MaterialIndex;
-        Indices = X.Indices;
+    {Indices = X.Indices;
         Positions = X.Positions;
         Normals = X.Normals;
         TangentsAndSigns = X.TangentsAndSigns;

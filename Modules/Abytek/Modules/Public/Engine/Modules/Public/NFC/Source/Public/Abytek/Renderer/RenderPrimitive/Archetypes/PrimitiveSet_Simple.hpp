@@ -14,16 +14,11 @@ namespace Abytek
     {
     private:
         TW<F_StaticMeshComponentRenderProxy> _StaticMeshComponentRenderProxy;
-        U32 _StaticMeshResourceIndex = ~U32(0);
         
     public:
         ABYTEK_FORCE_INLINE const auto& GetStaticMeshComponentRenderProxy() const noexcept
         {
             return _StaticMeshComponentRenderProxy;
-        }
-        ABYTEK_FORCE_INLINE auto GetStaticMeshResourceIndex() const noexcept
-        {
-            return _StaticMeshResourceIndex;
         }
         
     public:
@@ -34,8 +29,7 @@ namespace Abytek
             const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, 
             const TW_Valid<A_RenderPrimitiveProcessor>& Processor,
             const F_RenderPrimitiveSetConfig& Config,
-            const TW_Valid<F_StaticMeshComponentRenderProxy>& StaticMeshComponentRenderProxy,
-            U32 StaticMeshResourceIndex
+            const TW_Valid<F_StaticMeshComponentRenderProxy>& StaticMeshComponentRenderProxy
         );
         void Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
         

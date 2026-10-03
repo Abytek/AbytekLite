@@ -10,16 +10,14 @@ namespace Abytek
         const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, 
         const TW_Valid<A_RenderPrimitiveProcessor>& Processor,
         const F_RenderPrimitiveSetConfig& Config,
-        const TW_Valid<F_StaticMeshComponentRenderProxy>& StaticMeshComponentRenderProxy,
-        U32 StaticMeshResourceIndex
+        const TW_Valid<F_StaticMeshComponentRenderProxy>& StaticMeshComponentRenderProxy
     )
     {
         A_RenderPrimitiveSet_Simple::Init(
             SubmissionItemContainer,
             Processor,
             Config,
-            StaticMeshComponentRenderProxy,
-            StaticMeshResourceIndex
+            StaticMeshComponentRenderProxy
         );
     }
     void F_SRPRenderPrimitiveSet_Simple::Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)

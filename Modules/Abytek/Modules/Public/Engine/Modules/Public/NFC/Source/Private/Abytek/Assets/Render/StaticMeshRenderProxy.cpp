@@ -34,56 +34,42 @@ namespace Abytek
         {
         case E_StaticMeshDataType::SIMPLE:
             {
-                const auto& SimpleDataList = *_TempSimpleDataList;
-                U32 NumSimpleData = static_cast<U32>(SimpleDataList.size());
-                for (U32 Idx = 0; Idx < NumSimpleData; ++Idx)
-                {
-                    const auto& SimpleData = SimpleDataList[Idx];
-                    F_StaticMeshResource_Simple Resource;
-                    Resource.Index = Idx;
-                    if (
-                        GeometryStorage->AddMeshData_Simple(
-                            SubmissionItemContainer, 
-                            SimpleData, 
-                            Resource.GeometryAllocation, 
-                            Resource.GeometryAllocationStructure
-                        )
+                const auto& SimpleData = *_TempSimpleData;
+                F_StaticMeshResource_Simple Resource;
+                if (
+                    GeometryStorage->AddMeshData_Simple(
+                        SubmissionItemContainer, 
+                        SimpleData, 
+                        Resource.GeometryAllocation, 
+                        Resource.GeometryAllocationStructure
                     )
-                    {
-                        _ResourceList_Simple.push_back(Resource);
-                    }
+                )
+                {
+                    _Resource_Simple = Resource;
                 }
-            
                 H_Frame::EnqueueCommand<E_FrameParamType::DISPLAY, E_FrameParamType::RENDER>(
-                    [TempSimpleDataList = ABYTEK_MOVE(_TempSimpleDataList)]
+                    [TempSimpleData = ABYTEK_MOVE(_TempSimpleData)]
                     {}    
                 );
             }
             break;
         case E_StaticMeshDataType::ECMS:
             {
-                const auto& ECMSDataList = *_TempECMSDataList;
-                U32 NumECMSData = static_cast<U32>(ECMSDataList.size());
-                for (U32 Idx = 0; Idx < NumECMSData; ++Idx)
-                {
-                    const auto& ECMSData = ECMSDataList[Idx];
-                    F_StaticMeshResource_ECMS Resource;
-                    Resource.Index = Idx;
-                    if (
-                        GeometryStorage->AddMeshData_ECMS(
-                            SubmissionItemContainer, 
-                            ECMSData, 
-                            Resource.GeometryAllocation, 
-                            Resource.GeometryAllocationStructure
-                        )
+                const auto& ECMSData = *_TempECMSData;
+                F_StaticMeshResource_ECMS Resource;
+                if (
+                    GeometryStorage->AddMeshData_ECMS(
+                        SubmissionItemContainer, 
+                        ECMSData, 
+                        Resource.GeometryAllocation, 
+                        Resource.GeometryAllocationStructure
                     )
-                    {
-                        _ResourceList_ECMS.push_back(Resource);
-                    }
+                )
+                {
+                    _Resource_ECMS = Resource;
                 }
-            
                 H_Frame::EnqueueCommand<E_FrameParamType::DISPLAY, E_FrameParamType::RENDER>(
-                    [TempECMSDataList = ABYTEK_MOVE(_TempECMSDataList)]
+                    [TempECMSData = ABYTEK_MOVE(_TempECMSData)]
                     {}    
                 );
             }
@@ -100,24 +86,22 @@ namespace Abytek
             {
                 auto Scene = GetWorldRenderResource()->GetScene();
                 auto GeometryStorage = Scene->GetGeometryStorage();
-            
-                for (const auto& Resource : _ResourceList_Simple)
+                if (_Resource_Simple)
                 {
-                    GeometryStorage->RemoveMeshData_Simple(SubmissionItemContainer, Resource.GeometryAllocation);
+                    GeometryStorage->RemoveMeshData_Simple(SubmissionItemContainer, _Resource_Simple->GeometryAllocation);
                 }
-                _ResourceList_Simple = {};
+                _Resource_Simple = {};
             }
             break;
         case E_StaticMeshDataType::ECMS:
             {
                 auto Scene = GetWorldRenderResource()->GetScene();
                 auto GeometryStorage = Scene->GetGeometryStorage();
-            
-                for (const auto& Resource : _ResourceList_ECMS)
+                if (_Resource_ECMS)
                 {
-                    GeometryStorage->RemoveMeshData_ECMS(SubmissionItemContainer, Resource.GeometryAllocation);
+                    GeometryStorage->RemoveMeshData_ECMS(SubmissionItemContainer, _Resource_ECMS->GeometryAllocation);
                 }
-                _ResourceList_ECMS = {};
+                _Resource_ECMS = {};
             }
             break;
         default:

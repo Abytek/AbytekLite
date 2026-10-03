@@ -85,16 +85,14 @@ namespace Abytek
         {
         case E_StaticMeshDataType::SIMPLE:
             {
-                const auto& ResourceList = StaticMeshRenderProxy->GetResourceList_Simple();
-                for (const auto& Resource : ResourceList)
+                if (const auto& Resource = StaticMeshRenderProxy->GetResource_Simple())
                 {
                     auto StaticMeshBindGroup = Binding.CreateBindGroup();
                     StaticMeshBindGroup->BindUniformData(ABYTEK_NAME("StaticMeshUniformData"), StaticMeshUniformData);
                     {
                         auto GeometryUniformData = F_StaticMeshGeometryUniformData_Simple::Make(
-                            Resource.Index,
-                            Resource.GeometryAllocation,
-                            Resource.GeometryAllocationStructure
+                            Resource->GeometryAllocation,
+                            Resource->GeometryAllocationStructure
                         );
                         StaticMeshBindGroup->BindUniformData(ABYTEK_NAME("StaticMeshGeometryUniformData_Simple"), GeometryUniformData);
                     }
@@ -111,7 +109,7 @@ namespace Abytek
                         },
                         View->GetDefaultViewportScissorConfig(),
                         F_RHIDrawNonIndexedConfig::Make(
-                            Resource.GeometryAllocationStructure.NumIndices
+                            Resource->GeometryAllocationStructure.NumIndices
                         )
                     );
                 }
@@ -120,17 +118,14 @@ namespace Abytek
         case E_StaticMeshDataType::ECMS:
             {
                 const auto& InstancedMeshletBuffer = CastedView->GetInstancedMeshletBuffer_ECMS();
-                
-                const auto& ResourceList = StaticMeshRenderProxy->GetResourceList_ECMS();
-                for (const auto& Resource : ResourceList)
+                if (const auto& Resource = StaticMeshRenderProxy->GetResource_ECMS())
                 {
                     auto StaticMeshBindGroup = Binding.CreateBindGroup();
                     StaticMeshBindGroup->BindUniformData(ABYTEK_NAME("StaticMeshUniformData"), StaticMeshUniformData);
                     {
                         auto GeometryUniformData = F_StaticMeshGeometryUniformData_ECMS::Make(
-                            Resource.Index,
-                            Resource.GeometryAllocation,
-                            Resource.GeometryAllocationStructure
+                            Resource->GeometryAllocation,
+                            Resource->GeometryAllocationStructure
                         );
                         StaticMeshBindGroup->BindUniformData(ABYTEK_NAME("StaticMeshGeometryUniformData_ECMS"), GeometryUniformData);
                     }
@@ -149,7 +144,7 @@ namespace Abytek
                         View->GetDefaultViewportScissorConfig(),
                         F_RHIDrawDispatchMeshConfig::Make(
                             F_Vector3_U32(
-                                Resource.GeometryAllocationStructure.NumMeshlets, 
+                                Resource->GeometryAllocationStructure.NumMeshlets, 
                                 1, 
                                 1
                             )

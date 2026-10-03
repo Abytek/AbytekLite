@@ -52,11 +52,9 @@ namespace Abytek
     {
         F_RenderGeometryAllocationStructure_Simple GeometryAllocationStructure;
         F_RenderGeometryAddress GeometryAddress;
-        U32 Index = 0;
-        U32 ___Padding___ = 0;
+        F_Vector2_U32 ___Padding___ = 0;
         
         static F_StaticMeshGeometryUniformData_Simple Make(
-            U32 Index,
             const F_RenderGeometryAllocation& GeometryAllocation,
             const F_RenderGeometryAllocationStructure_Simple& GeometryAllocationStructure
         );
@@ -83,11 +81,9 @@ namespace Abytek
     {
         F_RenderGeometryAllocationStructure_ECMS GeometryAllocationStructure;
         F_RenderGeometryAddress GeometryAddress;
-        U32 Index = 0;
-        U32 ___Padding___ = 0;
+        F_Vector2_U32 ___Padding___ = 0;
         
         static F_StaticMeshGeometryUniformData_ECMS Make(
-            U32 Index,
             const F_RenderGeometryAllocation& GeometryAllocation,
             const F_RenderGeometryAllocationStructure_ECMS& GeometryAllocationStructure
         );

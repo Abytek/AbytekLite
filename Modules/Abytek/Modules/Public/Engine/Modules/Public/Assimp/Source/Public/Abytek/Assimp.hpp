@@ -7,6 +7,7 @@ namespace Abytek
 {
     struct F_AssimpSimpleMeshData
     {
+        U32 MaterialIndex = 0;
         TF_Vector<U32> Indices;
         TF_Vector<F_Vector3_F32> Positions;
         TF_Vector<F_Vector3_F32> Normals;

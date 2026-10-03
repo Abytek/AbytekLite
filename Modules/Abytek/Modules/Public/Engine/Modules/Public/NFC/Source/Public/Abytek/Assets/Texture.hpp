@@ -89,17 +89,22 @@ namespace Abytek
         }
     };
     
-    enum class E_TextureImportFlag : U8
+    enum class E_TextureSourceDecodeFlag : U8
     {
         NONE = 0x0,
         SUPPORT_HDR32 = 0x1,
         DEFAULT = NONE
     };
-    ABYTEK_DEFINE_FLAG_OPERATORS(E_TextureImportFlag);
+    ABYTEK_DEFINE_FLAG_OPERATORS(E_TextureSourceDecodeFlag);
     
-    struct F_TextureImportConfig
+    struct F_TextureSourceDecodeConfig
     {
-        E_TextureImportFlag Flags = E_TextureImportFlag::DEFAULT;
+        E_TextureSourceDecodeFlag Flags = E_TextureSourceDecodeFlag::DEFAULT;
+    };
+    
+    struct F_TextureSourceImportConfig
+    {
+        F_TextureSourceDecodeConfig Decode;
     };
     
     class ABYTEK_ENGINE_NFC_API F_Texture : public A_WorldContext, public A_Renderable, public I_Cookable
@@ -248,8 +253,11 @@ namespace Abytek
         void OnDestroyRenderState() override;
         
     public:
-        void Import(const TF_Span<const U8>& Bytes, const F_TextureImportConfig& Config = {}, const TF_Optional<F_TextureSetting>& Setting = {});
-        void Import(const F_Text& FilePath, const F_TextureImportConfig& Config = {}, const TF_Optional<F_TextureSetting>& Setting = {});
+        static F_FeedbackStatus SourceDecode(const TF_Span<const U8>& Bytes, const F_TextureSourceDecodeConfig& Config, F_RHIImage& OutImage);
+        
+    public:
+        void Import(const TF_Span<const U8>& Bytes, const F_TextureSourceImportConfig& Config = {}, const TF_Optional<F_TextureSetting>& Setting = {});
+        void Import(const F_Text& FilePath, const F_TextureSourceImportConfig& Config = {}, const TF_Optional<F_TextureSetting>& Setting = {});
         void Import(const F_RHIImageROView& ImageView, const TF_Optional<F_TextureSetting>& Setting = {});
         template<B8 __EnableWrite, E_RHIFormat __Format>
         void Import(const TF_RHIImageRawView<__EnableWrite, __Format>& ImageRawView, const TF_Optional<F_TextureSetting>& Setting = {})

@@ -44,8 +44,7 @@ namespace Abytek
     {
         public F_RenderGeometryAllocationStructure_Simple GeometryAllocationStructure;
         public F_RenderGeometryAddress GeometryAddress;
-        public uint Index = 0;
-        private uint ___Padding___;
+        private uint2 ___Padding___ = uint2(0);
     };
 
     public struct F_RenderGeometryAllocationStructure_ECMS
@@ -71,7 +70,6 @@ namespace Abytek
     {
         public F_RenderGeometryAllocationStructure_ECMS GeometryAllocationStructure;
         public F_RenderGeometryAddress GeometryAddress;
-        public uint Index = 0;
-        private uint ___Padding___;
+        private uint2 ___Padding___ = uint2(0);
     };
 }

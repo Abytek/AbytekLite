@@ -11,13 +11,11 @@ namespace Abytek
 
     struct F_StaticMeshResource_Simple
     {
-        U32 Index = 0;
         F_RenderGeometryAllocation GeometryAllocation;
         F_RenderGeometryAllocationStructure_Simple GeometryAllocationStructure;
     };
     struct F_StaticMeshResource_ECMS
     {
-        U32 Index = 0;
         F_RenderGeometryAllocation GeometryAllocation;
         F_RenderGeometryAllocationStructure_ECMS GeometryAllocationStructure;
     };
@@ -29,12 +27,12 @@ namespace Abytek
         
     private:
         E_StaticMeshDataType _DataType = E_StaticMeshDataType::NONE;
-        TS_Unmanaged<TF_Vector<F_SimpleMeshData>> _TempSimpleDataList;
-        TS_Unmanaged<TF_Vector<F_ECMSMeshData>> _TempECMSDataList;
+        TS_Unmanaged<F_SimpleMeshData> _TempSimpleData;
+        TS_Unmanaged<F_ECMSMeshData> _TempECMSData;
         F_StaticMeshSetting _Setting;
         
-        TF_Vector<F_StaticMeshResource_Simple> _ResourceList_Simple;
-        TF_Vector<F_StaticMeshResource_ECMS> _ResourceList_ECMS;
+        TF_Optional<F_StaticMeshResource_Simple> _Resource_Simple;
+        TF_Optional<F_StaticMeshResource_ECMS> _Resource_ECMS;
         
     public:
         ABYTEK_FORCE_INLINE auto GetDataType() const noexcept
@@ -46,13 +44,13 @@ namespace Abytek
             return _Setting;
         }
         
-        ABYTEK_FORCE_INLINE const auto& GetResourceList_Simple() const noexcept
+        ABYTEK_FORCE_INLINE const auto& GetResource_Simple() const noexcept
         {
-            return _ResourceList_Simple;
+            return _Resource_Simple;
         }
-        ABYTEK_FORCE_INLINE const auto& GetResourceList_ECMS() const noexcept
+        ABYTEK_FORCE_INLINE const auto& GetResource_ECMS() const noexcept
         {
-            return _ResourceList_ECMS;
+            return _Resource_ECMS;
         }
         
     public:

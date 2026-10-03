@@ -40,9 +40,8 @@ namespace Abytek
             {
                 auto CastedPrimitiveSet = PrimitiveSet.FastCast<F_SRPRenderPrimitiveSet_Simple>();
                 
-                auto ResourceIndex = CastedPrimitiveSet->GetStaticMeshResourceIndex();
                 const auto& StaticMeshComponentRenderProxy = CastedPrimitiveSet->GetStaticMeshComponentRenderProxy();
-                const auto& Resource = StaticMeshComponentRenderProxy->GetStaticMeshRenderProxy()->GetResourceList_ECMS()[ResourceIndex];
+                const auto& Resource = StaticMeshComponentRenderProxy->GetStaticMeshRenderProxy()->GetResource_ECMS();
         
                 F_Binding::F_DynamicPermutationVector BindingPermutationVector;
                 auto Binding = F_Binding::Instantiate(
@@ -91,7 +90,7 @@ namespace Abytek
                     View->GetDefaultViewportScissorConfig(),
                     F_RHIDrawDispatchMeshConfig::Make(
                         F_Vector3_U32(
-                            Resource.GeometryAllocationStructure.NumMeshlets, 
+                            Resource->GeometryAllocationStructure.NumMeshlets, 
                             1, 
                             1
                         )

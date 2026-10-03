@@ -7,8 +7,7 @@ namespace Abytek
         const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
         const TW_Valid<A_RenderPrimitiveProcessor>& Processor,
         const F_RenderPrimitiveSetConfig& Config,
-        const TW_Valid<F_StaticMeshComponentRenderProxy>& StaticMeshComponentRenderProxy,
-        U32 StaticMeshResourceIndex
+        const TW_Valid<F_StaticMeshComponentRenderProxy>& StaticMeshComponentRenderProxy
     )
     {
         InitPrimitiveSet(
@@ -17,11 +16,9 @@ namespace Abytek
             Config
         );
         _StaticMeshComponentRenderProxy = StaticMeshComponentRenderProxy;
-        _StaticMeshResourceIndex = StaticMeshResourceIndex;
     }
     void A_RenderPrimitiveSet_Simple::Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        _StaticMeshResourceIndex = ~U32(0);
         _StaticMeshComponentRenderProxy = {};
         A_RenderPrimitiveSet::Release(SubmissionItemContainer);
     }

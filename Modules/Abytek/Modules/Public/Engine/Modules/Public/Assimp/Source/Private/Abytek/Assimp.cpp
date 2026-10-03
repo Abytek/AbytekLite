@@ -33,6 +33,8 @@ namespace Abytek
         {
             F_AssimpSimpleMeshData SimpleData;
             const aiMesh* mesh = Scene->mMeshes[i];
+            
+            SimpleData.MaterialIndex = mesh->mMaterialIndex;
 
             for (unsigned int v = 0; v < mesh->mNumVertices; ++v)
             {

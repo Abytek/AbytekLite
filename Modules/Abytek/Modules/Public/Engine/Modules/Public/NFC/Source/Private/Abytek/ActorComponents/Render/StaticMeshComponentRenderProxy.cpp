@@ -40,7 +40,7 @@ namespace Abytek
     {
         auto StaticMeshRenderProxy = GetStaticMeshRenderProxy();
         ABYTEK_ENGINE_NFC_ASSERT(StaticMeshRenderProxy->GetDataType() == E_StaticMeshDataType::ECMS);
-        for (const auto& Resource : StaticMeshRenderProxy->GetResourceList_ECMS())
+        if (const auto& Resource = StaticMeshRenderProxy->GetResource_ECMS())
         {
             OutPrimitiveSets.push_back(GetRenderObjectFactory()->CreatePrimitiveSet_Simple());
         }
@@ -50,19 +50,19 @@ namespace Abytek
         const TF_Vector<TS<A_RenderPrimitiveSet>>& PrimitiveSets
     )
     {
+        if (PrimitiveSets.empty())
+        {
+            return;
+        }
         F_RenderPrimitiveSetConfig Config;
         Config.Num = 1;
-        for (U32 Idx = 0; Idx < PrimitiveSets.size(); ++Idx)
-        {
-            const auto& PrimitiveSet = PrimitiveSets[Idx];
-            PrimitiveSet.StaticCast<A_RenderPrimitiveSet_Simple>()->Init(
-                SubmissionItemContainer,
-                GetWorldRenderResource()->GetScene()->GetPrimitiveProcessor_Simple(),
-                Config,
-                ABYTEK_WTHIS(),
-                Idx
-            );
-        }
+        const auto& PrimitiveSet = PrimitiveSets[0];
+        PrimitiveSet.StaticCast<A_RenderPrimitiveSet_Simple>()->Init(
+            SubmissionItemContainer,
+            GetWorldRenderResource()->GetScene()->GetPrimitiveProcessor_Simple(),
+            Config,
+            ABYTEK_WTHIS()
+        );
     }
 
     void F_StaticMeshComponentRenderProxy::UpdateWorldTransformMatrix_Simple(const F_Matrix4x4_F32& Value)
@@ -76,15 +76,14 @@ namespace Abytek
     }
     void F_StaticMeshComponentRenderProxy::UpdateStaticMesh_Simple(const TS<F_StaticMeshRenderProxy>& StaticMeshRenderProxy)
     {
-        const auto& StaticMeshResources = StaticMeshRenderProxy->GetResourceList_ECMS();
-        U32 NumResources = static_cast<U32>(StaticMeshResources.size());
-        for (U32 Idx = 0; Idx < NumResources; ++Idx)
+        const auto& StaticMeshResource = StaticMeshRenderProxy->GetResource_ECMS();
+        if (!StaticMeshResource)
         {
-            const auto& StaticMeshResource = StaticMeshResources[Idx];
-            const auto& PrimitiveSet = GetPrimitiveSets()[Idx];
-            auto CastedPrimitiveSet = PrimitiveSet.FastCast<A_RenderPrimitiveSet_Simple>();
-            CastedPrimitiveSet->UploadComponent_GeometryAddress_ECMS({ F_RenderGeometryAddress::From(StaticMeshResource.GeometryAllocation) });
-            CastedPrimitiveSet->UploadComponent_GeometryAllocationStructure_ECMS({ StaticMeshResource.GeometryAllocationStructure });
+            return;
         }
+        const auto& PrimitiveSet = GetPrimitiveSets()[0];
+        auto CastedPrimitiveSet = PrimitiveSet.FastCast<A_RenderPrimitiveSet_Simple>();
+        CastedPrimitiveSet->UploadComponent_GeometryAddress_ECMS({ F_RenderGeometryAddress::From(StaticMeshResource->GeometryAllocation) });
+        CastedPrimitiveSet->UploadComponent_GeometryAllocationStructure_ECMS({ StaticMeshResource->GeometryAllocationStructure });
     }
 }

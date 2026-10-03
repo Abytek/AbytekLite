@@ -79,7 +79,6 @@ namespace Abytek
     {
         using F_Allocator = __F_Allocator;
         
-        U32 MaterialIndex = 0;
         ContainerTemplates::TF_Vector<F_ECMSMeshlet, TF_RebindAllocator<F_ECMSMeshlet, F_Allocator>> Meshlets;
         ContainerTemplates::TF_Vector<F_ECMSMeshTriangle, TF_RebindAllocator<F_ECMSMeshTriangle, F_Allocator>> Triangles;
         ContainerTemplates::TF_Vector<F_ECMSGlobalVertexIndex, TF_RebindAllocator<F_ECMSGlobalVertexIndex, F_Allocator>> VertexIndices;
@@ -118,7 +117,6 @@ namespace Abytek
         
         friend F_FeedbackStatus operator << (F_ArchiveReadWriteView& View, const TF_ECMSMeshData& Value)
         {
-            ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.MaterialIndex);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.Meshlets);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.Triangles);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.VertexIndices);
@@ -130,7 +128,6 @@ namespace Abytek
         }
         friend F_FeedbackStatus operator >> (F_ArchiveReadOnlyView& View, TF_ECMSMeshData& Value)
         {
-            ABYTEK_FEEDBACK_STATUS_CHECK(View >> Value.MaterialIndex);
             ABYTEK_FEEDBACK_STATUS_CHECK(View >> Value.Meshlets);
             ABYTEK_FEEDBACK_STATUS_CHECK(View >> Value.Triangles);
             ABYTEK_FEEDBACK_STATUS_CHECK(View >> Value.VertexIndices);
@@ -240,7 +237,6 @@ namespace Abytek
     {
         static constexpr B8 EnableWrite = false;
         
-        U32 MaterialIndex = 0;
         TF_Span<
             std::conditional_t<
                 EnableWrite,
@@ -324,7 +320,6 @@ namespace Abytek
         
         friend F_FeedbackStatus operator << (F_ArchiveReadWriteView& View, const TF_ECMSMeshDataView& Value)
         {
-            ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.MaterialIndex);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.Meshlets);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.Triangles);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.VertexIndices);
@@ -341,7 +336,6 @@ namespace Abytek
     {
         static constexpr B8 EnableWrite = true;
         
-        U32 MaterialIndex = 0;
         TF_Span<
             std::conditional_t<
                 EnableWrite,
@@ -425,7 +419,6 @@ namespace Abytek
         
         friend F_FeedbackStatus operator << (F_ArchiveReadWriteView& View, const TF_ECMSMeshDataView& Value)
         {
-            ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.MaterialIndex);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.Meshlets);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.Triangles);
             ABYTEK_FEEDBACK_STATUS_CHECK(View << Value.VertexIndices);
@@ -440,7 +433,6 @@ namespace Abytek
     template <typename __F_Allocator>
     template <B8 __EnableWrite2>
     TF_ECMSMeshData<__F_Allocator>::TF_ECMSMeshData(const TF_ECMSMeshDataView<__EnableWrite2>& X) :
-        MaterialIndex(X.MaterialIndex),
         Meshlets(X.Meshlets.begin(), X.Meshlets.end()),
         Triangles(X.Triangles.begin(), X.Triangles.end()),
         VertexIndices(X.VertexIndices.begin(), X.VertexIndices.end()),
@@ -454,8 +446,6 @@ namespace Abytek
     template <B8 __EnableWrite2>
     TF_ECMSMeshData<__F_Allocator>& TF_ECMSMeshData<__F_Allocator>::operator = (const TF_ECMSMeshDataView<__EnableWrite2>& X)
     {
-        MaterialIndex = X.MaterialIndex;
-        
         using F_Meshlets = decltype(Meshlets);
         Meshlets = F_Meshlets(X.Meshlets.begin(), X.Meshlets.end());
         
@@ -481,7 +471,6 @@ namespace Abytek
 
     template <typename __F_Allocator2>
     TF_ECMSMeshDataView<false>::TF_ECMSMeshDataView(const TF_ECMSMeshData<__F_Allocator2>& X) :
-        MaterialIndex(X.MaterialIndex),
         Meshlets(X.Meshlets),
         Triangles(X.Triangles),
         VertexIndices(X.VertexIndices),
@@ -494,7 +483,6 @@ namespace Abytek
     template <typename __F_Allocator2>
     TF_ECMSMeshDataView<false>& TF_ECMSMeshDataView<false>::operator = (const TF_ECMSMeshData<__F_Allocator2>& X)
     {
-        MaterialIndex = X.MaterialIndex;
         Meshlets = X.Meshlets;
         Triangles = X.Triangles;
         VertexIndices = X.VertexIndices;
@@ -506,7 +494,6 @@ namespace Abytek
     }
     template <typename __F_Allocator2>
     TF_ECMSMeshDataView<true>::TF_ECMSMeshDataView(TF_ECMSMeshData<__F_Allocator2>& X) :
-        MaterialIndex(X.MaterialIndex),
         Meshlets(X.Meshlets),
         Triangles(X.Triangles),
         VertexIndices(X.VertexIndices),
@@ -519,7 +506,6 @@ namespace Abytek
     template <typename __F_Allocator2>
     TF_ECMSMeshDataView<true>& TF_ECMSMeshDataView<true>::operator = (TF_ECMSMeshData<__F_Allocator2>& X)
     {
-        MaterialIndex = X.MaterialIndex;
         Meshlets = X.Meshlets;
         Triangles = X.Triangles;
         VertexIndices = X.VertexIndices;
