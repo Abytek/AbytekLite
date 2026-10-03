@@ -21,8 +21,9 @@ namespace Abytek
         
     private:
         TW<F_GPUData> _GPUData;
-        TF_Optional<F_GPUDataInstanceAllocation> _Allocation;
         U32 _Num = 0;
+        F_GPUDataInstanceAllocation _Allocation;
+        U32 _Index = ABYTEK_U32_MAX;
         
         struct F_UploadCandidate
         {
@@ -37,13 +38,17 @@ namespace Abytek
         {
             return _GPUData;
         }
+        ABYTEK_FORCE_INLINE auto GetNum() const noexcept
+        {
+            return _Num;
+        }
         ABYTEK_FORCE_INLINE const auto& GetAllocation() const noexcept
         {
             return _Allocation;
         }
-        ABYTEK_FORCE_INLINE auto GetNum() const noexcept
+        ABYTEK_FORCE_INLINE auto GetIndex() const noexcept
         {
-            return _Num;
+            return _Index;
         }
         
     public:
@@ -59,6 +64,9 @@ namespace Abytek
     public:
         void UploadComponents(U32 Index, const void* DataPtr);
         void UploadComponents(const TW_Valid<F_GPUDataComponentType>& ComponentType, const void* DataPtr);
+        
+    public:
+        F_GPUDataInstanceSetHeader GetHeader() const;
         
     private:
         void _MarkDirty();

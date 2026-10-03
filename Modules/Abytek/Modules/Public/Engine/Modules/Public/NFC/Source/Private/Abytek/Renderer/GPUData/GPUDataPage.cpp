@@ -36,8 +36,13 @@ namespace Abytek
             );
             auto RHIBuffer = RACreateAndBuildShared<A_RHIResource>(BufferBuildParams);
 #ifdef ABYTEK_DEBUG_INFO
-            RHIBuffer->SetDebugName(GetDebugName());
+            RHIBuffer->SetDebugName(
+                *GetDebugName()
+                + ABYTEK_TEXT(".")
+                + *ComponentType->GetName()
+            );
 #endif
+            _RHIBuffers.push_back(RHIBuffer);
         
             {
                 F_RHIBufferViewBuildParams BufferViewBuildParams;
@@ -48,7 +53,12 @@ namespace Abytek
                 BufferViewBuildParams.Access = F_RHIResourceAccess::MakeSRV();
                 auto SRV = RACreateAndBuildShared<A_RHIResourceView>(BufferViewBuildParams);
 #ifdef ABYTEK_DEBUG_INFO
-                SRV->SetDebugName(*GetDebugName() + ABYTEK_TEXT(".SRV"));
+                SRV->SetDebugName(
+                    *GetDebugName()
+                    + ABYTEK_TEXT(".")
+                    + *ComponentType->GetName() 
+                    + ABYTEK_TEXT(".SRV")
+                );
 #endif
                 _SRVs.push_back(SRV);
             }
@@ -61,7 +71,12 @@ namespace Abytek
                 BufferViewBuildParams.Access = F_RHIResourceAccess::MakeUAV();
                 auto UAV = RACreateAndBuildShared<A_RHIResourceView>(BufferViewBuildParams);
 #ifdef ABYTEK_DEBUG_INFO
-                UAV->SetDebugName(*GetDebugName() + ABYTEK_TEXT(".UAV"));
+                UAV->SetDebugName(
+                    *GetDebugName()
+                    + ABYTEK_TEXT(".")
+                    + *ComponentType->GetName() 
+                    + ABYTEK_TEXT(".UAV")
+                );
 #endif
                 _UAVs.push_back(UAV);
             }
@@ -83,7 +98,7 @@ namespace Abytek
         A_RenderObject::Release(SubmissionItemContainer);
     }
 
-    TF_Optional<F_GPUDataInstanceAllocation> F_GPUDataPage::Allocate(U32 NumInstances)
+    F_GPUDataInstanceAllocation F_GPUDataPage::Allocate(U32 NumInstances)
     {
         if (auto OffsetInInstances = _Distributor.Allocate(1))
         {

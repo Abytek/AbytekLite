@@ -15,7 +15,6 @@ namespace Abytek
     ABYTEK_REFLECT(A_ActorComponent)
     {
         ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::A_ActorComponent"));
-        ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(_Actor);
         ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(_Tags);
     }
 

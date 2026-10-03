@@ -18,6 +18,6 @@ namespace Abytek::MathRenderer2D
 
     public struct F_PSInput
     {
-        public float4 ClipPosition : SV_Position;
+        public float4 ClipOrPixelPosition : SV_Position;
     };
 }

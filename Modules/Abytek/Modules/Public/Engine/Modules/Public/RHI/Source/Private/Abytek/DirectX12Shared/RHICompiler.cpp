@@ -26,27 +26,73 @@ namespace Abytek
         {
             U32 SM = 60; // baseline SM6_0
 
-            const auto& F = FTemplate.ExtendedSet;
-
             // ---- general shader features ----
 
-            if (F.PrimitiveTypes >= F_RHIFeatureSet::E_PrimitiveTypes::FEATURE_F16)
+            if (
+                ABYTEK_RHI_FEATURE_CHECK(
+                    PrimitiveTypes,
+                    F_RHIFeatureSet::E_PrimitiveTypes::FEATURE_F16,
+                    FTemplate
+                )
+            )
+            {
                 SM = Max<U32>(SM, 62u);
+            }
 
-            if (F.VariableRateShading >= F_RHIFeatureSet::E_VariableRateShading::L1)
+            if (
+                ABYTEK_RHI_FEATURE_CHECK(
+                    VariableRateShading,
+                    F_RHIFeatureSet::E_VariableRateShading::L1,
+                    FTemplate
+                )
+            )
+            {
                 SM = Max<U32>(SM, 64u);
+            }
 
-            if (F.MeshShader >= F_RHIFeatureSet::E_MeshShader::L1)
+            if (
+                ABYTEK_RHI_FEATURE_CHECK(
+                    MeshShader,
+                    F_RHIFeatureSet::E_MeshShader::L1,
+                    FTemplate
+                )
+            )
+            {
                 SM = Max<U32>(SM, 65u);
+            }
 
-            if (F.SamplerFeedback >= F_RHIFeatureSet::E_SamplerFeedback::L1)
+            if (
+                ABYTEK_RHI_FEATURE_CHECK(
+                    SamplerFeedback,
+                    F_RHIFeatureSet::E_SamplerFeedback::L1,
+                    FTemplate
+                )
+            )
+            {
                 SM = Max<U32>(SM, 65u);
+            }
 
-            if (F.AtomicOps >= F_RHIFeatureSet::E_AtomicOps::FEATURE_I64)
+            if (
+                ABYTEK_RHI_FEATURE_CHECK(
+                    AtomicOps,
+                    F_RHIFeatureSet::E_AtomicOps::FEATURE_I64,
+                    FTemplate
+                )
+            )
+            {
                 SM = Max<U32>(SM, 66u);
+            }
 
-            if (F.Binding >= F_RHIFeatureSet::E_Binding::L3)
+            if (
+                ABYTEK_RHI_FEATURE_CHECK(
+                    Binding,
+                    F_RHIFeatureSet::E_Binding::L3,
+                    FTemplate
+                )
+            )
+            {
                 SM = Max<U32>(SM, 66u);
+            }
 
             // ---- ray tracing ----
 
@@ -57,11 +103,27 @@ namespace Abytek
                 Frequency == E_RHIShaderFrequency::RT_MISS
             )
             {
-                if (F.RayTracing >= F_RHIFeatureSet::E_RayTracing::L1)
+                if (
+                    ABYTEK_RHI_FEATURE_CHECK(
+                        RayTracing,
+                        F_RHIFeatureSet::E_RayTracing::L1,
+                        FTemplate
+                    )
+                )
+                {
                     SM = Max<U32>(SM, 63u);
-
-                if (F.RayTracing >= F_RHIFeatureSet::E_RayTracing::L2)
+                }
+                
+                if (
+                    ABYTEK_RHI_FEATURE_CHECK(
+                        RayTracing,
+                        F_RHIFeatureSet::E_RayTracing::L2,
+                        FTemplate
+                    )
+                )
+                {
                     SM = Max<U32>(SM, 66u);
+                }
             }
 
             // ---- work graphs ----
@@ -83,7 +145,9 @@ namespace Abytek
             {
                 // SM 6.8 currently not valid for standard shaders
                 if (SM > 66)
+                {
                     SM = 66;
+                }
             }
 
             return SM;
@@ -416,6 +480,7 @@ namespace Abytek
                     NumDescriptorsInCurrentMergedRootParameter += InitialDescriptorRange.NumDescriptors;
                     
                     MergedRootParameter.DescriptorTable.Ranges.push_back(InitialDescriptorRange);
+                    MergedRootParameter.DescriptorTable.Ranges.back().OffsetInDescriptorsFromTableStart = MergedSlotMap.DescriptorIndexFromRootParameterStart;
                 } 
             }
         }
@@ -1231,16 +1296,17 @@ namespace Abytek
                     Definitions_DescArrayRaw = Definitions_DescArray.data();
                 }
             }
-            
+
             slang::SessionDesc SessionDesc;
             SessionDesc.targets = TargetDescs;
             SessionDesc.targetCount = sizeof(TargetDescs) / sizeof(slang::TargetDesc);
             SessionDesc.searchPaths = SearchPaths_CStrArrayRaw;
-            SessionDesc.searchPathCount = SearchPaths_CStrArray.size();
+            SessionDesc.searchPathCount = static_cast<SlangInt>(SearchPaths_CStrArray.size());
             SessionDesc.preprocessorMacros = Definitions_DescArrayRaw;
-            SessionDesc.preprocessorMacroCount = Definitions_DescArray.size();
+            SessionDesc.preprocessorMacroCount = static_cast<SlangInt>(Definitions_DescArray.size());
             SessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR;
             SessionDesc.abytekCustomizationConfig.overrideParameterBindings = SlangCustomizedParameterBindingMap;
+            
             Slang::ComPtr<slang::ISession> Session;
             HR = GlobalSession->createSession(SessionDesc, Session.writeRef());
             if (SLANG_FAILED(HR))

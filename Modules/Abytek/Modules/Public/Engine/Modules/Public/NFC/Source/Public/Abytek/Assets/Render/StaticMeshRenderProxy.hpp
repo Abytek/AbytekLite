@@ -15,6 +15,12 @@ namespace Abytek
         F_RenderGeometryAllocation GeometryAllocation;
         F_RenderGeometryAllocationStructure_Simple GeometryAllocationStructure;
     };
+    struct F_StaticMeshResource_ECMS
+    {
+        U32 Index = 0;
+        F_RenderGeometryAllocation GeometryAllocation;
+        F_RenderGeometryAllocationStructure_ECMS GeometryAllocationStructure;
+    };
     
     class ABYTEK_ENGINE_NFC_API F_StaticMeshRenderProxy : public A_WorldContextRenderProxy
     {
@@ -24,9 +30,11 @@ namespace Abytek
     private:
         E_StaticMeshDataType _DataType = E_StaticMeshDataType::NONE;
         TS_Unmanaged<TF_Vector<F_SimpleMeshData>> _TempSimpleDataList;
+        TS_Unmanaged<TF_Vector<F_ECMSMeshData>> _TempECMSDataList;
         F_StaticMeshSetting _Setting;
         
         TF_Vector<F_StaticMeshResource_Simple> _ResourceList_Simple;
+        TF_Vector<F_StaticMeshResource_ECMS> _ResourceList_ECMS;
         
     public:
         ABYTEK_FORCE_INLINE auto GetDataType() const noexcept
@@ -41,6 +49,10 @@ namespace Abytek
         ABYTEK_FORCE_INLINE const auto& GetResourceList_Simple() const noexcept
         {
             return _ResourceList_Simple;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetResourceList_ECMS() const noexcept
+        {
+            return _ResourceList_ECMS;
         }
         
     public:

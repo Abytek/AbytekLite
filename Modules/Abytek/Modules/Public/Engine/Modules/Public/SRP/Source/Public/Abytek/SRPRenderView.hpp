@@ -2,7 +2,8 @@
 
 #include "Abytek/Engine.SRP.prerequisites.hpp"
 #include "Abytek/Renderer/RenderView.hpp"
-#include "Abytek/SRPCommon.hpp"
+#include "Abytek/SRPVisibilityBuffer.hpp"
+#include "Abytek/ECMS/SRPInstancedMeshletBuffer_ECMS.hpp"
 
 
 namespace Abytek
@@ -10,22 +11,17 @@ namespace Abytek
     class ABYTEK_ENGINE_SRP_API F_SRPRenderView final : public A_RenderView
     {
     private:
-        TS<A_RHIResource> _OpaqueVisibilityBuffer;
-        TS<A_RHIResourceView> _OpaqueVisibilitySRV;
-        TS<A_RHIResourceView> _OpaqueVisibilityUAV;
+        SRP::VisibilityBuffer::F_OpaqueInstance _OpaqueVisibilityBuffer;
+        SRP::ECMS::F_InstancedMeshletBuffer _InstancedMeshletBuffer_ECMS;
         
     public:
         ABYTEK_FORCE_INLINE const auto& GetOpaqueVisibilityBuffer() const noexcept
         {
             return _OpaqueVisibilityBuffer;
         }
-        ABYTEK_FORCE_INLINE const auto& GetOpaqueVisibilitySRV() const noexcept
+        ABYTEK_FORCE_INLINE const auto& GetInstancedMeshletBuffer_ECMS() const noexcept
         {
-            return _OpaqueVisibilitySRV;
-        }
-        ABYTEK_FORCE_INLINE const auto& GetOpaqueVisibilityUAV() const noexcept
-        {
-            return _OpaqueVisibilityUAV;
+            return _InstancedMeshletBuffer_ECMS;
         }
         
     public:
@@ -41,10 +37,6 @@ namespace Abytek
     protected:
         void OnBeginFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
         void OnEndFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
-        
-    public:
-        void BeginOpaqueVisibilityBuffer(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
-        void EndOpaqueVisibilityBuffer(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
         
     public:
         void ClearOpaqueVisibilityBuffer(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);

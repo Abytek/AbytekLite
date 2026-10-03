@@ -19,6 +19,9 @@ namespace Abytek
     template<typename __F_Element>
     struct TF_Rotator
     {
+        ABYTEK_BEGIN_REFLECTOR(I_Serializable)
+        ABYTEK_END_REFLECTOR(TF_Rotator);
+        
         using F_Element = __F_Element;
         using F_Vector3 = TF_Vector3<F_Element>;
         using F_Vector4 = TF_Vector4<F_Element>;
@@ -81,6 +84,11 @@ namespace Abytek
             return FromQuaternion(A.GetQuaternion() / B.GetQuaternion());
         }
     };
+    template<typename __F_Element>
+    ABYTEK_REFLECT(TF_Rotator<__F_Element>)
+    {
+        ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(EulerAngles);
+    }
     
     using F_Rotator = TF_Rotator<F32>;
     using F_Rotator_F32 = TF_Rotator<F32>;

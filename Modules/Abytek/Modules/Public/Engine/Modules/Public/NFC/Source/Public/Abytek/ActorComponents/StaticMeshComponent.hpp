@@ -6,7 +6,7 @@
 namespace Abytek
 {
     class F_StaticMesh;
-
+    
     class ABYTEK_ENGINE_NFC_API F_StaticMeshComponent : public A_PrimitiveComponent
     {
     public:
@@ -37,5 +37,11 @@ namespace Abytek
         void OnCreateRenderState() override;
         void OnDestroyRenderState() override;
         TS<A_RenderProxy> CreateRenderProxy() override;
+        
+    public:
+        void SetStaticMesh(const TS<F_StaticMesh>& StaticMesh);
+        
+    protected:
+        void OnTransformChanged() override;
     };
 }

@@ -1,4 +1,6 @@
 #include "Abytek/World/World.hpp"
+#include "Abytek/ApplicationModuleContainer.hpp"
+#include "Abytek/ApplicationModule.hpp"
 #include "Abytek/ApplicationSubsystem.hpp"
 #include "Abytek/World/WorldBusiness.hpp"
 #include "Abytek/World/WorldContextHelper.hpp"
@@ -10,6 +12,8 @@
 #include "Abytek/CoreUpdateGraph/HighLevelUpdateRange.hpp"
 #include "Abytek/Level/Level.hpp"
 #include "Abytek/CoreUpdateGraph/PostTickUpdateRange.hpp"
+#include "Abytek/CoreUpdateGraph/ShutdownUpdateRange.hpp"
+#include "Abytek/CoreUpdateGraph/StartupUpdateRange.hpp"
 #include "Abytek/CoreUpdateGraph/TickUpdateRange.hpp"
 #include "Abytek/Development/Cook/CookGraph.hpp"
 #include "Abytek/Development/Cook/CookProfile.hpp"
@@ -28,14 +32,347 @@ namespace Abytek
         return ABYTEK_NAME("Abytek::F_World::Cook");
     }
 
+    F_Name F_World::GetInitUpdateFunctionName()
+    {
+        return ABYTEK_NAME("Abytek::F_World::Init");
+    }
+    F_Name F_World::GetStartupUpdateFunctionName()
+    {
+        return ABYTEK_NAME("Abytek::F_World::Startup");
+    }
+    F_Name F_World::GetShutdownUpdateFunctionName()
+    {
+        return ABYTEK_NAME("Abytek::F_World::Shutdown");
+    }
+    F_Name F_World::GetReleaseUpdateFunctionName()
+    {
+        return ABYTEK_NAME("Abytek::F_World::Release");
+    }
+
+    void F_World::GlobalInit()
+    {
+        {
+            auto UpdateFunction = H_ApplicationUpdateFunction::Register(
+                []
+                {
+                    for (const auto& WorldStart : F_WorldManager::GetInstance()->_WorldsToInit.PopAll())
+                    {
+                        auto World = WorldStart.World;
+                        auto SerializableEnvironment = World->GetEnvironment();
+                        const auto& Config = WorldStart.Config;
+                        
+                        auto& Worlds = F_WorldManager::GetInstance()->_Worlds;
+                        Worlds.push_back(World.Weak());
+                        
+                        World->_Flags = Config.Flags;
+                        if (FlagHas(World->_Flags, E_WorldFlag::MAIN))
+                        {
+                            ABYTEK_ENGINE_CORE_ASSERT(!_Main) << "Multiple main worlds are not allowed";
+                            _Main = World.Weak();
+                        }
+                        
+                        World->_SubsystemContainer = TU<F_WorldSubsystemContainer>()(World.Weak());
+                        
+                        // Init subsystems
+                        {
+                            for (const auto& WorldSubsystemType : F_WorldManager::GetInstance()->GetWorldSubsystemTypes())
+                            {
+                                World->_SubsystemContainer->EnsureUnit(WorldSubsystemType);
+                            }
+                            World->_SubsystemContainer->Update();
+                        }
+                    }
+                },
+                GetInitUpdateFunctionName(),
+                E_ApplicationState::TICKING
+            );
+            UpdateFunction->AddDependency(
+                A_ApplicationSubsystem::GetStartupUpdateFunctionName()  
+            );
+            UpdateFunction->AddReverseDependency(
+                F_StartupUpdateRange::GetEndFunctionName()  
+            );
+        }
+        {
+            auto UpdateFunction = H_ApplicationUpdateFunction::Register(
+                []
+                {
+                    for (const auto& WorldStart : F_WorldManager::GetInstance()->_WorldsToStartup.PopAll())
+                    {
+                        auto World = WorldStart.World;
+                        auto SerializableEnvironment = World->GetEnvironment();
+                        const auto& Config = WorldStart.Config;
+                        
+                        // Create CDOs
+                        {
+                            auto BaseCDOType = TF_ReflectionTypeHandle<A_SerializableObject>(F_ReflectionContext::GetGlobal());
+                            ABYTEK_ENGINE_NFC_ASSERT(BaseCDOType);
+                            F_ApplicationModuleContainer::GetInstance()->ForEachUnit(
+                                [&](const TW_Valid<F_ProgramUnit>& Unit)
+                                {
+                                    auto Module = Unit.FastCast<F_Module>();
+                                    auto ReflectionSession = Module->GetReflectionSession();
+                                    ReflectionSession->ForEachTypeDerivedFrom(
+                                        BaseCDOType,
+                                        [&](const TW_Valid<F_ReflectionType>& Type)
+                                        {
+                                            if (Type->IsAbstract())
+                                            {
+                                                return true;
+                                            }
+                                            World->_CDOTypes.push_back(Type);
+                                            return true;
+                                        }
+                                    );
+                                    return true;
+                                }
+                            );
+                            for (const auto& Type : World->_CDOTypes)
+                            {
+                                SerializableEnvironment->AddCDOType(Type);
+                            }
+                        }
+                        
+                        // Load objects
+                        SerializableEnvironment->LoadEnqueuedObjects();
+                        
+                        // Startup subsystems
+                        {
+                            World->_SubsystemContainer->ForEachUnit(
+                                [](const TW_Valid<F_ProgramUnit>& Unit)
+                                {
+                                    Unit.FastCast<A_WorldSubsystem>()->OnStartup();
+                                    return true;
+                                }
+                            );
+                            World->_SubsystemContainer->ForEachUnit(
+                                [](const TW_Valid<F_ProgramUnit>& Unit)
+                                {
+                                    Unit.FastCast<A_WorldSubsystem>()->OnPostStartup();
+                                    return true;
+                                }
+                            );
+                        }
+                        
+                        // Persistent business
+                        if (!World->HasFlags(E_WorldFlag::COOK_MODE))
+                        {
+                            auto PersistentBusinessType = Config.PersistentBusinessType;
+                            if (!PersistentBusinessType)
+                            {
+                                PersistentBusinessType = TF_ReflectionTypeHandle<F_WorldBusiness>(F_ReflectionContext::GetGlobal());
+                            }
+                            World->_PersistentBusiness = H_WorldContext::CreateObject<F_WorldBusiness>(
+                                World.Weak(),
+                                {},
+                                {},
+                                PersistentBusinessType
+                            );
+                            World->_PersistentBusiness->BeginPlay();
+                        }
+                        
+                        // Cook
+                        if (FlagHas(World->_Flags, E_WorldFlag::COOK_MODE))
+                        {
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+                            ABYTEK_ENGINE_CORE_ASSERT(FlagHas(World->_Flags, E_WorldFlag::MAIN)) << "Cook mode is only allowed on main world";
+                            ABYTEK_ENGINE_CORE_ASSERT(Config.CookProfileName) << "Invalid cook profile";
+                            World->_CookProfile = TU<F_CookProfile>()(
+                                Config.CookProfileName,
+                                A_ApplicationCore::GetInstance()->GetName()
+                            );
+                            F_CookProfile::SetMain(World->_CookProfile.Weak());
+                            F_HighLevelUpdateRange::EnqueueCommand(
+                                [World = World]
+                                {
+                                    World->_Cook();
+                                }
+                            );
+#else
+                            ABYTEK_LOG_FATAL() << "Cook mode is not allowed on non-development build";
+#endif
+                        }
+                        
+                        // Travel level
+                        {
+                            TF_Vector<TS<F_Level>> Levels;
+                            for (const auto& PersistentLevel : Config.PersistentLevels)
+                            {
+                                auto Level = H_WorldContext::CreateObject<F_Level>(
+                                    World.Weak(),
+                                    PersistentLevel.Name,
+                                    PersistentLevel.PackageName,
+                                    PersistentLevel.Type.Cast<F_Level>()
+                                );
+                                Levels.push_back(Level);
+                            }
+                            World->_LevelsToTravel = Levels;
+                            World->_TravelMode = E_TravelMode::START;
+                            World->_ImmediateTravel();
+                        }
+                        
+                        // Callbacks
+                        TF_Function<void(const TS<F_World>& World)> Command;
+                        while (World->_StartCallbacks.TryPop(Command))
+                        {
+                            Command(World);
+                        }
+                    }
+                },
+                GetStartupUpdateFunctionName(),
+                E_ApplicationState::TICKING
+            );
+            UpdateFunction->AddDependency(
+                GetInitUpdateFunctionName()
+            );
+            UpdateFunction->AddReverseDependency(
+                F_StartupUpdateRange::GetEndFunctionName()  
+            );
+        }
+        {
+            auto UpdateFunction = H_ApplicationUpdateFunction::Register(
+                []
+                {
+                    for (const auto& World : F_WorldManager::GetInstance()->_WorldsToShutdown.PopAll())
+                    {
+                        auto SerializableEnvironment = World->GetEnvironment();
+                        
+                        World->_LevelsToTravel = {};
+                        World->_TravelMode = E_TravelMode::STOP;
+                        World->_ImmediateTravel();
+                        
+                        // Persistent business
+                        if (World->_PersistentBusiness)
+                        {
+                            World->_PersistentBusiness->EndPlay();
+                            World->_PersistentBusiness = {};
+                        }
+                        
+                        // Shutdown subsystems
+                        {
+                            World->_SubsystemContainer->ForEachUnit(
+                                [](const TW_Valid<F_ProgramUnit>& Unit)
+                                {
+                                    Unit.FastCast<A_WorldSubsystem>()->OnPreShutdown();
+                                    return true;
+                                }
+                            );
+                            World->_SubsystemContainer->ForEachUnit(
+                                [](const TW_Valid<F_ProgramUnit>& Unit)
+                                {
+                                    Unit.FastCast<A_WorldSubsystem>()->OnShutdown();
+                                    return true;
+                                }
+                            );
+                        }
+                        
+                        // Destroy CDOs
+                        {
+                            for (const auto& Type : World->_CDOTypes)
+                            {
+                                SerializableEnvironment->RemoveCDOType(Type);
+                            }
+                            World->_CDOTypes = {};
+                        }
+                    }
+                },
+                GetShutdownUpdateFunctionName(),
+                E_ApplicationState::TICKING
+            );
+            UpdateFunction->AddDependency(
+                F_ShutdownUpdateRange::GetBeginFunctionName()  
+            );
+            UpdateFunction->AddReverseDependency(
+                A_ApplicationSubsystem::GetShutdownUpdateFunctionName()  
+            );
+        }
+        {
+            auto UpdateFunction = H_ApplicationUpdateFunction::Register(
+                []
+                {
+                    for (const auto& World : F_WorldManager::GetInstance()->_WorldsToShutdown.PopAll())
+                    {
+                        auto SerializableEnvironment = World->GetEnvironment();
+                        
+                        // Release subsystems
+                        {
+                            World->_SubsystemContainer->EnqueueRemoveAllUnits();
+                            World->_SubsystemContainer->Update();
+                        }
+                        
+                        World->_SubsystemContainer = {};
+                        
+                        B8 IsMain = FlagHas(World->_Flags, E_WorldFlag::MAIN);
+                        if (IsMain)
+                        {
+                            _Main = {};
+                        }
+                        World->_Flags = E_WorldFlag::NONE;
+                        
+                        auto& Worlds = F_WorldManager::GetInstance()->_Worlds;
+                        Worlds.erase(
+                            std::find(
+                                Worlds.begin(),
+                                Worlds.end(),
+                                World.Weak()
+                            )    
+                        );
+                        ABYTEK_ENGINE_CORE_ASSERT(
+                            (Worlds.size() == 0)
+                            || !IsMain
+                        ) << "Main world must be the last world to stop";
+                        
+                        if (IsMain)
+                        {
+                            A_ApplicationCore::GetInstance()->SignalShutdown();
+                        }
+                    }
+                },
+                GetReleaseUpdateFunctionName(),
+                E_ApplicationState::TICKING
+            );
+            UpdateFunction->AddDependency(
+                GetShutdownUpdateFunctionName()
+            );
+            UpdateFunction->AddReverseDependency(
+                A_ApplicationSubsystem::GetShutdownUpdateFunctionName()  
+            );
+        }
+    }
+    void F_World::GlobalRelease()
+    {
+        H_UpdateUtilities::UnregisterFunction(
+            GetReleaseUpdateFunctionName()
+        );
+        H_UpdateUtilities::UnregisterFunction(
+            GetShutdownUpdateFunctionName()
+        );
+        H_UpdateUtilities::UnregisterFunction(
+            GetStartupUpdateFunctionName()
+        );
+        H_UpdateUtilities::UnregisterFunction(
+            GetInitUpdateFunctionName()
+        );
+    }
+
     TW<F_World> F_World::_Main;
 
-    TS<F_World> F_World::Create(const F_WorldConfig& Config)
+    TS<F_World> F_World::Create(const F_WorldConfig& Config, TF_Function<void(const TS<F_World>& World)>&& Callback)
     {
         auto Result = F_EngineRuntime::GetInstance()->GetSerializableEnvironment()->CreateObject<F_World>(
             Config.Name
         );
-        Result->_ImmmediateStart(Config);
+        if (Callback)
+        {
+            Result->_StartCallbacks.Push(ABYTEK_MOVE(Callback));
+        }
+        
+        F_HighLevelUpdateRange::EnqueueCommand(
+            [Result, Config]
+            {
+                Result->_PrepareStart(Config);
+            }
+        );
         return Result;
     }
 
@@ -64,159 +401,24 @@ namespace Abytek
     {
     }
 
-    void F_World::_ImmmediateStart(const F_WorldConfig& Config)
+    void F_World::_PrepareStart(const F_WorldConfig& Config)
     {
         ABYTEK_CHECK_FRAME_PARAM_TYPE(E_FrameParamType::MAIN);
         
-        auto& Worlds = F_WorldManager::GetInstance()->_Worlds;
-        Worlds.push_back(ABYTEK_WTHIS());
-        
-        _Flags = Config.Flags;
-        if (FlagHas(_Flags, E_WorldFlag::MAIN))
-        {
-            ABYTEK_ENGINE_CORE_ASSERT(!_Main) << "Multiple main worlds are not allowed";
-            _Main = ABYTEK_WTHIS();
-        }
-        
-        _SubsystemContainer = TU<F_WorldSubsystemContainer>()(ABYTEK_WTHIS());
-        
-        {
-            for (const auto& WorldSubsystemType : F_WorldManager::GetInstance()->GetWorldSubsystemTypes())
-            {
-                _SubsystemContainer->EnsureUnit(WorldSubsystemType);
-            }
-            _SubsystemContainer->Update();
-            _SubsystemContainer->ForEachUnit(
-                [](const TW_Valid<F_ProgramUnit>& Unit)
-                {
-                    Unit.FastCast<A_WorldSubsystem>()->OnStartup();
-                    return true;
-                }
-            );
-            _SubsystemContainer->ForEachUnit(
-                [](const TW_Valid<F_ProgramUnit>& Unit)
-                {
-                    Unit.FastCast<A_WorldSubsystem>()->OnPostStartup();
-                    return true;
-                }
-            );
-        }
-        
-        if (!HasFlags(E_WorldFlag::COOK_MODE))
-        {
-            auto PersistentBusinessType = Config.PersistentBusinessType;
-            if (!PersistentBusinessType)
-            {
-                PersistentBusinessType = TF_ReflectionTypeHandle<F_WorldBusiness>(F_ReflectionContext::GetGlobal());
-            }
-            _PersistentBusiness = H_WorldContext::CreateObject<F_WorldBusiness>(
-                ABYTEK_WTHIS(),
-                {},
-                {},
-                PersistentBusinessType
-            );
-            _PersistentBusiness->BeginPlay();
-        }
-        
-        if (FlagHas(_Flags, E_WorldFlag::COOK_MODE))
-        {
-#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
-            ABYTEK_ENGINE_CORE_ASSERT(FlagHas(_Flags, E_WorldFlag::MAIN)) << "Cook mode is only allowed on main world";
-            ABYTEK_ENGINE_CORE_ASSERT(Config.CookProfileName) << "Invalid cook profile";
-            _CookProfile = TU<F_CookProfile>()(
-                Config.CookProfileName,
-                A_ApplicationCore::GetInstance()->GetName()
-            );
-            F_CookProfile::SetMain(_CookProfile.Weak());
-            F_HighLevelUpdateRange::EnqueueCommand(
-                [this]
-                {
-                    _Cook();
-                }
-            );
-#else
-            ABYTEK_LOG_FATAL() << "Cook mode is not allowed on non-development build";
-#endif
-        }
-        
-        {
-            TF_Vector<TS<F_Level>> Levels;
-            for (const auto& PersistentLevel : Config.PersistentLevels)
-            {
-                auto Level = H_WorldContext::CreateObject<F_Level>(
-                    ABYTEK_WTHIS(),
-                    PersistentLevel.Name,
-                    PersistentLevel.PackageName,
-                    PersistentLevel.Type.Cast<F_Level>()
-                );
-                Levels.push_back(Level);
-            }
-            _LevelsToTravel = Levels;
-            _TravelMode = E_TravelMode::START;
-            _ImmediateTravel();
-        }
+        auto WorldManager = F_WorldManager::GetInstance();
+        F_WorldManager::F_WorldStart WorldStart;
+        WorldStart.World = ABYTEK_STHIS();
+        WorldStart.Config = Config;
+        WorldManager->_WorldsToInit.Push(WorldStart);
+        WorldManager->_WorldsToStartup.Push(WorldStart);
     }
-    void F_World::_ImmediateStop()
+    void F_World::_PrepareStop()
     {
         ABYTEK_CHECK_FRAME_PARAM_TYPE(E_FrameParamType::MAIN);
-        ABYTEK_CHECK_HIGH_LEVEL_UPDATE_RANGE();
-        ABYTEK_CHECK_NOT_PRIMARY_UPDATE_RANGE();
         
-        _LevelsToTravel = {};
-        _TravelMode = E_TravelMode::STOP;
-        _ImmediateTravel();
-        
-        if (_PersistentBusiness)
-        {
-            _PersistentBusiness->EndPlay();
-            _PersistentBusiness = {};
-        }
-        
-        {
-            _SubsystemContainer->ForEachUnit(
-                [](const TW_Valid<F_ProgramUnit>& Unit)
-                {
-                    Unit.FastCast<A_WorldSubsystem>()->OnPreShutdown();
-                    return true;
-                }
-            );
-            _SubsystemContainer->ForEachUnit(
-                [](const TW_Valid<F_ProgramUnit>& Unit)
-                {
-                    Unit.FastCast<A_WorldSubsystem>()->OnShutdown();
-                    return true;
-                }
-            );
-            _SubsystemContainer->EnqueueRemoveAllUnits();
-            _SubsystemContainer->Update();
-        }
-        
-        _SubsystemContainer = {};
-        
-        B8 IsMain = FlagHas(_Flags, E_WorldFlag::MAIN);
-        if (IsMain)
-        {
-            _Main = {};
-        }
-        _Flags = E_WorldFlag::NONE;
-        
-        auto& Worlds = F_WorldManager::GetInstance()->_Worlds;
-        Worlds.erase(
-            std::find(
-                Worlds.begin(),
-                Worlds.end(),
-                ABYTEK_WTHIS()
-            )    
-        );
-        ABYTEK_ENGINE_CORE_ASSERT(
-            (Worlds.size() == 0)
-            || !IsMain
-        ) << "Main world must be the last world to stop";
-        
-        if (IsMain)
-        {
-            A_ApplicationCore::GetInstance()->SignalShutdown();
-        }
+        auto WorldManager = F_WorldManager::GetInstance();
+        WorldManager->_WorldsToShutdown.Push(ABYTEK_STHIS());
+        WorldManager->_WorldsToRelease.Push(ABYTEK_STHIS());
     }
 
     void F_World::Stop(TF_Function<void()>&& Callback)
@@ -234,7 +436,7 @@ namespace Abytek
         F_HighLevelUpdateRange::EnqueueCommand(
             [this]
             {
-                _ImmediateStop();
+                _PrepareStop();
                 TF_Function<void()> Command;
                 while (_StopCallbacks.TryPop(Command))
                 {

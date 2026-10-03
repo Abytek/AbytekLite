@@ -46,6 +46,7 @@ namespace Abytek
 
     F_RenderRegistry::F_RenderRegistry(const F_RenderRegistryBuildParams& BuildParams) :
         _RHIConfig(BuildParams.RHIConfig),
+        _DebugGeneratedShaders(BuildParams.DebugGeneratedShaders),
         _Dependencies(BuildParams.Dependencies)
     {
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD

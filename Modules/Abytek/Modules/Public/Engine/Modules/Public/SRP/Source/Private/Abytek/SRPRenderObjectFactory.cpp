@@ -3,6 +3,8 @@
 #include "Abytek/SRPRenderViewFamily.hpp"
 #include "Abytek/SRPRenderView.hpp"
 #include "Abytek/SRPRenderer.hpp"
+#include "Abytek/SimplePrimitive/SRPRenderPrimitiveProcessor_Simple.hpp"
+#include "Abytek/SimplePrimitive/SRPRenderPrimitiveSet_Simple.hpp"
 
 
 namespace Abytek
@@ -29,5 +31,14 @@ namespace Abytek
     TS<A_Renderer> F_SRPRenderObjectFactory::CreateRenderer()
     {
         return F_SRPRenderer::Create(GetWorldRenderResource());
+    }
+
+    TS<A_RenderPrimitiveProcessor_Simple> F_SRPRenderObjectFactory::CreatePrimitiveProcessor_Simple()
+    {
+        return F_SRPRenderPrimitiveProcessor_Simple::Create(GetWorldRenderResource());
+    }
+    TS<A_RenderPrimitiveSet_Simple> F_SRPRenderObjectFactory::CreatePrimitiveSet_Simple()
+    {
+        return F_SRPRenderPrimitiveSet_Simple::Create(GetWorldRenderResource());
     }
 }

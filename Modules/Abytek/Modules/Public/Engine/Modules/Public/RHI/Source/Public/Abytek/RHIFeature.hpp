@@ -115,7 +115,7 @@ namespace Abytek
 
         NUM,
 #ifdef ABYTEK_PLATFORM_WINDOWS
-        DEFAULT = DESKTOP_0
+        DEFAULT = DESKTOP_1
 #else
         DEFAULT = MOBILE_0 // lowest
 #endif

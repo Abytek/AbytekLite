@@ -63,7 +63,7 @@ namespace Abytek
         void Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
     
     public:
-        TF_Optional<F_GPUDataInstanceAllocation> Allocate(U32 NumInstances);
+        F_GPUDataInstanceAllocation Allocate(U32 NumInstances);
         void Deallocate(const F_GPUDataInstanceAllocation& Allocation);
         
     public:

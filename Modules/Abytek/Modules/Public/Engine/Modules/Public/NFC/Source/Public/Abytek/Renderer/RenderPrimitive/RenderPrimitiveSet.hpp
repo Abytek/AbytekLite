@@ -2,35 +2,36 @@
 
 #include "Abytek/Engine.NFC.prerequisites.hpp"
 #include "Abytek/Renderer/RenderObject.hpp"
-#include "Abytek/Renderer/RenderPrimitive/Components/Component_Transform.hpp"
-#include "Abytek/Renderer/RenderPrimitive/Components/Component_InverseTransposeTransform.hpp"
-#include "Abytek/Renderer/RenderPrimitive/Components/Component_MeshHandle.hpp"
 
 
 namespace Abytek
 {
     class F_RenderPrimitiveManager;
+    class A_RenderPrimitiveProcessor;
     class F_GPUDataInstanceSet;
-
-    struct F_RenderPrimitiveSetBuildParams
+    
+    struct F_RenderPrimitiveSetConfig
     {
-        TW<F_RenderPrimitiveManager> Manager;
         U32 Num = 1;
     };
-    class ABYTEK_ENGINE_NFC_API F_RenderPrimitiveSet final : public A_RenderObject
+
+    class ABYTEK_ENGINE_NFC_API A_RenderPrimitiveSet : public A_RenderObject
     {
     public:
         friend class F_RenderPrimitiveManager;
+        friend class A_RenderPrimitiveProcessor;
         
     private:
-        TW<F_RenderPrimitiveManager> _Manager;
+        TW<A_RenderPrimitiveProcessor> _Processor;
         U32 _Num = 0;
         TS<F_GPUDataInstanceSet> _GPUDataInstanceSet;
+        U32 _Index = 0;
         
     public:
-        ABYTEK_FORCE_INLINE const auto& GetManager() const noexcept
+        TW_Valid<F_RenderPrimitiveManager> GetManager() const;
+        ABYTEK_FORCE_INLINE const auto& GetProcessor() const noexcept
         {
-            return _Manager;
+            return _Processor;
         }
         ABYTEK_FORCE_INLINE auto GetNum() const noexcept
         {
@@ -40,20 +41,22 @@ namespace Abytek
         {
             return _GPUDataInstanceSet;
         }
+        ABYTEK_FORCE_INLINE auto GetIndex() const noexcept
+        {
+            return _Index;
+        }
         
     public:
-        ABYTEK_RENDER_OBJECT_CREATABLE(F_RenderPrimitiveSet, A_RenderObject);
+        ABYTEK_RENDER_OBJECT(A_RenderPrimitiveSet, A_RenderObject);
         
-    public:
-        void Init(
+    protected:
+        void InitPrimitiveSet(
             const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, 
-            const F_RenderPrimitiveSetBuildParams& BuildParams
+            const TW_Valid<A_RenderPrimitiveProcessor>& Processor,
+            const F_RenderPrimitiveSetConfig& Config
         );
-        void Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
         
     public:
-        void UploadComponents_Transform(const RenderPrimitive::F_Component_Transform* ValuePtr);
-        void UploadComponents_InverseTransposeTransform(const RenderPrimitive::F_Component_InverseTransposeTransform* ValuePtr);
-        void UploadComponents_MeshHandle(const RenderPrimitive::F_Component_MeshHandle* ValuePtr);
+        void Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
     };
 }

@@ -1,6 +1,6 @@
 module Common;
 
-__exported import Abytek.Renderer.RenderMesh.Handle;
+__exported import Abytek.Renderer.RenderGeometry.Common;
 
 namespace Abytek
 {
@@ -14,9 +14,13 @@ namespace Abytek
         {
             public float4x4 Matrix;
         };
-        public struct F_Component_MeshHandle
+        public struct F_Component_GeometryAddress_ECMS
         {
-            public F_RenderMeshHandle Handle;
+            public F_RenderGeometryAddress Address;
+        };
+        public struct F_Component_GeometryAllocationStructure_ECMS
+        {
+            public F_RenderGeometryAllocationStructure_ECMS AllocationStructure;
         };
     }
 }

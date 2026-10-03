@@ -2,6 +2,7 @@
 
 #include "Abytek/Engine.NFC.prerequisites.hpp"
 #include "Abytek/GlobalRenderBinding.hpp"
+#include "Abytek/Assets/ECMSMeshData.hpp"
 #include "Abytek/Assets/SimpleMeshData.hpp"
 #include "Abytek/Renderer/RenderObject.hpp"
 #include "Abytek/Renderer/RenderGeometry/RenderGeometryCommon.hpp"
@@ -167,15 +168,14 @@ namespace Abytek
     public:
         void BeginUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
         void EndUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
-        void BeginPostUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
-        void EndPostUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
+        void FinalizeFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
         
     private:
         TF_ConcurrentQueue<F_RenderGeometryAllocation> _DeallocationQueue;
         void _FlushDeallocationQueue(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
         
     public:
-        TF_Optional<F_RenderGeometryAllocation> Allocate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, U64 SizeInBytes, U64 AlignmentInBytes = sizeof(F_Vector4_F32));
+        TF_Optional<F_RenderGeometryAllocation> Allocate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, U64 SizeInBytes, U64 AlignmentInBytes = ABYTEK_ALIGNOF(F_ArchiveDataAlignedElement));
         TS<F_RenderGeometryPage> AddNewPage(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, U64 SizeInBytes);
         
     public:
@@ -186,6 +186,18 @@ namespace Abytek
             F_RenderGeometryAllocationStructure_Simple& OutGeometryAllocationStructure
         );
         void RemoveMeshData_Simple(
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
+            const F_RenderGeometryAllocation& GeometryAllocation
+        );
+        
+    public:
+        B8 AddMeshData_ECMS(
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
+            const F_ECMSMeshDataROView& MeshDataView,
+            F_RenderGeometryAllocation& OutGeometryAllocation,
+            F_RenderGeometryAllocationStructure_ECMS& OutGeometryAllocationStructure
+        );
+        void RemoveMeshData_ECMS(
             const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
             const F_RenderGeometryAllocation& GeometryAllocation
         );

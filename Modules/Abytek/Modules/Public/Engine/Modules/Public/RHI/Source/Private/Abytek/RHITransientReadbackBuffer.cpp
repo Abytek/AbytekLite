@@ -5,11 +5,11 @@
 
 namespace Abytek
 {
-    TS_Valid<A_RHIResource> F_RHITransientReadbackBufferRange_V2::GetBuffer() const
+    TS_Valid<A_RHIResource> F_RHITransientReadbackBufferRange::GetBuffer() const
     {
         return Page->GetBuffer();
     }
-    void F_RHITransientReadbackBufferRange_V2::Readback(F_RHIReadbackBufferCallback&& Callback, Sz ManualSizeInBytes, Sz AdditionalOffsetInBytes) const
+    void F_RHITransientReadbackBufferRange::Readback(F_RHIReadbackBufferCallback&& Callback, Sz ManualSizeInBytes, Sz AdditionalOffsetInBytes) const
     {
         ABYTEK_ENGINE_RHI_ASSERT(AdditionalOffsetInBytes <= GetSizeInBytes()) << "Transient readback buffer range out of bounds";
         Sz ActualSizeInBytes = ManualSizeInBytes;
@@ -22,16 +22,16 @@ namespace Abytek
         {
             return;
         }
-        F_RHITransientReadbackBufferCandidate_V2 Candidate;
-        static_cast<F_RHITransientReadbackBufferRangeLocal_V2&>(Candidate) = static_cast<const F_RHITransientReadbackBufferRangeLocal_V2&>(*this);
+        F_RHITransientReadbackBufferCandidate Candidate;
+        static_cast<F_RHITransientReadbackBufferRangeLocal&>(Candidate) = static_cast<const F_RHITransientReadbackBufferRangeLocal&>(*this);
         Candidate.Callback = ABYTEK_MOVE(Callback);
         Candidate.BeginOffsetInBytes += AdditionalOffsetInBytes;
         Candidate.EndOffsetInBytes = Candidate.BeginOffsetInBytes + ActualSizeInBytes;
         Page->Queue.Push(Candidate);
     }
 
-    ABYTEK_RA_OBJECT_DEFAULT(F_RHITransientReadbackBufferPage_V2);
-    void F_RHITransientReadbackBufferPage_V2::Build(const F_RHITransientReadbackBufferPageBuildParams_V2& BuildParams)
+    ABYTEK_RA_OBJECT_DEFAULT(F_RHITransientReadbackBufferPage);
+    void F_RHITransientReadbackBufferPage::Build(const F_RHITransientReadbackBufferPageBuildParams& BuildParams)
     {
         A_RHIContextChild::Build(BuildParams);
         _Index = BuildParams.Index;
@@ -45,7 +45,7 @@ namespace Abytek
         BufferBuildParams.AdditionalFlags = E_RHIResourceAdditionalFlag::TRANSIENT;
         _Buffer = RACreateAndBuildShared<A_RHIResource>(BufferBuildParams);
     }
-    void F_RHITransientReadbackBufferPage_V2::Release()
+    void F_RHITransientReadbackBufferPage::Release()
     {
         _Buffer = {};
         
@@ -55,28 +55,38 @@ namespace Abytek
         A_RHIContextChild::Release();
     }
 
-    TF_Optional<F_RHITransientReadbackBufferRange_V2> F_RHITransientReadbackBufferPage_V2::Allocate(Sz SizeInBytes)
+    TF_Optional<F_RHITransientReadbackBufferRange> F_RHITransientReadbackBufferPage::Allocate(Sz SizeInBytes, Sz AlignmentInBytes)
     {
-        if ((_UsageInBytes + SizeInBytes) > _SizeInBytes)
+        Sz BeginOffsetInBytes = AlignAddress_PO2(_UsageInBytes, AlignmentInBytes);
+        if ((BeginOffsetInBytes + SizeInBytes) > _SizeInBytes)
         {
             return {};
         }
-        F_RHITransientReadbackBufferRange_V2 Result;
+        
+        F_RHITransientReadbackBufferRange Result;
         Result.Page = ABYTEK_WTHIS();
-        Result.BeginOffsetInBytes = _UsageInBytes;
-        Result.EndOffsetInBytes = _UsageInBytes + SizeInBytes;
-        _UsageInBytes += SizeInBytes;
+        Result.BeginOffsetInBytes = BeginOffsetInBytes;
+        Result.EndOffsetInBytes = BeginOffsetInBytes + SizeInBytes;
+        _UsageInBytes = BeginOffsetInBytes + SizeInBytes;
         return Result;
     }
 
-    ABYTEK_RA_OBJECT_DEFAULT(F_RHITransientReadbackBufferManager_V2);
-    void F_RHITransientReadbackBufferManager_V2::Build(const F_RHITransientReadbackBufferManagerBuildParams_V2& BuildParams)
+#ifdef ABYTEK_DEBUG_INFO
+    void F_RHITransientReadbackBufferPage::SetDebugName(const F_DebugName& Value) noexcept
+    {
+        A_RHIContextChild::SetDebugName(Value);
+        _Buffer->SetDebugName(Value);
+    }
+#endif
+
+    ABYTEK_RA_OBJECT_DEFAULT(F_RHITransientReadbackBufferManager);
+    void F_RHITransientReadbackBufferManager::Build(const F_RHITransientReadbackBufferManagerBuildParams& BuildParams)
     {
         A_RHIContextChild::Build(BuildParams);
         _MinPageSizeInBytes = BuildParams.MinPageSizeInBytes;
         _MaxPageSizeInBytes = BuildParams.MaxPageSizeInBytes;
     }
-    void F_RHITransientReadbackBufferManager_V2::Release()
+    void F_RHITransientReadbackBufferManager::Release()
     {
         ABYTEK_ENGINE_RHI_ASSERT(SectionData.Pages.size() == 0);
         _MaxPageSizeInBytes = 0;
@@ -85,22 +95,22 @@ namespace Abytek
         A_RHIContextChild::Release();
     }
 
-    void F_RHITransientReadbackBufferManager_V2::ReleasePages()
+    void F_RHITransientReadbackBufferManager::ReleasePages()
     {
         SectionData.Pages = {};
         _EnqueuedToReleasePages.clear(boost::memory_order_release);
     }
 
-    F_RHITransientReadbackBufferRange_V2 F_RHITransientReadbackBufferManager_V2::Allocate(Sz SizeInBytes)
+    F_RHITransientReadbackBufferRange F_RHITransientReadbackBufferManager::Allocate(Sz SizeInBytes, Sz AlignmentInBytes)
     {
         if (SectionData.Pages.size() > 0)
         {
-            if (auto Allocation = SectionData.Pages.back()->Allocate(SizeInBytes))
+            if (auto Allocation = SectionData.Pages.back()->Allocate(SizeInBytes, AlignmentInBytes))
             {
                 return *Allocation;
             }
         }
-        AddNewPage(SizeInBytes);
+        AddNewPage(SizeInBytes + AlignmentInBytes - 1);
         if (_EnqueuedToReleasePages.test_and_set(boost::memory_order_release) == false)
         {
             GetContext()->GetCurrentProcess()->EnqueuePostCompileCommand(
@@ -110,9 +120,9 @@ namespace Abytek
                 }
             );
         }
-        return *(SectionData.Pages.back()->Allocate(SizeInBytes));
+        return *(SectionData.Pages.back()->Allocate(SizeInBytes, AlignmentInBytes));
     }
-    void F_RHITransientReadbackBufferManager_V2::AddNewPage(Sz SizeInBytes)
+    void F_RHITransientReadbackBufferManager::AddNewPage(Sz SizeInBytes)
     {
         Sz MinPageSizeInBytes = Max<Sz>(_MinPageSizeInBytes, SizeInBytes);
         if (SectionData.Pages.size() > 0)
@@ -126,11 +136,11 @@ namespace Abytek
             RoundUpToPowerOfTwo(MinPageSizeInBytes),
             _MaxPageSizeInBytes
         );
-        F_RHITransientReadbackBufferPageBuildParams_V2 PageBuildParams;
+        F_RHITransientReadbackBufferPageBuildParams PageBuildParams;
         PageBuildParams.Context = GetContext();
         PageBuildParams.Index = SectionData.Pages.size();
         PageBuildParams.SizeInBytes = ActualSizeInBytes;
-        auto Page = RACreateAndBuildShared<F_RHITransientReadbackBufferPage_V2>(PageBuildParams);
+        auto Page = RACreateAndBuildShared<F_RHITransientReadbackBufferPage>(PageBuildParams);
 #ifdef ABYTEK_DEBUG_INFO
         Page->SetDebugName(ABYTEK_TEXT("Abytek::RHITransientReadbackBufferPages[") + ToText(PageBuildParams.Index) + ABYTEK_TEXT("]"));
 #endif

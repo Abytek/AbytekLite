@@ -15,7 +15,7 @@ namespace Abytek
         auto Context = GetContext();
         if (HasWork())
         {
-            _TransientUploadBufferRange = Context->GetTransientUploadBufferManager_V2()->Allocate(
+            _TransientUploadBufferRange = Context->GetTransientUploadBufferManager()->Allocate(
                 BuildParams.BufferDataView.size()    
             );
             _TransientUploadBufferRange.Upload(BuildParams.BufferDataView);

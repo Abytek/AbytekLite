@@ -3,7 +3,6 @@
 #include "Abytek/DirectX12/RHICommandQueue.hpp"
 #include "Abytek/DirectX12/RHIDescriptorManager.hpp"
 #include "Abytek/DirectX12/RHIPlacedResourceManager.hpp"
-#include "Abytek/RHITransientUploadBufferManager.hpp"
 
 
 #ifdef ABYTEK_ENGINE_RHI_ENABLE_DIRECTX12

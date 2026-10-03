@@ -20,7 +20,26 @@ namespace Abytek
     void F_SRPRenderView::OnBeginFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
         A_RenderView::OnBeginFrame(SubmissionItemContainer);
-        BeginOpaqueVisibilityBuffer(SubmissionItemContainer);
+        
+        _OpaqueVisibilityBuffer = SRP::VisibilityBuffer::F_OpaqueInstance::Create(
+            SubmissionItemContainer,
+            GetResolution(),
+            GetRHIFeatureSupports(),
+            E_RHIResourceAdditionalFlag::TRANSIENT
+        );
+#ifdef ABYTEK_DEBUG_INFO
+        _OpaqueVisibilityBuffer.SetDebugName(*GetDebugName() + ABYTEK_TEXT(".OpaqueVisibilityBuffer"));
+#endif
+        
+        _InstancedMeshletBuffer_ECMS = SRP::ECMS::F_InstancedMeshletBuffer::Create(
+            SubmissionItemContainer,
+            ABYTEK_WTHIS(),
+            1000000,
+            E_RHIResourceAdditionalFlag::TRANSIENT
+        );
+#ifdef ABYTEK_DEBUG_INFO
+        _InstancedMeshletBuffer_ECMS.SetDebugName(*GetDebugName() + ABYTEK_TEXT(".InstancedMeshletBuffer_ECMS"));
+#endif
         
         {
             ClearOpaqueVisibilityBuffer(SubmissionItemContainer);
@@ -28,60 +47,18 @@ namespace Abytek
     }
     void F_SRPRenderView::OnEndFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        EndOpaqueVisibilityBuffer(SubmissionItemContainer);
-        A_RenderView::OnEndFrame(SubmissionItemContainer);
-    }
-
-    void F_SRPRenderView::BeginOpaqueVisibilityBuffer(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
-    {
-        auto Context = H_RHI::GetMainContext();
+        _InstancedMeshletBuffer_ECMS.Release(SubmissionItemContainer);
+        _InstancedMeshletBuffer_ECMS = {};
         
-        const auto& FeatureSupports = GetRHIFeatureSupports();
-        const auto& Resolution = GetResolution();
-        
-        F_RHITextureBuildParams OpaqueVisibilityBufferBuildParams;
-        OpaqueVisibilityBufferBuildParams.Context = Context.Weak();
-        OpaqueVisibilityBufferBuildParams.TextureAspect.Width = Resolution.X;
-        OpaqueVisibilityBufferBuildParams.TextureAspect.Height = Resolution.Y;
-        OpaqueVisibilityBufferBuildParams.TextureAspect.DimensionCount = 2;
-        OpaqueVisibilityBufferBuildParams.Format = SRP::GetVisibilityFormat(FeatureSupports);
-        OpaqueVisibilityBufferBuildParams.AccessCapabilities = (
-            F_RHIResourceAccess::MakeSRVCapabilities() 
-            | F_RHIResourceAccess::MakeUAVCapabilities()
-        );
-        OpaqueVisibilityBufferBuildParams.AdditionalFlags |= E_RHIResourceAdditionalFlag::TRANSIENT;
-        _OpaqueVisibilityBuffer = RACreateAndBuildShared<A_RHIResource>(OpaqueVisibilityBufferBuildParams);
-        
-        F_RHITextureViewBuildParams OpaqueVisibilitySRVBuildParams;
-        OpaqueVisibilitySRVBuildParams.Context = Context.Weak();
-        OpaqueVisibilitySRVBuildParams.Resource = _OpaqueVisibilityBuffer;
-        OpaqueVisibilitySRVBuildParams.Access = F_RHIResourceAccess::MakeSRV();
-        _OpaqueVisibilitySRV = RACreateAndBuildShared<A_RHIResourceView>(OpaqueVisibilitySRVBuildParams);
-        
-        F_RHITextureViewBuildParams OpaqueVisibilityUAVBuildParams;
-        OpaqueVisibilityUAVBuildParams.Context = Context.Weak();
-        OpaqueVisibilityUAVBuildParams.Resource = _OpaqueVisibilityBuffer;
-        OpaqueVisibilityUAVBuildParams.Access = F_RHIResourceAccess::MakeUAV();
-        OpaqueVisibilityUAVBuildParams.TextureViewAspect.UAVClearable = true;
-        _OpaqueVisibilityUAV = RACreateAndBuildShared<A_RHIResourceView>(OpaqueVisibilityUAVBuildParams);
-    }
-    void F_SRPRenderView::EndOpaqueVisibilityBuffer(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
-    {
-        _OpaqueVisibilityUAV = {};
-        _OpaqueVisibilitySRV = {};
+        _OpaqueVisibilityBuffer.Release(SubmissionItemContainer);
         _OpaqueVisibilityBuffer = {};
+        A_RenderView::OnEndFrame(SubmissionItemContainer);
     }
 
     void F_SRPRenderView::ClearOpaqueVisibilityBuffer(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        F_RHIClearUAVUIntPassBuildParams PassBuildParams;
-        PassBuildParams.Context = H_RHI::GetMainContext().Weak();
-        PassBuildParams.UAV = _OpaqueVisibilityUAV;
-        F_Vector4_U64 ClearValue(ABYTEK_U64_MAX);
-        H_RHISubmissionUtilities::ClearUAVUInt(
-            SubmissionItemContainer,
-            _OpaqueVisibilityUAV,
-            ClearValue
+        _OpaqueVisibilityBuffer.Clear(
+            SubmissionItemContainer
 #ifdef ABYTEK_DEBUG_INFO
             , ABYTEK_TEXT("Abytek::SRP::ClearOpaqueVisibilityBuffer(")
             + *GetDebugName()

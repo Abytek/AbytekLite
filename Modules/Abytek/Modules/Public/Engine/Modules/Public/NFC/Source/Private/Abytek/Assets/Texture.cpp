@@ -281,9 +281,9 @@ namespace Abytek
             }
         };
         
-        using F_STBBuildImageFunction_HDR = void(const U8* PixelBytes, U32 Width, U32 Height, const F_TextureFileImportConfig& Config, F_RHIImage& OutImage);
+        using F_STBBuildImageFunction_HDR = void(const U8* PixelBytes, U32 Width, U32 Height, const F_TextureImportConfig& Config, F_RHIImage& OutImage);
         template<Sz __ChannelSize, Sz __NumChannels>
-        void STBBuildImage_HDR(const U8* PixelBytes, U32 Width, U32 Height, const F_TextureFileImportConfig& Config, F_RHIImage& OutImage)
+        void STBBuildImage_HDR(const U8* PixelBytes, U32 Width, U32 Height, const F_TextureImportConfig& Config, F_RHIImage& OutImage)
         {
             static constexpr E_RHIFormat Format = ResolveFormat_HDR<__ChannelSize, __NumChannels>();
             static_assert(Format != E_RHIFormat::NONE);
@@ -413,9 +413,9 @@ namespace Abytek
             }
         };
         
-        using F_STBBuildImageFunction_NonHDR = void(const U8* PixelBytes, U32 Width, U32 Height, const F_TextureFileImportConfig& Config, F_RHIImage& OutImage);
+        using F_STBBuildImageFunction_NonHDR = void(const U8* PixelBytes, U32 Width, U32 Height, const F_TextureImportConfig& Config, F_RHIImage& OutImage);
         template<Sz __ChannelSize, Sz __NumChannels>
-        void STBBuildImage_NonHDR(const U8* PixelBytes, U32 Width, U32 Height, const F_TextureFileImportConfig& Config, F_RHIImage& OutImage)
+        void STBBuildImage_NonHDR(const U8* PixelBytes, U32 Width, U32 Height, const F_TextureImportConfig& Config, F_RHIImage& OutImage)
         {
             static constexpr E_RHIFormat Format = ResolveFormat_NonHDR<__ChannelSize, __NumChannels>();
             static_assert(Format != E_RHIFormat::NONE);
@@ -442,7 +442,7 @@ namespace Abytek
             OutImage = F_RHIImage(ImageRaw);
         }
         
-        F_FeedbackStatus Decode(const TF_Span<const U8>& Bytes, const F_TextureFileImportConfig& Config, F_RHIImage& OutImage)
+        F_FeedbackStatus Decode(const TF_Span<const U8>& Bytes, const F_TextureImportConfig& Config, F_RHIImage& OutImage)
         {
             int Width = 0;
             int Height = 0;
@@ -450,7 +450,7 @@ namespace Abytek
             
             if (stbi_is_hdr_from_memory(Bytes.data(), static_cast<int>(Bytes.size())))
             {
-                if (FlagHas(Config.Flags, E_TextureFileImportFlag::SUPPORT_HDR32))
+                if (FlagHas(Config.Flags, E_TextureImportFlag::SUPPORT_HDR32))
                 {
                     float* Pixels = stbi_loadf_from_memory(
                         Bytes.data(), 
@@ -573,7 +573,7 @@ namespace Abytek
             return F_FeedbackStatus::MakeSucceeded();
         }
     }
-    void F_Texture::Import(const TF_Span<const U8>& Bytes, const F_TextureFileImportConfig& Config, const TF_Optional<F_TextureSetting>& Setting)
+    void F_Texture::Import(const TF_Span<const U8>& Bytes, const F_TextureImportConfig& Config, const TF_Optional<F_TextureSetting>& Setting)
     {
         F_RHIImage Image;
         ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
@@ -587,7 +587,7 @@ namespace Abytek
         MarkPackageDirty();
         RecreateRenderState();
     }
-    void F_Texture::Import(const F_Text& FilePath, const F_TextureFileImportConfig& Config, const TF_Optional<F_TextureSetting>& Setting)
+    void F_Texture::Import(const F_Text& FilePath, const F_TextureImportConfig& Config, const TF_Optional<F_TextureSetting>& Setting)
     {
         F_Text AbsoluteFilePath;
         ABYTEK_FEEDBACK_STATUS_CHECK_HARD(

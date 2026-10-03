@@ -42,14 +42,11 @@ namespace Abytek
     }
     void F_GPUDataStorage::EndUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-    }
-    void F_GPUDataStorage::BeginPostUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
-    {
         _RecreateBindGroupsIfNeeded(SubmissionItemContainer);
-        _FlushDeallocationQueue(SubmissionItemContainer);
     }
-    void F_GPUDataStorage::EndPostUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
+    void F_GPUDataStorage::FinalizeFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
+        _FlushDeallocationQueue(SubmissionItemContainer);
     }
 
     void F_GPUDataStorage::_FlushDeallocationQueue(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
@@ -61,9 +58,13 @@ namespace Abytek
         }
     }
 
-    TF_Optional<F_GPUDataInstanceAllocation> F_GPUDataStorage::Allocate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, U32 NumInstances)
+    F_GPUDataInstanceAllocation F_GPUDataStorage::Allocate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, U32 NumInstances)
     {
-        TF_Optional<F_GPUDataInstanceAllocation> Result;
+        if (NumInstances == 0)
+        {
+            return {};
+        }
+        F_GPUDataInstanceAllocation Result;
         _CriticalSection(
             [this, &SubmissionItemContainer, &Result, NumInstances]
             {
@@ -72,6 +73,7 @@ namespace Abytek
                     if (auto Allocation = Page->Allocate(NumInstances))
                     {
                         Result = ABYTEK_MOVE(Allocation);
+                        return;
                     }
                 }
                 if (auto Page = AddNewPage(SubmissionItemContainer, NumInstances))
@@ -79,6 +81,7 @@ namespace Abytek
                     if (auto Allocation = Page->Allocate(NumInstances))
                     {
                         Result = ABYTEK_MOVE(Allocation);
+                        return;
                     }
                 }
             }
@@ -192,7 +195,7 @@ namespace Abytek
         }
     }
 
-    TF_Optional<F_GPUDataInstanceAllocation> F_GPUDataStorage::New(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, U32 NumInstances)
+    F_GPUDataInstanceAllocation F_GPUDataStorage::New(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, U32 NumInstances)
     {
         return Allocate(SubmissionItemContainer, NumInstances);
     }

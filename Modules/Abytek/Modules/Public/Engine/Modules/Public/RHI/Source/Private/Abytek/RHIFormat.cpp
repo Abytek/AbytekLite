@@ -359,4 +359,17 @@ namespace Abytek
         ) << "Invalid RHI format: " << static_cast<U32>(Format);
         return Internal::RHIFormat::TypelessChecks[ResultIndex];
     }
+    E_RHIFormat RHIFormatToDepth(E_RHIFormat Format)
+    {
+        if (Format == E_RHIFormat::D32_FLOAT)
+        {
+            return E_RHIFormat::D32_FLOAT;
+        }
+        if (Format == E_RHIFormat::R32_TYPELESS)
+        {
+            return E_RHIFormat::D32_FLOAT;
+        }
+        ABYTEK_LOG_FATAL() << "Cannot convert to depth format from " << static_cast<U32>(Format);
+        return E_RHIFormat::NONE;
+    }
 }

@@ -26,7 +26,9 @@
 
 #include "Abytek/Renderer/RenderPrimitive/Components/Component_Transform.hpp"
 #include "Abytek/Renderer/RenderPrimitive/Components/Component_InverseTransposeTransform.hpp"
-#include "Abytek/Renderer/RenderPrimitive/Components/Component_MeshHandle.hpp"
+#include "Abytek/Renderer/RenderPrimitive/Components/Component_GeometryAddress_ECMS.hpp"
+#include "Abytek/Renderer/RenderPrimitive/Components/Component_GeometryAllocationStructure_ECMS.hpp"
+#include "Abytek/Renderer/RenderPrimitive/Archetypes/Data_Simple.hpp"
 #include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveManager.hpp"
 
 #include "Abytek/Assets/Texture.hpp"
@@ -80,9 +82,12 @@ namespace Abytek
         RegisterStaticType<E_CameraProjectionMode>();
         RegisterStaticType<F_CameraComponent>();
         RegisterStaticType<F_CameraComponentManager>();
+        RegisterStaticType<F_PrimitiveSceneComponent>();
         RegisterStaticType<A_PrimitiveComponent>();
         RegisterStaticType<F_InputComponent>();
         RegisterStaticType<F_InputComponentManager>();
+        
+        RegisterStaticType<F_StaticMeshComponent>();
         
         RegisterStaticType<F_RendererManager>();
         RegisterStaticType<A_RenderPath>();
@@ -92,9 +97,9 @@ namespace Abytek
 
         RegisterStaticType<RenderPrimitive::F_Component_Transform>();
         RegisterStaticType<RenderPrimitive::F_Component_InverseTransposeTransform>();
-        RegisterStaticType<RenderPrimitive::F_Component_MeshHandle>();
-        RegisterStaticType<RenderPrimitive::F_Data>();
-        RegisterStaticType<RenderPrimitive::F_DemoPipeline>();
+        RegisterStaticType<RenderPrimitive::F_Component_GeometryAddress_ECMS>();
+        RegisterStaticType<RenderPrimitive::F_Component_GeometryAllocationStructure_ECMS>();
+        RegisterStaticType<RenderPrimitive::F_Data_Simple>();
         
         RegisterStaticType<F_Texture>();
         RegisterStaticType<F_TextureSetting>();

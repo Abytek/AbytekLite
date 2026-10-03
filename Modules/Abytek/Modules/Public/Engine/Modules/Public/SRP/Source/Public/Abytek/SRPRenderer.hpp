@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Abytek/Engine.SRP.prerequisites.hpp"
+#include "Abytek/RHIBufferInlineAllocator.hpp"
 #include "Abytek/Renderer/Renderer.hpp"
 
 

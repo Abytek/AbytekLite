@@ -1,0 +1,4 @@
+
+[Abytek.PersistentLevel]
+Types = [ "Abytek::F_StaticMeshComponentSampleLevel" ]
+Paths = [ "@Abytek.Sandbox.NFCSamples.StaticMeshComponent::Assets:/.IgnoreSVC/StaticMeshComponentSampleLevel::StaticMeshComponentSampleLevel" ]

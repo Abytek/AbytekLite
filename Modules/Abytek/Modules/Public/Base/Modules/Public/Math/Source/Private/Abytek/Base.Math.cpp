@@ -1,6 +1,8 @@
 #include "Abytek/Base.Math.prerequisites.pch.hpp"
 #include "Abytek/Types/Vecma.hpp"
 #include "Abytek/Types/Quaternion.hpp"
+#include "Abytek/Types/Transform.hpp"
+#include "Abytek/Types/Rotator.hpp"
 
 
 namespace Abytek
@@ -27,5 +29,8 @@ namespace Abytek
         Session->RegisterType<F_Matrix4x4_U32>();
         
         Session->RegisterType<F_Quaternion_F32>();
+        
+        Session->RegisterType<F_Transform_F32>();
+        Session->RegisterType<F_Rotator_F32>();
     }
 }

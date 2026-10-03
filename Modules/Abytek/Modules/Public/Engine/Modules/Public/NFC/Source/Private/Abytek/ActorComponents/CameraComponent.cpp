@@ -33,7 +33,7 @@ namespace Abytek
     F_CameraComponent::F_CameraComponent(const F_SerializableObjectInitParams& InitParams) :
         A_RenderableComponent(InitParams)
     {
-        _SceneComponent = CreateDefaultSerializableSubobject<F_SceneComponent>(ABYTEK_NAME("Scene"));
+        _SceneComponent = CreateSerializableSubobjectDelayLoading<F_SceneComponent>(ABYTEK_NAME("Scene"));
         AddChildInstanceComponent(_SceneComponent);
     }
     F_CameraComponent::~F_CameraComponent()
@@ -139,7 +139,7 @@ namespace Abytek
             return;
         }
         _IsEnabled = true;
-        if (IsRegistered() && !HasSerializableFlags(E_SerializableObjectFlag::CDO))
+        if (IsRegistered())
         {
             _Enable_Impl();
         }
@@ -151,7 +151,7 @@ namespace Abytek
             return;
         }
         _IsEnabled = false;
-        if (IsRegistered() && !HasSerializableFlags(E_SerializableObjectFlag::CDO))
+        if (IsRegistered())
         {
             _Disable_Impl();
         }

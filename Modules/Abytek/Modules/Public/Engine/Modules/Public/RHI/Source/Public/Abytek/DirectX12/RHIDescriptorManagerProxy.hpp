@@ -16,6 +16,9 @@ namespace Abytek
         {
             F_DirectX12RHIDescriptorIndex DescriptorIndex;
             DirectX12SharedAPIWrapper::F_D3D12DescriptorDesc D3D12DescriptorDesc;
+#ifdef ABYTEK_DEBUG_INFO
+            F_Name DebugName;
+#endif
         };
         
         struct F_Copy

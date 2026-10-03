@@ -27,7 +27,7 @@ namespace Abytek
     {
         U64 SizeInBytes = 0;
         U64 OffsetInBytes = 0;
-        U32 StrideInBytes = 1;
+        U32 StrideInBytes = 0;
         
         B8 RawAccess = false;
     };

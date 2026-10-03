@@ -34,6 +34,8 @@ namespace Abytek
             _ComponentIndexToClass.push_back(ComponentTypeConfig.Class);
         }
         
+        _InstanceSetHeaderBinding = BuildParams.InstanceSetHeaderBinding;
+        
         F_GPUDataStorageBuildParams StorageBuildParams;
         StorageBuildParams.GPUData = ABYTEK_WTHIS();
 #ifdef ABYTEK_DEBUG_INFO
@@ -49,8 +51,14 @@ namespace Abytek
     }
     void F_GPUData::Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
+        _InstanceSetHeaderBindGroup = {};
+        _InstanceSetHeaderSRV = {};
+        _InstanceSetHeaderBuffer = {};
+        
         _Storage->Release(SubmissionItemContainer);
         _Storage = {};
+        
+        _InstanceSetHeaderBinding = {};
         
         for (const auto& ComponentType : _ComponentTypes)
         {
@@ -80,28 +88,18 @@ namespace Abytek
             [this, &SubmissionItemContainer]
             {
                 _Storage->EndUpdate(SubmissionItemContainer);
+                _FlushDirtyInstanceSets(SubmissionItemContainer);
+                _UpdateInstanceSetHeaderBuffer(SubmissionItemContainer);
                 _IsUpdatePhase.clear(boost::memory_order_release);
             }
         );
     }
-    void F_GPUData::BeginPostUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
+    void F_GPUData::FinalizeFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
         _CriticalSection(
             [this, &SubmissionItemContainer]
             {
-                _IsPostUpdatePhase.test_and_set(boost::memory_order_release);
-                _FlushDirtyInstanceSets(SubmissionItemContainer);
-                _Storage->BeginPostUpdate(SubmissionItemContainer);
-            }
-        );
-    }
-    void F_GPUData::EndPostUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
-    {
-        _CriticalSection(
-            [this, &SubmissionItemContainer]
-            {
-                _Storage->EndPostUpdate(SubmissionItemContainer);
-                _IsPostUpdatePhase.clear(boost::memory_order_release);
+                _Storage->FinalizeFrame(SubmissionItemContainer);
             }
         );
     }
@@ -112,7 +110,10 @@ namespace Abytek
             [this, &InstanceSet]
             {
                 ABYTEK_ENGINE_NFC_ASSERT(_IsUpdatePhase.test(boost::memory_order_acquire)) << "Cannot register instance sets outside update phase";
-                _InstanceSets.insert(InstanceSet);
+                InstanceSet->_Index = static_cast<U32>(_InstanceSets.size());
+                _InstanceSets.push_back(InstanceSet);
+                
+                _InstanceSetHeaders.push_back(InstanceSet->GetHeader());
             }
         );
     }
@@ -122,7 +123,17 @@ namespace Abytek
             [this, &InstanceSet]
             {
                 ABYTEK_ENGINE_NFC_ASSERT(_IsUpdatePhase.test(boost::memory_order_acquire)) << "Cannot unregister instance sets outside update phase";
-                _InstanceSets.erase(_InstanceSets.find(InstanceSet));
+                _InstanceSets.back()->_Index = InstanceSet->_Index;
+                std::swap(
+                    _InstanceSets[InstanceSet->_Index],
+                    _InstanceSets.back()
+                );
+                std::swap(
+                    _InstanceSetHeaders[InstanceSet->_Index],
+                    _InstanceSetHeaders.back()
+                );
+                _InstanceSets.pop_back();
+                _InstanceSetHeaders.pop_back();
             }
         );
     }
@@ -141,16 +152,18 @@ namespace Abytek
     {
         for (const auto& InstanceSet : _DirtyInstanceSets)
         {
-            const auto& Allocation = *InstanceSet->GetAllocation();
-            for (const auto& UploadCandidate : InstanceSet->_UploadCandidates)
+            if (const auto& Allocation = InstanceSet->GetAllocation())
             {
-                H_RHISubmissionUtilities::UploadBuffer(
-                    SubmissionItemContainer,
-                    UploadCandidate.CachedData,
-                    Allocation.Page->GetRHIBuffer(UploadCandidate.ComponentIndex),
-                    static_cast<U64>(Allocation.BeginLocalIndex) 
-                    * static_cast<U64>(_ComponentIndexToSizeInBytes[UploadCandidate.ComponentIndex])
-                );
+                for (const auto& UploadCandidate : InstanceSet->_UploadCandidates)
+                {
+                    H_RHISubmissionUtilities::UploadBuffer(
+                        SubmissionItemContainer,
+                        UploadCandidate.CachedData,
+                        Allocation.Page->GetRHIBuffer(UploadCandidate.ComponentIndex),
+                        static_cast<U64>(Allocation.BeginLocalIndex) 
+                        * static_cast<U64>(_ComponentIndexToSizeInBytes[UploadCandidate.ComponentIndex])
+                    );
+                }
             }
             InstanceSet->_IsDirty = false;
             InstanceSet->_UploadCandidates = {};
@@ -214,5 +227,89 @@ namespace Abytek
     TS<F_GPUDataComponentType> F_GPUData::GetComponentType(U32 Index) const
     {
         return _ComponentTypes[Index];
+    }
+
+    void F_GPUData::_UpdateInstanceSetHeaderBuffer(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
+    {
+        auto Context = H_RHI::GetMainContext();
+        
+        B8 IsEmpty = _InstanceSetHeaders.empty();
+        
+        auto SizeInBytes = sizeof(F_GPUDataInstanceSetHeader) * Max<Sz>(_InstanceSetHeaders.size(), 1);
+        
+        void* CachedInstanceSetHeadersPtr = H_Frame::GetArena(E_FrameParamType::RENDER)->AllocateData(
+            SizeInBytes
+        );
+        if (!IsEmpty)
+        {
+            memcpy(
+                CachedInstanceSetHeadersPtr,
+                _InstanceSetHeaders.data(),
+                SizeInBytes
+            );
+        }
+        
+        F_RHIBufferBuildParams BufferBuildParams;
+        BufferBuildParams.Context = Context.Weak();
+        BufferBuildParams.BufferAspect.SizeInBytes = SizeInBytes;
+        BufferBuildParams.BufferAspect.StrideInBytes = sizeof(F_GPUDataInstanceSetHeader);
+        if (!IsEmpty)
+        {
+            BufferBuildParams.BufferDataView = F_RHIBufferDataView(
+                ((const U8*)CachedInstanceSetHeadersPtr),    
+                ((const U8*)CachedInstanceSetHeadersPtr) + SizeInBytes    
+            );
+        }
+        BufferBuildParams.AdditionalFlags |= E_RHIResourceAdditionalFlag::TRANSIENT;
+        BufferBuildParams.AccessCapabilities = F_RHIResourceAccess::MakeSRVCapabilities();
+        _InstanceSetHeaderBuffer = RACreateAndBuildShared<A_RHIResource>(BufferBuildParams);
+#ifdef ABYTEK_DEBUG_INFO
+        _InstanceSetHeaderBuffer->SetDebugName(
+            *GetDebugName()  
+            + ABYTEK_TEXT(".InstanceSetHeaderBuffer")
+        );
+#endif
+        
+        F_RHIBufferViewBuildParams SRVBuildParams;
+        SRVBuildParams.Context = Context.Weak();
+        SRVBuildParams.BufferViewAspect.SizeInBytes = BufferBuildParams.BufferAspect.SizeInBytes;
+        SRVBuildParams.BufferViewAspect.StrideInBytes = BufferBuildParams.BufferAspect.StrideInBytes;
+        SRVBuildParams.Resource = _InstanceSetHeaderBuffer;
+        SRVBuildParams.Access = F_RHIResourceAccess::MakeSRV();
+        _InstanceSetHeaderSRV = RACreateAndBuildShared<A_RHIResourceView>(SRVBuildParams);
+#ifdef ABYTEK_DEBUG_INFO
+        _InstanceSetHeaderSRV->SetDebugName(
+            *GetDebugName()  
+            + ABYTEK_TEXT(".InstanceSetHeaderSRV")
+        );
+#endif
+        
+        const auto& RHIFeatureSupports = GetRHIFeatureSupports();
+        _InstanceSetHeaderBindGroup = _InstanceSetHeaderBinding.CreateBindGroup();
+#ifdef ABYTEK_DEBUG_INFO
+        _InstanceSetHeaderBindGroup->SetDebugName(
+            *GetDebugName()  
+            + ABYTEK_TEXT(".InstanceSetHeaderBindGroup")
+        );
+#endif
+        _InstanceSetHeaderBindGroup->BindResourceView(
+            GetBindGroupSlotName_InstanceSetHeaderBuffer(
+                _Name, 
+                RHIFeatureSupports
+            ), 
+            _InstanceSetHeaderSRV
+        );
+        {
+            GPUData::F_InstanceSetHeadersUniformData UniformData;
+            UniformData.Num = static_cast<U32>(_InstanceSetHeaders.size());
+            _InstanceSetHeaderBindGroup->BindUniformData(
+                GetBindGroupSlotName_InstanceSetHeadersUniformData(
+                    _Name, 
+                    RHIFeatureSupports
+                ), 
+                UniformData
+            );
+        }
+        _InstanceSetHeaderBindGroup->Commit();
     }
 }

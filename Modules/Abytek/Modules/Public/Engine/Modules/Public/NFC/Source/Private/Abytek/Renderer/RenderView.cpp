@@ -42,6 +42,28 @@ namespace Abytek
 
     void A_RenderView::OnBeginFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
+    }
+    void A_RenderView::OnEndFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
+    {
+    }
+
+    void A_RenderView::BeginFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
+    {
+#ifdef ABYTEK_DEBUG_INFO
+        SubmissionItemContainer->PushAdditionalStackCaptureEventStates(
+            ABYTEK_TEXT("Abytek::A_RenderView::BeginFrame(") + *GetDebugName() + ABYTEK_TEXT(")")
+        );
+#endif
+        
+        F_RHIBufferInlineAllocatorBuildParams UAVDataAllocatorBuildParams;
+        UAVDataAllocatorBuildParams.Context = H_RHI::GetMainContext().Weak();
+        UAVDataAllocatorBuildParams.ResourceAccessCapabilities = F_RHIResourceAccess::MakeUAVCapabilities();
+        UAVDataAllocatorBuildParams.ResourceAdditionalFlags = E_RHIResourceAdditionalFlag::TRANSIENT;
+        _UAVDataAllocator = RACreateAndBuildShared<F_RHIBufferInlineAllocator>(UAVDataAllocatorBuildParams);
+#ifdef ABYTEK_DEBUG_INFO
+        _UAVDataAllocator->SetDebugName(*GetDebugName() + ABYTEK_TEXT(".UAVDataAllocator"));
+#endif
+        
         UpdateProjectionMatrix(SubmissionItemContainer);
         UpdateUniformBindGroup(SubmissionItemContainer);
         UpdateDefaultViewportScissorConfig(SubmissionItemContainer);
@@ -61,23 +83,25 @@ namespace Abytek
                 );
             }
         }
-    }
-    void A_RenderView::OnEndFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
-    {
-    }
-
-    void A_RenderView::BeginFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
-    {
-#ifdef ABYTEK_DEBUG_INFO
-        SubmissionItemContainer->PushAdditionalStackCaptureEventStates(
-            ABYTEK_TEXT("Abytek::A_RenderView::Frame(") + *GetDebugName() + ABYTEK_TEXT(")")
-        );
-#endif
+        
         OnBeginFrame(SubmissionItemContainer);
+        
+#ifdef ABYTEK_DEBUG_INFO
+        SubmissionItemContainer->PopAdditionalStackCaptureEventStates();
+#endif
     }
     void A_RenderView::EndFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
+#ifdef ABYTEK_DEBUG_INFO
+        SubmissionItemContainer->PushAdditionalStackCaptureEventStates(
+            ABYTEK_TEXT("Abytek::A_RenderView::EndFrame(") + *GetDebugName() + ABYTEK_TEXT(")")
+        );
+#endif
+        
         OnEndFrame(SubmissionItemContainer);
+        
+        _UAVDataAllocator = {};
+        
 #ifdef ABYTEK_DEBUG_INFO
         SubmissionItemContainer->PopAdditionalStackCaptureEventStates();
 #endif
@@ -124,7 +148,10 @@ namespace Abytek
         DepthBufferBuildParams.TextureAspect.Width = _UniformData.Resolution.X;
         DepthBufferBuildParams.TextureAspect.Height = _UniformData.Resolution.Y;
         DepthBufferBuildParams.TextureAspect.DimensionCount = 2;
-        DepthBufferBuildParams.AccessCapabilities = F_RHIResourceAccess::MakeDSVCapabilities();
+        DepthBufferBuildParams.AccessCapabilities = (
+            F_RHIResourceAccess::MakeDSVCapabilities()
+            | F_RHIResourceAccess::MakeSRVCapabilities()
+        );
         _DepthBuffer = RACreateAndBuildShared<A_RHIResource>(DepthBufferBuildParams);
 #ifdef ABYTEK_DEBUG_INFO
         _DepthBuffer->SetDebugName(

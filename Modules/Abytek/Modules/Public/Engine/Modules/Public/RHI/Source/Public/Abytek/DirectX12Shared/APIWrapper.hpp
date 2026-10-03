@@ -271,7 +271,7 @@ namespace Abytek
         }
 #endif
         
-        enum class E_ShaderVisibility : U16
+        enum class E_ShaderVisibility : U8
         {
             NONE,
             VERTEX,

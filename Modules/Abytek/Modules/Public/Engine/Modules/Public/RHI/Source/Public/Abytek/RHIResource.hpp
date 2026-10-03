@@ -23,7 +23,7 @@ namespace Abytek
         U8 Stencil = 0;                           ///< Clear stencil value
     };
 
-    enum class E_RHIResourceArchetype : U16
+    enum class E_RHIResourceArchetype : U8
     {
         NONE = 0x0,
         
@@ -66,7 +66,7 @@ namespace Abytek
     using F_RHIRTASData = TF_RHIRTASData<>;
     using F_RHIRTASDataView = F_RHIRTASData;
 
-    enum class E_RHIResourceAdditionalFlag : U16
+    enum class E_RHIResourceAdditionalFlag : U8
     {
         NONE = 0x0,
         CROSS_CONTEXT = 0x1,

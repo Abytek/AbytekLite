@@ -141,6 +141,7 @@ namespace Abytek
     ABYTEK_ENGINE_RHI_API B8 RHIFormatHasDepth(E_RHIFormat Format);
     ABYTEK_ENGINE_RHI_API B8 RHIFormatHasStencil(E_RHIFormat Format);
     ABYTEK_ENGINE_RHI_API B8 RHIFormatIsTypeless(E_RHIFormat Format);
+    ABYTEK_ENGINE_RHI_API E_RHIFormat RHIFormatToDepth(E_RHIFormat Format);
     
     namespace Internal::RHIFormat
     {

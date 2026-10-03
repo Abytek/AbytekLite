@@ -98,7 +98,7 @@ namespace Abytek
             }
         }
         
-        _TransientUploadBufferRange = Context->GetTransientUploadBufferManager_V2()->Allocate(
+        _TransientUploadBufferRange = Context->GetTransientUploadBufferManager()->Allocate(
               D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT - 1
               + UploadSizeInBytes
         );

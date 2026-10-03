@@ -13,7 +13,7 @@ namespace Abytek
     class ABYTEK_ENGINE_RHI_API F_DirectX12RHIUploadBufferPass : public A_RHIUploadBufferPass, public A_DirectX12RHIPassExtension
     {
     private:
-        F_RHITransientUploadBufferRange_V2 _TransientUploadBufferRange;
+        F_RHITransientUploadBufferRange _TransientUploadBufferRange;
 
     public:
         ABYTEK_FORCE_INLINE const auto& GetTransientUploadBufferRange() const noexcept

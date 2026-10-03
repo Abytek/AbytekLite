@@ -36,6 +36,9 @@ namespace Abytek
             F_RenderRegistryBuildParams BuildParams;
             BuildParams.RHIConfig.API = F_RHISubsystem::GetInstance()->GetActiveAPI();
             BuildParams.RHIConfig.FeatureSupports = _MainFeatureSupports;
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_DRIVER_DEBUGGER
+            BuildParams.DebugGeneratedShaders = true;
+#endif
             _MainRegistry = TS<F_RenderRegistry>()(BuildParams);
             
             {
@@ -44,18 +47,19 @@ namespace Abytek
                     _MainRegistry
                 );
             }
+            
+            _AllowCreateRenderPacks.test_and_set(boost::memory_order_release);
+            _GlobalRenderPack = H_WorldContext::CreateObjectDelayLoading<F_GlobalRenderPack>(
+                GetWorld(),
+                F_GlobalRenderPack::GetStaticName(),
+                F_GlobalRenderPack::GetStaticPackageName()
+            );
         }
     }
     void F_RenderCoreManager::OnStartup()
     {
         if (F_RHISubsystem::GetInstance()->IsEnabled())
         {
-            _AllowCreateRenderPacks.test_and_set(boost::memory_order_release);
-            _GlobalRenderPack = H_WorldContext::CreateObject<F_GlobalRenderPack>(
-                GetWorld(),
-                F_GlobalRenderPack::GetStaticName(),
-                F_GlobalRenderPack::GetStaticPackageName()
-            );
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
             _GlobalRenderPack->GetPackage()->SaveIfDirty();
 #endif
@@ -65,14 +69,15 @@ namespace Abytek
     {
         if (F_RHISubsystem::GetInstance()->IsEnabled())
         {
-            _GlobalRenderPack = {};
-            _AllowCreateRenderPacks.clear(boost::memory_order_release);
         }
     }
     void F_RenderCoreManager::OnRelease()
     {
         if (F_RHISubsystem::GetInstance()->IsEnabled())
         {
+            _GlobalRenderPack = {};
+            _AllowCreateRenderPacks.clear(boost::memory_order_release);
+            
             {
                 F_RenderRegistry::UnsetSerializableEnvironmentMetadataElement_Registry(
                     GetWorld()->GetEnvironment()

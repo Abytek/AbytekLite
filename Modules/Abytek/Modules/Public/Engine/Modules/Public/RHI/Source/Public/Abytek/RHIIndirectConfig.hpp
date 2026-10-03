@@ -7,7 +7,7 @@
 
 namespace Abytek
 {
-    enum class E_RHIIndirectArgumentType
+    enum class E_RHIIndirectArgumentType : U8
     {
         NONE,
         DRAW_NON_INDEXED,

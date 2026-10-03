@@ -17,5 +17,6 @@ namespace Abytek
     {
         F_RenderCoreRHIConfig RHIConfig;
         TF_Vector<TS<F_RenderRegistry>> Dependencies;
+        B8 DebugGeneratedShaders = false;
     };
 }

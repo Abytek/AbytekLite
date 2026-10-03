@@ -2,6 +2,7 @@
 
 #include "Abytek/Base.Serializable.prerequisites.pch.hpp"
 #include "Abytek/SerializableObjectData.hpp"
+#include "Abytek/SerializableObjectFlag.hpp"
 
 
 namespace Abytek
@@ -45,7 +46,7 @@ namespace Abytek
         
         AU32 _NextAnonymousObjectIndex = 0;
         
-        B8 _AllowCreateObjectWithLoading = true;
+        B8 _IsEnabledObjectLoading = true;
         
         TF_Map<TF_ReflectionTypeHandle<A_SerializableObject>, TS<A_SerializableObject>> _CDOs;
         
@@ -125,9 +126,9 @@ namespace Abytek
             return It->second;
         }
         
-        ABYTEK_FORCE_INLINE auto GetAllowCreateObjectWithLoading() const noexcept
+        ABYTEK_FORCE_INLINE auto IsEnabledObjectLoading() const noexcept
         {
-            return _AllowCreateObjectWithLoading;
+            return _IsEnabledObjectLoading;
         }
         
         ABYTEK_FORCE_INLINE const auto& GetCDOs() const noexcept
@@ -270,11 +271,7 @@ namespace Abytek
             TF_Set<F_Name>& OutObjectPathSet,
             TF_Map<F_Name, TS<F_SerializablePackage>>& OutPackages
         );
-        void LoadObjects(
-            const TF_SmallVector<F_Name, 1>& ObjectPaths,
-            TF_SmallVector<TS<A_SerializableObject>, 1>& OutObjects
-        );
-        void CreateObjectsWihtoutLoading(
+        void CreateObjectsWithoutLoading(
             const TF_SmallVector<F_SerializableObjectCreationParams, 1>& CreationParamsList,
             TF_SmallVector<TS<A_SerializableObject>, 1>& OutObjects
         );
@@ -282,10 +279,11 @@ namespace Abytek
             const TF_SmallVector<F_SerializableObjectCreationParams, 1>& CreationParamsList,
             TF_SmallVector<TS<A_SerializableObject>, 1>& OutObjects
         );
-        TS<A_SerializableObject> ForceCreateObjectWithoutLoading(
+        TS<A_SerializableObject> ForceCreateObjectDelayLoading(
             const F_Name& Name = {},
             const F_Name& PackageName = {},
-            const TF_ReflectionTypeHandle<A_SerializableObject>& Type = {}
+            const TF_ReflectionTypeHandle<A_SerializableObject>& Type = {},
+            E_SerializableObjectFlag Flags = E_SerializableObjectFlag::DEFAULT
         );
         void LoadEnqueuedObjects();
         template<typename __F_Object>
@@ -298,19 +296,19 @@ namespace Abytek
             auto Object = ForceCreateObjectWithoutLoading(Name, PackageName, Type.template Cast<A_SerializableObject>());
             return Object.template FastCast<__F_Object>();
         }
-        TS<A_SerializableObject> CreateObjectWithoutLoading(
+        TS<A_SerializableObject> CreateObjectDelayLoading(
             const F_Name& Name = {},
             const F_Name& PackageName = {},
             const TF_ReflectionTypeHandle<A_SerializableObject>& Type = {}
         );
         template<typename __F_Object>
-        TS<__F_Object> CreateObjectWithoutLoading(
+        TS<__F_Object> CreateObjectDelayLoading(
             const F_Name& Name = {},
             const F_Name& PackageName = {},
             const TF_ReflectionTypeHandle<__F_Object>& Type = TF_ReflectionTypeHandle<__F_Object>(F_ReflectionContext::GetGlobal())
         )
         {
-            auto Object = CreateObjectWithoutLoading(Name, PackageName, Type.template Cast<A_SerializableObject>());
+            auto Object = CreateObjectDelayLoading(Name, PackageName, Type.template Cast<A_SerializableObject>());
             return Object.template FastCast<__F_Object>();
         }
         TS<A_SerializableObject> CreateObject(
@@ -327,6 +325,30 @@ namespace Abytek
         {
             auto Object = CreateObject(Name, PackageName, Type.template Cast<A_SerializableObject>());
             return Object.template FastCast<__F_Object>();
+        }
+        B8 PopulateObjectDelayLoading(
+            TS<A_SerializableObject>& OutObject,
+            const F_Name& Name,
+            const F_Name& PackageName,
+            const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+        );
+        template<typename __F_Object>
+        B8 PopulateObjectDelayLoading(
+            TS<__F_Object>& OutObject,
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<__F_Object>& Type = TF_ReflectionTypeHandle<__F_Object>(F_ReflectionContext::GetGlobal())
+        )
+        {
+            TS<A_SerializableObject> Object;
+            B8 Result = PopulateDelayLoading(
+                Object,
+                Name,
+                PackageName,
+                Type
+            );
+            OutObject = Object.FastCast<__F_Object>();
+            return Result;
         }
         B8 PopulateObject(
             TS<A_SerializableObject>& OutObject,
@@ -354,6 +376,19 @@ namespace Abytek
         }
         
     public:
+        TS<A_SerializableObject> CreateCDO(
+            const TF_ReflectionTypeHandle<A_SerializableObject>& Type = {}
+        );
+        template<typename __F_Object>
+        TS<__F_Object> CreateCDO(
+            const TF_ReflectionTypeHandle<__F_Object>& Type = TF_ReflectionTypeHandle<__F_Object>(F_ReflectionContext::GetGlobal())
+        )
+        {
+            auto Object = CreateObject(Type.template Cast<A_SerializableObject>());
+            return Object.template FastCast<__F_Object>();
+        }
+        
+    public:
         TS<F_SerializablePackage> EnsurePackage(const F_Name& PackageName);
         
     public:
@@ -361,5 +396,9 @@ namespace Abytek
         
     public:
         TS<F_SerializableEnvironment> Clone() const;
+        
+    public:
+        void EnableObjectLoading();
+        void DisableObjectLoading();
     };
 }

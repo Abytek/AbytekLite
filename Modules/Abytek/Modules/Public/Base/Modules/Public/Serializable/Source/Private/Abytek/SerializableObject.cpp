@@ -34,10 +34,6 @@ namespace Abytek
             A_Object::SetDebugName(_Name);
 #endif
         }
-        if (!HasSerializableFlags(E_SerializableObjectFlag::CDO))
-        {
-            _Environment->_ObjectsToLoad.Push(ABYTEK_STHIS());
-        }
     }
     A_SerializableObject::~A_SerializableObject()
     {
@@ -64,6 +60,11 @@ namespace Abytek
 
     void A_SerializableObject::CallLoad()
     {
+        if (HasSerializableFlags(E_SerializableObjectFlag::CDO))
+        {
+            return;
+        }
+        
         ABYTEK_BASE_SERIALIZABLE_ASSERT(!IsLoaded());
         _IsLoaded = true;
 
@@ -89,6 +90,11 @@ namespace Abytek
     }
     void A_SerializableObject::CallUnload()
     {
+        if (HasSerializableFlags(E_SerializableObjectFlag::CDO))
+        {
+            return;
+        }
+        
         ABYTEK_BASE_SERIALIZABLE_ASSERT(IsLoaded());
         OnUnload();
         _IsLoaded = false;
@@ -256,7 +262,7 @@ namespace Abytek
         return _Package->MarkDirty();
     }
 
-    TS<A_SerializableObject> A_SerializableObject::CreateDefaultSerializableSubobject(
+    TS<A_SerializableObject> A_SerializableObject::CreateSerializableSubobjectDelayLoading(
         const F_Name& SubobjectName,
         const TF_ReflectionTypeHandle<A_SerializableObject>& Type
     ) const
@@ -270,12 +276,13 @@ namespace Abytek
         {
             ActualSubobjectName = _Environment->GenerateAnonymousObjectName();
         }
-        return _Environment->CreateObjectWithoutLoading(
+        return _Environment->CreateObjectDelayLoading(
             ActualSubobjectName,
             _PackageName,
             Type
         );
     }
+
     TS<A_SerializableObject> A_SerializableObject::CreateSerializableSubobject(
         const F_Name& SubobjectName,
         const TF_ReflectionTypeHandle<A_SerializableObject>& Type

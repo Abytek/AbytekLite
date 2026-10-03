@@ -13,12 +13,22 @@ namespace Abytek
     
     private:
         TW<F_SceneComponent> _Parent;
+        TF_Vector<TW<F_SceneComponent>> _Childs;
+        U32 _IndexInParent = ~U32(0);
         F_Transform _LocalTransform = F_Transform::MakeIdentity();
         
     public:
         ABYTEK_FORCE_INLINE const auto& GetParent() const noexcept
         {
             return _Parent;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetChilds() const noexcept
+        {
+            return _Childs;
+        }
+        ABYTEK_FORCE_INLINE auto GetIndexInParent() const noexcept
+        {
+            return _IndexInParent;
         }
         ABYTEK_FORCE_INLINE const auto& GetLocalTransform() const noexcept
         {
@@ -46,8 +56,8 @@ namespace Abytek
         void OnUnregisterComponent() override;
         
     protected:
-        virtual void OnParentChanged(const TW<F_SceneComponent>& LastParent);
-        virtual void OnLocalTransformChanged(const F_Transform& LastLocalTransform);
+        virtual void OnParentChanged();
+        virtual void OnTransformChanged();
         
     public:
         void SetParent(const TW<F_SceneComponent>& Value);

@@ -104,7 +104,7 @@ namespace Abytek
     }
     void A_ApplicationCore::PostReflectModules()
     {
-        _SetupCDOTypes();
+        // _SetupCDOTypes();
     }
     void A_ApplicationCore::PostCreateConsole()
     {
@@ -302,7 +302,7 @@ namespace Abytek
     }
     void A_ApplicationCore::OnPreCleanUpModuleReflectionSessions()
     {
-        _CleanUpCDOTypes();
+        // _CleanUpCDOTypes();
     }
 
     void A_ApplicationCore::UpdateFrame(E_ApplicationState State)

@@ -42,8 +42,10 @@ namespace Abytek
         void OnConfig() override;
         
     protected:
+        void OnInit() override;
         void OnStartup() override;
         void OnShutdown() override;
+        void OnRelease() override;
         
     public:
         B8 IsRenderable() const override;

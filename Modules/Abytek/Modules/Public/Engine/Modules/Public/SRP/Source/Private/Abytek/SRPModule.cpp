@@ -3,6 +3,9 @@
 #include "Abytek/SRPRenderPath.hpp"
 #include "Abytek/SRPBasicDrawers/Cube.hpp"
 #include "Abytek/SRPBasicDrawers/StaticMesh.hpp"
+#include "Abytek/SRPVisibilityBuffer.hpp"
+#include "Abytek/SimplePrimitive/SRPVisibilityBufferPass_Simple.hpp"
+#include "Abytek/SimplePrimitive/SRPColorPass_Simple.hpp"
 
 
 namespace Abytek
@@ -37,5 +40,11 @@ namespace Abytek
         RegisterStaticType<SRPBasicDrawers::F_CubePipeline>();
         RegisterStaticType<SRPBasicDrawers::F_StaticMeshBinding>();
         RegisterStaticType<SRPBasicDrawers::F_StaticMeshPipeline>();
+        RegisterStaticType<SRP::VisibilityBuffer::F_DemoBinding>();
+        RegisterStaticType<SRP::VisibilityBuffer::F_DemoPipeline>();
+        RegisterStaticType<SRP::SimplePrimitive::VisibilityBufferPass::F_Binding>();
+        RegisterStaticType<SRP::SimplePrimitive::VisibilityBufferPass::F_Pipeline>();
+        RegisterStaticType<SRP::SimplePrimitive::ColorPass::F_Binding>();
+        RegisterStaticType<SRP::SimplePrimitive::ColorPass::F_Pipeline>();
     }
 }

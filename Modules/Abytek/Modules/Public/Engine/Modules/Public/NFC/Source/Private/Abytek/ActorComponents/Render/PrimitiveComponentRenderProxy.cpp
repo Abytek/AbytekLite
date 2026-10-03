@@ -19,33 +19,32 @@ namespace Abytek
 
     void A_PrimitiveComponentRenderProxy::OnCreateRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        _PrimitiveSet = CreatePrimitiveSet(SubmissionItemContainer);
+        _CreateAndInitPrimitiveSets(SubmissionItemContainer);
     }
     void A_PrimitiveComponentRenderProxy::OnDestroyRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        _PrimitiveSet = {};
+        for (auto It = _PrimitiveSets.rbegin(); It != _PrimitiveSets.rend(); ++It)
+        {
+            (*It)->Release(SubmissionItemContainer);
+        }
+        _PrimitiveSets = {};
+        _WorldTransformMatrix = Identity<F_Matrix4x4_F32>();
     }
 
-    TS<F_RenderPrimitiveSet> A_PrimitiveComponentRenderProxy::CreatePrimitiveSet(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
+    void A_PrimitiveComponentRenderProxy::_CreateAndInitPrimitiveSets(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        auto PrimitiveManager = GetWorldRenderResource()->GetScene()->GetPrimitiveManager();
-        F_RenderPrimitiveSetBuildParams BuildParams;
-        BuildParams.Manager = PrimitiveManager.Weak();
-        BuildParams.Num = 1;
-        SetupPrimitiveSetBuildParams(BuildParams);
+        CreatePrimitiveSets(SubmissionItemContainer, _PrimitiveSets);
 #ifdef ABYTEK_DEBUG_INFO
-        auto PrimitiveSet = F_RenderPrimitiveSet::CreateAndInit_WithDebugName(
-            GetDebugName(),
-#else
-        auto PrimitiveSet = F_RenderPrimitiveSet::CreateAndInit(
+        for (U32 Idx = 0; Idx < _PrimitiveSets.size(); ++Idx)
+        {
+            _PrimitiveSets[Idx]->SetDebugName(
+                *GetDebugName()
+                + ABYTEK_TEXT("[")
+                + ToText(Idx)
+                + ABYTEK_TEXT("]")
+            );
+        }
 #endif
-            GetWorldRenderResource(),
-            SubmissionItemContainer,
-            BuildParams
-        );
-        return PrimitiveSet;
-    }
-    void A_PrimitiveComponentRenderProxy::SetupPrimitiveSetBuildParams(F_RenderPrimitiveSetBuildParams& OutBuildParams)
-    {
+        InitPrimitiveSets(SubmissionItemContainer, _PrimitiveSets);
     }
 }

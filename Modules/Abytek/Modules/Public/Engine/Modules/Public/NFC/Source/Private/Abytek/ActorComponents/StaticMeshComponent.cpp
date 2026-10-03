@@ -1,5 +1,7 @@
 #include "Abytek/ActorComponents/StaticMeshComponent.hpp"
 #include "Abytek/ActorComponents/Render/StaticMeshComponentRenderProxy.hpp"
+#include "Abytek/Assets/StaticMesh.hpp"
+#include "Abytek/Assets/Render/StaticMeshRenderProxy.hpp"
 
 
 namespace Abytek
@@ -39,6 +41,16 @@ namespace Abytek
     void F_StaticMeshComponent::OnCreateRenderState()
     {
         A_PrimitiveComponent::OnCreateRenderState();
+        
+        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
+            [
+                CachedRenderProxy = GetRenderProxy().StaticCast<F_StaticMeshComponentRenderProxy>(),
+                CachedStaticMeshRenderProxy = _StaticMesh->GetRenderProxy().StaticCast<F_StaticMeshRenderProxy>()
+            ]
+            {
+                CachedRenderProxy->_StaticMeshRenderProxy = CachedStaticMeshRenderProxy;
+            }
+        );
     }
     void F_StaticMeshComponent::OnDestroyRenderState()
     {
@@ -47,5 +59,42 @@ namespace Abytek
     TS<A_RenderProxy> F_StaticMeshComponent::CreateRenderProxy()
     {
         return TS<F_StaticMeshComponentRenderProxy>()(ABYTEK_WTHIS());
+    }
+
+    void F_StaticMeshComponent::SetStaticMesh(const TS<F_StaticMesh>& StaticMesh)
+    {
+        _StaticMesh = StaticMesh;
+        if (auto RenderProxy = GetRenderProxy())
+        {
+            H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
+                [
+                    CachedRenderProxy = RenderProxy.StaticCast<F_StaticMeshComponentRenderProxy>(),
+                    CachedStaticMeshRenderProxy = StaticMesh->GetRenderProxy().StaticCast<F_StaticMeshRenderProxy>()
+                ]
+                {
+                    CachedRenderProxy->_StaticMeshRenderProxy = CachedStaticMeshRenderProxy;
+                    CachedRenderProxy->UpdateStaticMesh_Simple(CachedStaticMeshRenderProxy);
+                }
+            );
+        }
+    }
+
+    void F_StaticMeshComponent::OnTransformChanged()
+    {
+        A_PrimitiveComponent::OnTransformChanged();
+        
+        if (auto RenderProxy = GetRenderProxy())
+        {
+            H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
+                [
+                    CachedRenderProxy = RenderProxy.StaticCast<F_StaticMeshComponentRenderProxy>()
+                ]
+                {
+                    CachedRenderProxy->UpdateWorldTransformMatrix_Simple(
+                        CachedRenderProxy->GetWorldTransformMatrix()    
+                    );
+                }
+            );
+        }
     }
 }

@@ -2,36 +2,15 @@
 
 #include "Abytek/Renderer/RenderObject.hpp"
 #include "Abytek/GlobalRenderPipeline.hpp"
-#include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveData.hpp"
+#include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveSet.hpp"
+#include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveProcessor.hpp"
 
 
 namespace Abytek
 {
     class A_RenderScene;
-    class F_RenderPrimitiveSet;
+    class A_RenderPrimitiveSet;
     
-    namespace RenderPrimitive
-    {
-        struct F_DemoPipeline : F_GlobalRenderPipeline
-        {
-            ABYTEK_GLOBAL_RENDER_PIPELINE(F_DemoPipeline, ABYTEK_NAME("Abytek::RenderPrimitive::F_DemoPipeline"));
-            
-            static F_FeedbackStatus Build(F_Config& Config)
-            {
-                Config.Type = E_RHIPipelineStateType::COMPUTE;
-                Config.ComputeShader = ABYTEK_GLOBAL_SHADER("MainCS", "Abytek/Renderer/RenderPrimitive/DemoCS", E_RHIShaderFrequency::COMPUTE);
-                ABYTEK_FEEDBACK_STATUS_CHECK(
-                    F_Component_Transform::AddBindGroupToPipelineStateTemplate<F_Data>(Config)    
-                );
-                ABYTEK_FEEDBACK_STATUS_CHECK(
-                    F_Component_InverseTransposeTransform::AddBindGroupToPipelineStateTemplate<F_Data>(Config, F_RHIResourceAccess::MakeUAV())    
-                );
-                GPUData::SetupCompileParams(Config);
-                return F_FeedbackStatus::MakeSucceeded();
-            }
-        };
-    }
-
     struct F_RenderPrimitiveManagerBuildParams
     {
         TW<A_RenderScene> Scene;
@@ -39,37 +18,23 @@ namespace Abytek
     class ABYTEK_ENGINE_NFC_API F_RenderPrimitiveManager final : public A_RenderObject
     {
     public:
-        friend class F_RenderPrimitiveSet;
+        friend class A_RenderPrimitiveSet;
+        friend class A_RenderPrimitiveProcessor;
         
     private:
         TW<A_RenderScene> _Scene;
-        TS<F_GPUData> _GPUData;
         
-        U32 _ComponentIndex_Transform = ~U32(0);
-        U32 _ComponentIndex_InverseTransposeTransform = ~U32(0);
-        U32 _ComponentIndex_MeshHandle = ~U32(0);
+        TF_Vector<TS<A_RenderPrimitiveProcessor>> _Processors;
         
     public:
         ABYTEK_FORCE_INLINE const auto& GetScene() const noexcept
         {
             return _Scene;
         }
-        ABYTEK_FORCE_INLINE const auto& GetGPUData() const noexcept
-        {
-            return _GPUData;
-        }
         
-        ABYTEK_FORCE_INLINE auto GetComponentIndex_Transform() const noexcept
+        ABYTEK_FORCE_INLINE const auto& GetProcessors() const noexcept
         {
-            return _ComponentIndex_Transform;
-        }
-        ABYTEK_FORCE_INLINE auto GetComponentIndex_InverseTransposeTransform() const noexcept
-        {
-            return _ComponentIndex_InverseTransposeTransform;
-        }
-        ABYTEK_FORCE_INLINE auto GetComponentIndex_MeshHandle() const noexcept
-        {
-            return _ComponentIndex_MeshHandle;
+            return _Processors;
         }
         
     public:
@@ -85,7 +50,38 @@ namespace Abytek
     public:
         void BeginUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
         void EndUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
-        void BeginPostUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
-        void EndPostUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
+        void FinalizeFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
+        
+    public:
+        template<typename __F_Processor, typename... __F_Args>
+        auto CreateAndAddProcessor(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, const F_Name& Name, __F_Args&&... Args)
+        {
+            auto Processor = __F_Processor::Create(GetWorldRenderResource());
+#ifdef ABYTEK_DEBUG_INFO
+            Processor->SetDebugName(Name);
+#endif
+            return AddProcessor<__F_Processor>(
+                SubmissionItemContainer,
+                Processor,
+                ABYTEK_FORWARD(Args)...
+            );
+        }
+        template<typename __F_Processor, typename... __F_Args>
+        auto AddProcessor(
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, 
+            const TS<__F_Processor>& Processor, 
+            __F_Args&&... Args
+        )
+        {
+            ABYTEK_ENGINE_NFC_ASSERT(_Processors.size() < INVALID_RENDER_PRIMITIVE_PROCESSOR_ID) << "Exceeded render primitive processor limit";
+            Processor->Init(
+                SubmissionItemContainer, 
+                ABYTEK_WTHIS(), 
+                static_cast<F_RenderPrimitiveProcessorId>(_Processors.size()),
+                ABYTEK_FORWARD(Args)...
+            );
+            _Processors.push_back(Processor);
+            return Processor.Weak();
+        }
     };
 }

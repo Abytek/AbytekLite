@@ -157,12 +157,12 @@ namespace Abytek
             struct F_TransientUploadBuffer
             {
                 TS<A_RHIResourceProxy> BufferProxy;
-                TF_Vector<F_RHITransientUploadBufferCandidate_V2> Candidates;
+                TF_Vector<F_RHITransientUploadBufferCandidate> Candidates;
             };
             struct F_TransientReadbackBuffer
             {
                 TS<A_RHIResourceProxy> BufferProxy;
-                TF_Vector<F_RHITransientReadbackBufferCandidate_V2> Candidates;
+                TF_Vector<F_RHITransientReadbackBufferCandidate> Candidates;
             };
         }
     }

@@ -13,7 +13,7 @@ namespace Abytek
     class ABYTEK_ENGINE_RHI_API F_DirectX12RHIUploadTexturePass : public A_RHIUploadTexturePass, public A_DirectX12RHIPassExtension
     {
     private:
-        F_RHITransientUploadBufferRange_V2 _TransientUploadBufferRange;
+        F_RHITransientUploadBufferRange _TransientUploadBufferRange;
         U32 _NumSubresources = 0;
         TF_SmallVector<TF_Span<const U8>, 3> _SubImages_Bytes;
         TF_SmallVector<D3D12_PLACED_SUBRESOURCE_FOOTPRINT, 3> _SubImages_UploadFootprint;

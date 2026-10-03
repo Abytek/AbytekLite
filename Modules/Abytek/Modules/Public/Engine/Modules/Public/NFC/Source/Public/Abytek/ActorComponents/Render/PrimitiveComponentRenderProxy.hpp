@@ -13,12 +13,17 @@ namespace Abytek
         friend class A_PrimitiveComponent;
         
     private:
-        TS<F_RenderPrimitiveSet> _PrimitiveSet;
+        TF_Vector<TS<A_RenderPrimitiveSet>> _PrimitiveSets;
+        F_Matrix4x4_F32 _WorldTransformMatrix = Identity<F_Matrix4x4_F32>();
         
     public:
-        ABYTEK_FORCE_INLINE const auto& GetPrimitiveSet() const noexcept
+        ABYTEK_FORCE_INLINE const auto& GetPrimitiveSets() const noexcept
         {
-            return _PrimitiveSet;
+            return _PrimitiveSets;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetWorldTransformMatrix() const noexcept
+        {
+            return _WorldTransformMatrix;
         }
         
     public:
@@ -29,8 +34,17 @@ namespace Abytek
         void OnCreateRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
         void OnDestroyRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
         
+    private:
+        void _CreateAndInitPrimitiveSets(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
+        
     protected:
-        virtual TS<F_RenderPrimitiveSet> CreatePrimitiveSet(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
-        virtual void SetupPrimitiveSetBuildParams(F_RenderPrimitiveSetBuildParams& OutBuildParams);
+        virtual void CreatePrimitiveSets(
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, 
+            TF_Vector<TS<A_RenderPrimitiveSet>>& OutPrimitiveSets
+        ) = 0;
+        virtual void InitPrimitiveSets(
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, 
+            const TF_Vector<TS<A_RenderPrimitiveSet>>& PrimitiveSets
+        ) = 0;
     };
 }

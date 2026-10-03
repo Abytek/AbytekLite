@@ -2,6 +2,7 @@
 
 #include "Abytek/Engine.Core.prerequisites.hpp"
 #include "Abytek/ApplicationSubsystem.hpp"
+#include "Abytek/World/World.hpp"
 #include "Abytek/UpdateBase/UpdateUtilities.hpp"
 
 
@@ -9,7 +10,11 @@ namespace Abytek
 {
     class A_WorldSubsystem;
     class F_Level;
-    class F_World;
+    struct F_WorldStart
+    {
+        TS<F_World> World;
+        F_WorldConfig Config;
+    };
     
     class ABYTEK_ENGINE_CORE_API F_WorldManager final : public A_ApplicationSubsystem
     {
@@ -34,6 +39,16 @@ namespace Abytek
         
         TF_Vector<TW<F_World>> _Worlds;
         TS<F_World> _MainWorld;
+        
+        struct F_WorldStart
+        {
+            TS<F_World> World;
+            F_WorldConfig Config;
+        };
+        TF_Queue<F_WorldStart> _WorldsToInit;
+        TF_Queue<F_WorldStart> _WorldsToStartup;
+        TF_Queue<TS<F_World>> _WorldsToShutdown;
+        TF_Queue<TS<F_World>> _WorldsToRelease;
         
         TF_Vector<TF_ReflectionTypeHandle<A_WorldSubsystem>> _WorldSubsystemTypes;
         

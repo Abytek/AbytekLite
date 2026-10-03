@@ -6,7 +6,7 @@
 
 namespace Abytek
 {
-    enum class E_RHIResourceCPUAccess : U16
+    enum class E_RHIResourceCPUAccess : U8
     {
         NONE = 0x0,
         
@@ -63,7 +63,7 @@ namespace Abytek
         return ABYTEK_MOVE(Result);
     }
     
-    enum class E_RHIResourceGPUAccess
+    enum class E_RHIResourceGPUAccess : U16
     {
         NONE = 0x0,
         
@@ -82,6 +82,8 @@ namespace Abytek
         GENERIC_READ_ = 0x200,
         
         RTAS = 0x400,
+        
+        INDIRECT_ARGUMENT = 0x800,
 
         DEFAULT = SRV,
         DEFAULT_CAPABILITIES = SRV | COPY_SOURCE | COPY_DEST
@@ -99,6 +101,7 @@ namespace Abytek
             || FlagHas(Access, E_RHIResourceGPUAccess::COPY_SOURCE)
             || FlagHas(Access, E_RHIResourceGPUAccess::GENERIC_READ_)
             || FlagHas(Access, E_RHIResourceGPUAccess::RTAS)
+            || FlagHas(Access, E_RHIResourceGPUAccess::INDIRECT_ARGUMENT)
         );
     }
     ABYTEK_FORCE_INLINE B8 RHIHasGPUWriteAccess(E_RHIResourceGPUAccess Access)
@@ -160,6 +163,10 @@ namespace Abytek
         if (FlagHas(Access, E_RHIResourceGPUAccess::RTAS))
         {
             Values.push_back(ABYTEK_TEXT("RTAS"));
+        }
+        if (FlagHas(Access, E_RHIResourceGPUAccess::INDIRECT_ARGUMENT))
+        {
+            Values.push_back(ABYTEK_TEXT("INDIRECT_ARGUMENT"));
         }
         
         Result += ABYTEK_TEXT("[");
@@ -435,6 +442,22 @@ namespace Abytek
             return {
                 E_RHIResourceCPUAccess::NONE,
                 E_RHIResourceGPUAccess::DSV,
+                InShaderFrequency
+            };
+        }
+        static F_RHIResourceAccess MakeIndirectArgumentCapabilities(E_RHIShaderFrequency InShaderFrequency = E_RHIShaderFrequency::DEFAULT)
+        {
+            return {
+                E_RHIResourceCPUAccess::NONE,
+                E_RHIResourceGPUAccess::INDIRECT_ARGUMENT | E_RHIResourceGPUAccess::COPY_DEST | E_RHIResourceGPUAccess::COPY_SOURCE,
+                InShaderFrequency
+            };
+        }
+        static F_RHIResourceAccess MakeIndirectArgument(E_RHIShaderFrequency InShaderFrequency = E_RHIShaderFrequency::DEFAULT)
+        {
+            return {
+                E_RHIResourceCPUAccess::NONE,
+                E_RHIResourceGPUAccess::INDIRECT_ARGUMENT,
                 InShaderFrequency
             };
         }

@@ -1,16 +1,41 @@
 #include "Abytek/ActorComponents/PrimitiveComponent.hpp"
+#include "Abytek/ActorComponents/SceneComponent.hpp"
+#include "Abytek/ActorComponents/Render/PrimitiveComponentRenderProxy.hpp"
 
 
 namespace Abytek
 {
+    ABYTEK_REFLECT(F_PrimitiveSceneComponent)
+    {
+        ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::F_PrimitiveSceneComponent"));
+    }
+    
+    F_PrimitiveSceneComponent::F_PrimitiveSceneComponent(const F_SerializableObjectInitParams& InitParams) :
+        F_SceneComponent(InitParams)
+    {
+    }
+    F_PrimitiveSceneComponent::~F_PrimitiveSceneComponent()
+    {
+    }
+
+    void F_PrimitiveSceneComponent::OnTransformChanged()
+    {
+        _PrimitiveComponent->OnTransformChanged();
+    }
+
     ABYTEK_REFLECT(A_PrimitiveComponent)
     {
         ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::A_PrimitiveComponent"));
+        
+        ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(_SceneComponent);
     }
     
     A_PrimitiveComponent::A_PrimitiveComponent(const F_SerializableObjectInitParams& InitParams) :
         A_RenderableComponent(InitParams)
     {
+        _SceneComponent = CreateSerializableSubobjectDelayLoading<F_PrimitiveSceneComponent>(ABYTEK_NAME("Scene"));
+        _SceneComponent->_PrimitiveComponent = ABYTEK_WTHIS();
+        AddChildInstanceComponent(_SceneComponent);
     }
     A_PrimitiveComponent::~A_PrimitiveComponent()
     {
@@ -44,6 +69,17 @@ namespace Abytek
     void A_PrimitiveComponent::OnCreateRenderState()
     {
         A_RenderableComponent::OnCreateRenderState();
+        
+        auto WorldTransformMatrix = _SceneComponent->GetWorldTransformMatrix();
+        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
+            [
+                CachedRenderProxy = GetRenderProxy().StaticCast<A_PrimitiveComponentRenderProxy>(),
+                CachedWorldTransformMatrix = WorldTransformMatrix
+            ]
+            {
+                CachedRenderProxy->_WorldTransformMatrix = CachedWorldTransformMatrix;
+            }
+        );
     }
     void A_PrimitiveComponent::OnDestroyRenderState()
     {
@@ -68,7 +104,7 @@ namespace Abytek
             return;
         }
         _IsEnabled = true;
-        if (IsRegistered() && !HasSerializableFlags(E_SerializableObjectFlag::CDO))
+        if (IsRegistered())
         {
             _Enable_Impl();
         }
@@ -80,7 +116,7 @@ namespace Abytek
             return;
         }
         _IsEnabled = false;
-        if (IsRegistered() && !HasSerializableFlags(E_SerializableObjectFlag::CDO))
+        if (IsRegistered())
         {
             _Disable_Impl();
         }
@@ -93,5 +129,23 @@ namespace Abytek
     void A_PrimitiveComponent::_Disable_Impl()
     {
         OnDisable();
+    }
+
+    void A_PrimitiveComponent::OnTransformChanged()
+    {
+        if (!CreatedRenderState())
+        {
+            return;
+        }
+        auto WorldTransformMatrix = _SceneComponent->GetWorldTransformMatrix();
+        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
+            [
+                CachedRenderProxy = GetRenderProxy().StaticCast<A_PrimitiveComponentRenderProxy>(),
+                CachedWorldTransformMatrix = WorldTransformMatrix
+            ]
+            {
+                CachedRenderProxy->_WorldTransformMatrix = CachedWorldTransformMatrix;
+            }
+        );
     }
 }

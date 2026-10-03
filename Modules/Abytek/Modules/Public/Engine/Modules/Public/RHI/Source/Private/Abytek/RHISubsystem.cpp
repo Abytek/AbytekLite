@@ -1,6 +1,7 @@
 #include "Abytek/RHISubsystem.hpp"
 #include "Abytek/RHISubsystemProxy.hpp"
 #include "Abytek/RHIDeviceManager.hpp"
+#include "Abytek/RHIContext.hpp"
 #include "Abytek/RHIBindGroup.hpp"
 #include "Abytek/RHIBindGroupProxy.hpp"
 #include "Abytek/RHIBindGroupTemplateRuntime.hpp"
@@ -50,6 +51,8 @@
 #include "Abytek/RHIResourceSyncPass.hpp"
 #include "Abytek/RHIResourceSyncPassProxy.hpp"
 #include "Abytek/RHITemplateSerializer.hpp"
+#include "Abytek/RHIBufferInlineAllocator.hpp"
+#include "Abytek/RHIIndirectArgumentAllocator.hpp"
 
 
 namespace Abytek
@@ -111,7 +114,11 @@ namespace Abytek
         A_RHISubmissionQueue,
         A_RHIViewport,
         A_RHIViewportProxy,
-        A_RHIWorkGraphPass
+        A_RHIWorkGraphPass,
+        F_RHIBufferInlineAllocator,
+        F_RHIBufferInlineAllocatorPage,
+        F_RHIIndirectArgumentAllocator,
+        F_RHIIndirectArgumentAllocatorPage
     >
     {
     };
@@ -187,6 +194,14 @@ namespace Abytek
                                     + ToText(H_Frame::GetIndex(E_FrameParamType::RENDER))
                                     + ABYTEK_TEXT(")") 
                                 );
+#endif
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
+                                RHIProcess->SetCaptureEventState( 
+                                    F_RHICaptureEventState::Make(
+                                        RHIProcess->GetDebugName(),
+                                        F_Vector3_F32(0.96f, 0.49f, 0.66f) 
+                                    )
+                                );   
 #endif
                                 
                                 _MainRHIProcess_Render = RHIProcess;

@@ -21,5 +21,9 @@ namespace Abytek
         TS<A_RenderViewFamily> CreateViewFamily() override;
         TS<A_RenderView> CreateView() override;
         TS<A_Renderer> CreateRenderer() override;
+        
+    public:
+        TS<A_RenderPrimitiveProcessor_Simple> CreatePrimitiveProcessor_Simple() override;
+        TS<A_RenderPrimitiveSet_Simple> CreatePrimitiveSet_Simple() override;
     };
 }

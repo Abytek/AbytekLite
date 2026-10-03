@@ -56,6 +56,16 @@ namespace Abytek
         static F_Name GetCookTaskTag();
         
     public:
+        static F_Name GetInitUpdateFunctionName();
+        static F_Name GetStartupUpdateFunctionName();
+        static F_Name GetShutdownUpdateFunctionName();
+        static F_Name GetReleaseUpdateFunctionName();
+        
+    public:
+        static void GlobalInit();
+        static void GlobalRelease();
+        
+    public:
         static TW<F_World> _Main;
         static ABYTEK_FORCE_INLINE const auto& GetMain() noexcept
         {
@@ -63,7 +73,7 @@ namespace Abytek
         }
         
     public:
-        static TS<F_World> Create(const F_WorldConfig& Config);
+        static TS<F_World> Create(const F_WorldConfig& Config, TF_Function<void(const TS<F_World>& World)>&& Callback = {});
 
     private:
         E_WorldFlag _Flags = E_WorldFlag::NONE;
@@ -75,12 +85,16 @@ namespace Abytek
         
         TU<F_WorldSubsystemContainer> _SubsystemContainer;
         
+        TF_Vector<TF_ReflectionTypeHandle<A_SerializableObject>> _CDOTypes;
+        
         TF_Set<TS<F_Level>> _PersistentLevels;
         B8 _CanModifyPersistentLevels = false;
         TF_Set<TS<F_Level>> _Levels;
         
         TS<F_WorldBusiness> _PersistentBusiness;
         TS<F_WorldBusiness> _SessionBusiness;
+        
+        TF_Queue<TF_Function<void(const TS<F_World>& World)>> _StartCallbacks;
         
         B8 _RequestedToStop = false;
         TF_Queue<TF_Function<void()>> _StopCallbacks;
@@ -124,6 +138,11 @@ namespace Abytek
             return _SubsystemContainer.Weak();
         }
         
+        ABYTEK_FORCE_INLINE const auto& GetCDOTypes() const noexcept
+        {
+            return _CDOTypes;
+        }
+        
         ABYTEK_FORCE_INLINE const auto& GetPersistentLevels() const noexcept
         {
             return _PersistentLevels;
@@ -155,8 +174,8 @@ namespace Abytek
         void OnUnload() override;
         
     public:
-        void _ImmmediateStart(const F_WorldConfig& Config);
-        void _ImmediateStop();
+        void _PrepareStart(const F_WorldConfig& Config);
+        void _PrepareStop();
         
     public:
         void Stop(TF_Function<void()>&& Callback = {});

@@ -1,5 +1,7 @@
 module Common;
 
+__exported import Abytek.Renderer.ECMSMeshData;
+
 namespace Abytek
 {
     public typealias F_RenderGeometryAddress = uint2;
@@ -41,6 +43,33 @@ namespace Abytek
     public struct F_StaticMeshGeometryUniformData_Simple
     {
         public F_RenderGeometryAllocationStructure_Simple GeometryAllocationStructure;
+        public F_RenderGeometryAddress GeometryAddress;
+        public uint Index = 0;
+        private uint ___Padding___;
+    };
+
+    public struct F_RenderGeometryAllocationStructure_ECMS
+    {
+        public uint NumMeshlets = 0;
+        public uint Meshlets_LocalOffsetInBytes = 0;
+
+        public uint NumTriangles = 0;
+        public uint Triangles_LocalOffsetInBytes = 0;
+
+        public uint NumVertexIndices = 0;
+        public uint VertexIndices_LocalOffsetInBytes = 0;
+
+        public uint NumVertices = 0;
+        public uint Positions_LocalOffsetInBytes = 0;
+        public uint Normals_LocalOffsetInBytes = 0;
+        public uint TangentsAndSigns_LocalOffsetInBytes = 0;
+        public uint UVs_LocalOffsetInBytes = 0;
+
+        private uint ___Padding___ = 0;
+    };
+    public struct F_StaticMeshGeometryUniformData_ECMS
+    {
+        public F_RenderGeometryAllocationStructure_ECMS GeometryAllocationStructure;
         public F_RenderGeometryAddress GeometryAddress;
         public uint Index = 0;
         private uint ___Padding___;

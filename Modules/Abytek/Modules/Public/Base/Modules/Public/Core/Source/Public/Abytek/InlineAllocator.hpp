@@ -179,51 +179,44 @@ namespace Abytek
             ResetUnsafe();
         }
         
-        TF_Span<U8> CacheData(const TF_Span<U8>& Data)
+        template<typename __F>
+        TF_Span<std::remove_const_t<__F>> CacheData(const TF_Span<__F>& Data)
         {
             TF_ScopeLock<F_SpinLock> _(Lock);
         
-            TF_InlineAllocator<U8> Allocator(&Heap);
-            TF_Span<U8> Result = {
-                Allocator.Allocate(Data.size()),
-                Data.size()
-            };
+            TF_InlineAllocator<std::remove_const_t<__F>> Allocator(&Heap);
+            auto CachePtr = Allocator.Allocate(Data.size());
+            TF_Span<std::remove_const_t<__F>> Result(
+                CachePtr,
+                CachePtr + Data.size()
+            );
             memcpy(
                 Result.data(),
                 Data.data(),
-                Data.size()
+                Data.size() * sizeof(__F)
             );
             return Result;
         }
-        template<typename __F>
-        TF_Span<U8> CacheData(const TF_Vector<__F>& Data)
-        {
-            return CacheData(
-                TF_Span<U8>(
-                    (U8*)Data.data(), 
-                    sizeof(__F) * Data.size()
-                )
-            );
-        }
         template<typename __F, auto __N>
-        TF_Span<U8> CacheData(const __F (&Data)[__N])
+        TF_Span<std::remove_const_t<__F>> CacheData(const __F (&Data)[__N])
         {
             return CacheData(
-                TF_Span<U8>(
-                    (U8*)Data, 
-                    sizeof(Data)
+                TF_Span<__F>(
+                    Data, 
+                    Data + __N
                 )
             );
         }
         template<typename __F>
-        TF_Span<U8> CacheData(const __F& Data)
+        std::remove_const_t<__F>& CacheData(const __F& Data)
         {
-            return CacheData(
-                TF_Span<U8>(
-                    (U8*)&Data, 
-                    sizeof(__F)
+            auto Span = CacheData(
+                TF_Span<__F>(
+                    &Data, 
+                    &Data + 1
                 )
             );
+            return *Span.data();
         }
         
         void* AllocateData(Sz Size)
@@ -305,17 +298,18 @@ namespace Abytek
             }
         }
         
-        TF_Span<U8> CacheData(const TF_Span<U8>& Data)
+        template<typename __F>
+        TF_Span<std::remove_const_t<__F>> CacheData(const TF_Span<__F>& Data)
+        {
+            return Arenas[WriteArenaIndex].CacheData(Data);
+        }
+        template<typename __F, auto __N>
+        TF_Span<std::remove_const_t<__F>> CacheData(const __F (&Data)[__N])
         {
             return Arenas[WriteArenaIndex].CacheData(Data);
         }
         template<typename __F>
-        TF_Span<U8> CacheData(const TF_Vector<__F>& Data)
-        {
-            return Arenas[WriteArenaIndex].CacheData(Data);
-        }
-        template<typename __F>
-        TF_Span<U8> CacheData(const __F& Data)
+        std::remove_const_t<__F>& CacheData(const __F& Data)
         {
             return Arenas[WriteArenaIndex].CacheData(Data);
         }

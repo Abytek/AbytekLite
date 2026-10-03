@@ -1,5 +1,5 @@
 ﻿#include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveManager.hpp"
-#include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveSet.hpp"
+#include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveProcessor.hpp"
 
 
 namespace Abytek
@@ -12,28 +12,14 @@ namespace Abytek
         InitMinimal(SubmissionItemContainer);
         
         _Scene = BuildParams.Scene;
-        
-        _GPUData = F_GPUData::Create(GetWorldRenderResource());
-#ifdef ABYTEK_DEBUG_INFO
-        _GPUData->SetDebugName(
-            *GetDebugName()
-            + ABYTEK_TEXT(".GPUData")
-        );
-#endif
-        RenderPrimitive::F_Data::Init(
-            SubmissionItemContainer,
-            _GPUData,
-            _Scene
-        );
-        
-        _ComponentIndex_Transform = _GPUData->GetComponentTypeIndex<RenderPrimitive::F_Component_Transform>();
-        _ComponentIndex_InverseTransposeTransform = _GPUData->GetComponentTypeIndex<RenderPrimitive::F_Component_InverseTransposeTransform>();
-        _ComponentIndex_MeshHandle = _GPUData->GetComponentTypeIndex<RenderPrimitive::F_Component_MeshHandle>();
     }
     void F_RenderPrimitiveManager::Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        _GPUData->Release(SubmissionItemContainer);
-        _GPUData = {};
+        for (const auto& Proccessor : _Processors)
+        {
+            Proccessor->Release(SubmissionItemContainer);
+        }
+        _Processors = {};
         
         _Scene = {};
         
@@ -42,18 +28,24 @@ namespace Abytek
 
     void F_RenderPrimitiveManager::BeginUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        _GPUData->BeginUpdate(SubmissionItemContainer);
+        for (const auto& Proccessor : _Processors)
+        {
+            Proccessor->BeginUpdate(SubmissionItemContainer);
+        }
     }
     void F_RenderPrimitiveManager::EndUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        _GPUData->EndUpdate(SubmissionItemContainer);
+        for (const auto& Proccessor : _Processors)
+        {
+            Proccessor->EndUpdate(SubmissionItemContainer);
+        }
     }
-    void F_RenderPrimitiveManager::BeginPostUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
+    void F_RenderPrimitiveManager::FinalizeFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        _GPUData->BeginPostUpdate(SubmissionItemContainer);
-    }
-    void F_RenderPrimitiveManager::EndPostUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
-    {
-        _GPUData->EndPostUpdate(SubmissionItemContainer);
+        for (auto It = _Processors.rbegin(); It != _Processors.rend(); ++It)
+        {
+            const auto& Proccessor = *It;
+            Proccessor->FinalizeFrame(SubmissionItemContainer);
+        }
     }
 }

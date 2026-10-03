@@ -22,6 +22,28 @@ namespace Abytek
     {
         A_DirectX12RHIPassExtension::AppendSubresourceBindings(SubresourceBindingSet);
         A_DirectX12RHIHasGeneralPipeline::AppendSubresourceBindings(SubresourceBindingSet);
+        
+        if (const auto& Indirect = GetIndirect())
+        {
+            if (const auto& Buffer = Indirect->ArgumentBuffer)
+            {
+                SubresourceBindingSet.push_back(
+                    F_DirectX12RHISubresourceBinding::MakeCore(
+                        F_DirectX12RHISubresourceReference::Make(Buffer.Weak(), 0),
+                        F_RHIResourceAccess::MakeIndirectArgument()
+                    )  
+                );
+            }
+            if (const auto& Buffer = Indirect->CountBuffer)
+            {
+                SubresourceBindingSet.push_back(
+                    F_DirectX12RHISubresourceBinding::MakeCore(
+                        F_DirectX12RHISubresourceReference::Make(Buffer.Weak(), 0),
+                        F_RHIResourceAccess::MakeIndirectArgument()
+                    )  
+                );
+            }
+        }
     }
 }
 #endif

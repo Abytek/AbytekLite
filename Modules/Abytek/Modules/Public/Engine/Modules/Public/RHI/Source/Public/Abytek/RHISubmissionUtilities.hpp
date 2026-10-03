@@ -26,9 +26,9 @@ namespace Abytek
         static void CopyBuffer(
             const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
             const TS_Valid<A_RHIResource>& DstBuffer,
-            U64 SrcOffsetInBytes,
-            const TS_Valid<A_RHIResource>& SrcBuffer,
             U64 DstOffsetInBytes,
+            const TS_Valid<A_RHIResource>& SrcBuffer,
+            U64 SrcOffsetInBytes,
             U64 SizeInBytes,
             const F_DebugName& DebugName = {}
         );

@@ -36,7 +36,19 @@ namespace Abytek
         const auto& Access = GetAccess();
         Result.Type = DirectX12SharedAPIWrapper::Conversions::RHIResourceGPUAccessToDescriptorType(Access.GPU);
         
-        DXGI_FORMAT DXGIFormat = RHIFormatToD3DFormat(GetFormat());
+        auto Format = GetFormat();
+        if (Format == E_RHIFormat::NONE)
+        {
+            Format = GetResourceProxy()->GetFormat();
+        }
+        
+        // if DSV, must convert format to depth format
+        if (FlagHas(Access.GPU, E_RHIResourceGPUAccess::DSV))
+        {
+            Format = RHIFormatToDepth(Format);
+        }
+        
+        DXGI_FORMAT DXGIFormat = RHIFormatToD3DFormat(Format);
         
         auto CastedResourceProxy = GetResourceProxy().FastCast<F_DirectX12RHIResourceProxy>();
         auto D3D12Resource = CastedResourceProxy->GetD3D12Resource();
@@ -47,7 +59,15 @@ namespace Abytek
         if (FlagHas(Archetype, E_RHIResourceViewArchetype::BUFFER_VIEW))
         {
             const auto& BufferAspect = GetResourceProxy()->GetBufferAspect();
-            const auto& BufferViewAspect = GetBufferViewAspect();
+            auto BufferViewAspect = GetBufferViewAspect();
+            if (BufferViewAspect.SizeInBytes == 0)
+            {
+                BufferViewAspect.SizeInBytes = BufferAspect.SizeInBytes;
+            }
+            if (BufferViewAspect.StrideInBytes == 0)
+            {
+                BufferViewAspect.StrideInBytes = BufferAspect.StrideInBytes;
+            }
             
             switch (Result.Type)
             {
@@ -62,7 +82,6 @@ namespace Abytek
                     if (DXGIFormat == DXGI_FORMAT_UNKNOWN)
                     {
                         ABYTEK_ENGINE_RHI_ASSERT(BufferViewAspect.SizeInBytes) << "SRV buffer size in bytes cannot be zero";
-                        ABYTEK_ENGINE_RHI_ASSERT(BufferViewAspect.StrideInBytes) << "SRV buffer stride in bytes cannot be zero";
                     
                         // Structured or raw buffer
                         U32 StrideInBytes = BufferViewAspect.StrideInBytes;
@@ -84,7 +103,6 @@ namespace Abytek
                     }
                     else
                     {
-                        ABYTEK_ENGINE_RHI_ASSERT(BufferViewAspect.SizeInBytes) << "SRV buffer size in bytes cannot be zero";
                         ABYTEK_ENGINE_RHI_ASSERT(BufferViewAspect.StrideInBytes) << "SRV buffer stride in bytes cannot be zero";
                     
                         // Typed buffer
@@ -108,7 +126,6 @@ namespace Abytek
                     if (DXGIFormat == DXGI_FORMAT_UNKNOWN)
                     {
                         ABYTEK_ENGINE_RHI_ASSERT(BufferViewAspect.SizeInBytes) << "UAV buffer size in bytes cannot be zero";
-                        ABYTEK_ENGINE_RHI_ASSERT(BufferViewAspect.StrideInBytes) << "UAV buffer stride in bytes cannot be zero";
                     
                         // Structured or raw buffer
                         UAVDesc.Buffer.CounterOffsetInBytes = 0;
@@ -131,7 +148,6 @@ namespace Abytek
                     }
                     else
                     {
-                        ABYTEK_ENGINE_RHI_ASSERT(BufferViewAspect.SizeInBytes) << "UAV buffer size in bytes cannot be zero";
                         ABYTEK_ENGINE_RHI_ASSERT(BufferViewAspect.StrideInBytes) << "UAV buffer stride in bytes cannot be zero";
                     
                         // Typed buffer

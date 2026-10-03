@@ -35,13 +35,12 @@ namespace Abytek
         );
     }
 
-    void F_RendererManager::OnStartup()
+    void F_RendererManager::OnInit()
     {
         {
             auto RenderPathType = _ConsoleVariable_RenderPathType->GetValue();
             ABYTEK_ENGINE_NFC_ASSERT(RenderPathType) << "Invalid render path type";
-            
-            _RenderPath = H_WorldContext::CreateObject<A_RenderPath>(
+            _RenderPath = H_WorldContext::CreateObjectDelayLoading<A_RenderPath>(
                 GetWorld(),
                 {},
                 {},
@@ -50,7 +49,13 @@ namespace Abytek
         }
         SetupRenderable();
     }
+    void F_RendererManager::OnStartup()
+    {
+    }
     void F_RendererManager::OnShutdown()
+    {
+    }
+    void F_RendererManager::OnRelease()
     {
         CleanUpRenderable();
         _RenderPath = {};

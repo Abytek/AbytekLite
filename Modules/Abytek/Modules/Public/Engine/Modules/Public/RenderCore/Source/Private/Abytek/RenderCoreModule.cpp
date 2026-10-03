@@ -11,6 +11,7 @@
 #include "Abytek/Development/RenderCore/RenderCoreCookSetting.hpp"
 #include "Abytek/EngineRuntime.hpp"
 #include "Abytek/DevelopmentData.hpp"
+#include "Abytek/RenderCoreExtensions.hpp"
 
 
 namespace Abytek
@@ -49,6 +50,10 @@ namespace Abytek
         RegisterStaticType<F_GlobalRenderPack>();
         RegisterStaticType<F_GlobalRenderBinding>();
         RegisterStaticType<F_GlobalRenderPipeline>();
+        RegisterStaticType<RenderCoreExtensions::CopyTexture2D_R32_SRVToUAV::F_Binding>();
+        RegisterStaticType<RenderCoreExtensions::CopyTexture2D_R32_SRVToUAV::F_Pipeline>();
+        RegisterStaticType<RenderCoreExtensions::CopyTexture2D_R32_SRVToDSV::F_Binding>();
+        RegisterStaticType<RenderCoreExtensions::CopyTexture2D_R32_SRVToDSV::F_Pipeline>();
     }
 
     void F_RenderCoreModule::OnInit()

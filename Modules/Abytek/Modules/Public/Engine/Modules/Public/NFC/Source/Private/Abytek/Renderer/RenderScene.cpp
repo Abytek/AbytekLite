@@ -4,9 +4,11 @@
 #include "Abytek/World/WorldContextHelper.hpp"
 #include "Abytek/World/WorldSubsystemContainer.hpp"
 #include "Abytek/Renderer/RendererManager.hpp"
+#include "Abytek/Renderer/RenderObjectFactory.hpp"
 #include "Abytek/Renderer/GPUData/GPUData.hpp"
 #include "Abytek/Renderer/RenderGeometry/RenderGeometryStorage.hpp"
 #include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveManager.hpp"
+#include "Abytek/Renderer/RenderPrimitive/Archetypes/Processor_Simple.hpp"
 
 
 namespace Abytek
@@ -47,6 +49,22 @@ namespace Abytek
                 PrimitiveManagerBuildParams
             );
         }
+        
+        {
+            if (auto Processor = GetRenderObjectFactory()->CreatePrimitiveProcessor_Simple())
+            {
+#ifdef ABYTEK_DEBUG_INFO
+                Processor->SetDebugName(
+                    *GetDebugName()
+                    + ABYTEK_TEXT(".PrimitiveProcessor_Simple")
+                );
+#endif
+                _PrimitiveProcessor_Simple = _PrimitiveManager->AddProcessor(
+                    SubmissionItemContainer,
+                    Processor
+                );
+            }
+        }
     }
     void A_RenderScene::Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
@@ -71,12 +89,10 @@ namespace Abytek
     }
     void A_RenderScene::OnBeginPostUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        _GeometryStorage->BeginPostUpdate(SubmissionItemContainer);
-        _PrimitiveManager->BeginPostUpdate(SubmissionItemContainer);
     }
     void A_RenderScene::OnEndPostUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        _PrimitiveManager->EndPostUpdate(SubmissionItemContainer);
-        _GeometryStorage->EndPostUpdate(SubmissionItemContainer);
+        _PrimitiveManager->FinalizeFrame(SubmissionItemContainer);
+        _GeometryStorage->FinalizeFrame(SubmissionItemContainer);
     }
 }

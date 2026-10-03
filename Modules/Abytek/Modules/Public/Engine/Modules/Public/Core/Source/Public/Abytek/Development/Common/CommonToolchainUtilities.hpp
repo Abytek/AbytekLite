@@ -6,7 +6,7 @@
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
 namespace Abytek
 {
-    enum class E_Platform : U16
+    enum class E_Platform : U8
     {
         NONE = 0x0,
         

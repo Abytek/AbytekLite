@@ -5,6 +5,7 @@
 
 namespace Abytek
 {
+    class A_RenderPrimitiveProcessor_Simple;
     class A_WorldContext;
     class F_RenderGeometryStorage;
     class F_RenderPrimitiveManager;
@@ -22,6 +23,8 @@ namespace Abytek
         TS<F_RenderGeometryStorage> _GeometryStorage;
         TS<F_RenderPrimitiveManager> _PrimitiveManager;
         
+        TW<A_RenderPrimitiveProcessor_Simple> _PrimitiveProcessor_Simple;
+        
     public:
         ABYTEK_FORCE_INLINE const auto& GetGeometryStorage() const noexcept
         {
@@ -30,6 +33,11 @@ namespace Abytek
         ABYTEK_FORCE_INLINE const auto& GetPrimitiveManager() const noexcept
         {
             return _PrimitiveManager;
+        }
+        
+        ABYTEK_FORCE_INLINE const auto& GetPrimitiveProcessor_Simple() const noexcept
+        {
+            return _PrimitiveProcessor_Simple;
         }
         
     public:

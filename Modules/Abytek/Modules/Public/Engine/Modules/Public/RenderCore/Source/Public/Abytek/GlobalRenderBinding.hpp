@@ -56,8 +56,9 @@ namespace Abytek
                 const TS<F_RenderPack>& Pack,  
                 const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
                 const TW_Valid<A_RenderPackTemplateMap>& TemplateMap,
-                TF_Vector<TF_Function<F_FeedbackStatus(TF_Vector<TS<A_RHITemplate>>& OutTemplates)>>& OutCommands, 
-                TF_Set<F_RHITemplateHashCode>& OutTemplateHashCodesToCompile
+                TF_Vector<TF_Function<void(TF_Vector<TS<A_RHITemplate>>& OutTemplates)>>& OutCommands, 
+                TF_Set<F_RHITemplateHashCode>& OutTemplateHashCodesToCompile,
+                TF_Set<F_RHITemplateHashCode>& OutTemplateHashCodes
             )
         >;
         static F_Name GetMetadataElementName_BuildCommandsAndCompilationSet()
@@ -270,8 +271,9 @@ namespace Abytek
                     const Abytek::TS<Abytek::F_RenderPack>& Pack, \
                     const Abytek::TW_Valid<Abytek::F_SerializableEnvironment>& SerializableEnvironment, \
                     const Abytek::TW_Valid<Abytek::A_RenderPackTemplateMap>& TemplateMap, \
-                    Abytek::TF_Vector<Abytek::TF_Function<Abytek::F_FeedbackStatus(Abytek::TF_Vector<Abytek::TS<Abytek::A_RHITemplate>>& OutTemplates)>>& OutCommands, \
-                    Abytek::TF_Set<Abytek::F_RHITemplateHashCode>& OutTemplateHashCodesToCompile \
+                    Abytek::TF_Vector<Abytek::TF_Function<void(Abytek::TF_Vector<Abytek::TS<Abytek::A_RHITemplate>>& OutTemplates)>>& OutCommands, \
+                    Abytek::TF_Set<Abytek::F_RHITemplateHashCode>& OutTemplateHashCodesToCompile, \
+                    Abytek::TF_Set<Abytek::F_RHITemplateHashCode>& OutTemplateHashCodes \
                 ) \
                 { \
                     auto Registry = Abytek::F_RenderRegistry::GetSerializableEnvironmentMetadataElement_Registry(SerializableEnvironment); \
@@ -285,6 +287,7 @@ namespace Abytek
                     for (const auto& Config : Configs) \
                     { \
                         B8 ShouldCompile = Abytek::Internal::GlobalRenderBinding::EnableInternalDebugger; \
+                        OutTemplateHashCodes.insert(*Config.CustomHashCode); \
                         if (TemplateMap->HasTemplate(*Config.CustomHashCode)) \
                         { \
                             Abytek::TW<Abytek::A_RHIBindGroupTemplate> Template; \
@@ -314,11 +317,11 @@ namespace Abytek
                             continue; \
                         } \
                         OutCommands.push_back( \
-                            [=](Abytek::TF_Vector<Abytek::TS<Abytek::A_RHITemplate>>& OutTemplates) -> Abytek::F_FeedbackStatus \
+                            [=](Abytek::TF_Vector<Abytek::TS<Abytek::A_RHITemplate>>& OutTemplates) \
                             { \
                                 ABYTEK_LOG_INFO() << "Compiling global render binding: " << Abytek::TypeFullName<Name>() << ", permutation hash code: " << Config.PermutationHashCode << ", template hash code: " << *Config.CustomHashCode; \
                                 Abytek::TS<Abytek::A_RHIBindGroupTemplate> BindGroupTemplate; \
-                                ABYTEK_FEEDBACK_STATUS_CHECK( \
+                                ABYTEK_FEEDBACK_STATUS_CHECK_HARD( \
                                     Compiler->CompileBindGroupTemplate( \
                                         Config, \
                                         TemplateDatabase.Weak(), \
@@ -327,7 +330,6 @@ namespace Abytek
                                 ); \
                                 OutTemplates.push_back(BindGroupTemplate); \
                                 ABYTEK_LOG_INFO() << "Compiled global render binding: " << Abytek::TypeFullName<Name>() << ", permutation hash code: " << Config.PermutationHashCode << ", template hash code: " << *Config.CustomHashCode; \
-                                return Abytek::F_FeedbackStatus::MakeSucceeded(); \
                             } \
                         ); \
                     } \
@@ -339,8 +341,9 @@ namespace Abytek
                     const Abytek::TS<Abytek::F_RenderPack>& Pack, \
                     const Abytek::TW_Valid<Abytek::F_SerializableEnvironment>& SerializableEnvironment, \
                     const Abytek::TW_Valid<Abytek::A_RenderPackTemplateMap>& TemplateMap, \
-                    Abytek::TF_Vector<Abytek::TF_Function<Abytek::F_FeedbackStatus(Abytek::TF_Vector<Abytek::TS<Abytek::A_RHITemplate>>& OutTemplates)>>& OutCommands, \
-                    Abytek::TF_Set<Abytek::F_RHITemplateHashCode>& OutTemplateHashCodesToCompile \
+                    Abytek::TF_Vector<Abytek::TF_Function<void(Abytek::TF_Vector<Abytek::TS<Abytek::A_RHITemplate>>& OutTemplates)>>& OutCommands, \
+                    Abytek::TF_Set<Abytek::F_RHITemplateHashCode>& OutTemplateHashCodesToCompile, \
+                    Abytek::TF_Set<Abytek::F_RHITemplateHashCode>& OutTemplateHashCodes \
                 ) \
                 { \
                     return Abytek::F_FeedbackStatus::MakeSucceeded(); \

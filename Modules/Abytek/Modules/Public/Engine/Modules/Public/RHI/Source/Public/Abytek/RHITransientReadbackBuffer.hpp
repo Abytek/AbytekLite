@@ -7,9 +7,9 @@
 
 namespace Abytek
 {
-    class F_RHITransientReadbackBufferPage_V2;
+    class F_RHITransientReadbackBufferPage;
     
-    struct F_RHITransientReadbackBufferRangeLocal_V2
+    struct F_RHITransientReadbackBufferRangeLocal
     {
         Sz BeginOffsetInBytes = 0;
         Sz EndOffsetInBytes = 0;
@@ -28,25 +28,25 @@ namespace Abytek
         }
     };
     
-    struct F_RHITransientReadbackBufferRange_V2 : F_RHITransientReadbackBufferRangeLocal_V2
+    struct F_RHITransientReadbackBufferRange : F_RHITransientReadbackBufferRangeLocal
     {
-        TW<F_RHITransientReadbackBufferPage_V2> Page;
+        TW<F_RHITransientReadbackBufferPage> Page;
         
         TS_Valid<A_RHIResource> GetBuffer() const;
         void Readback(F_RHIReadbackBufferCallback&& Callback, Sz ManualSizeInBytes = 0, Sz AdditionalOffsetInBytes = 0) const;
     };
     
-    struct F_RHITransientReadbackBufferCandidate_V2 : F_RHITransientReadbackBufferRangeLocal_V2
+    struct F_RHITransientReadbackBufferCandidate : F_RHITransientReadbackBufferRangeLocal
     {
         F_RHIReadbackBufferCallback Callback;
     };
     
-    struct F_RHITransientReadbackBufferPageBuildParams_V2 : F_RHIContextChildBuildParams
+    struct F_RHITransientReadbackBufferPageBuildParams : F_RHIContextChildBuildParams
     {
         U32 Index = 0;
         Sz SizeInBytes = 0;
     };
-    class ABYTEK_ENGINE_RHI_API F_RHITransientReadbackBufferPage_V2 : public A_RHIContextChild
+    class ABYTEK_ENGINE_RHI_API F_RHITransientReadbackBufferPage : public A_RHIContextChild
     {
     private:
         U32 _Index = 0;
@@ -55,7 +55,7 @@ namespace Abytek
         TS<A_RHIResource> _Buffer;
         
     public:
-        TF_ConcurrentQueue<F_RHITransientReadbackBufferCandidate_V2> Queue;
+        TF_ConcurrentQueue<F_RHITransientReadbackBufferCandidate> Queue;
         
     public:
         ABYTEK_FORCE_INLINE auto GetIndex() const noexcept
@@ -76,21 +76,26 @@ namespace Abytek
         }
         
     public:
-        ABYTEK_RA_DECLARE_OBJECT_CREATABLE(F_RHITransientReadbackBufferPage_V2);
-        virtual void Build(const F_RHITransientReadbackBufferPageBuildParams_V2& BuildParams);
+        ABYTEK_RA_DECLARE_OBJECT_CREATABLE(F_RHITransientReadbackBufferPage);
+        virtual void Build(const F_RHITransientReadbackBufferPageBuildParams& BuildParams);
         void Release() override;
         
     public:
-        TF_Optional<F_RHITransientReadbackBufferRange_V2> Allocate(Sz SizeInBytes);
+        TF_Optional<F_RHITransientReadbackBufferRange> Allocate(Sz SizeInBytes, Sz AlignmentInBytes);
+        
+    public:
+#ifdef ABYTEK_DEBUG_INFO
+        void SetDebugName(const F_DebugName& Value) noexcept override;
+#endif
     };
     
-    struct F_RHITransientReadbackBufferManagerBuildParams_V2 : F_RHIContextChildBuildParams
+    struct F_RHITransientReadbackBufferManagerBuildParams : F_RHIContextChildBuildParams
     {
         Sz MinPageSizeInBytes = Sz(512) * Sz(1024);
         Sz MaxPageSizeInBytes = Sz(256) * Sz(1024) * Sz(1024);
     };
     
-    class ABYTEK_ENGINE_RHI_API F_RHITransientReadbackBufferManager_V2 : public A_RHIContextChild
+    class ABYTEK_ENGINE_RHI_API F_RHITransientReadbackBufferManager : public A_RHIContextChild
     {
     private:
         Sz _MinPageSizeInBytes = 0;
@@ -100,7 +105,7 @@ namespace Abytek
     public:
         struct F_SectionData
         {
-            TF_Vector<TS<F_RHITransientReadbackBufferPage_V2>> Pages;
+            TF_Vector<TS<F_RHITransientReadbackBufferPage>> Pages;
         } SectionData;
         
     public:
@@ -114,15 +119,15 @@ namespace Abytek
         }
         
     public:
-        ABYTEK_RA_DECLARE_OBJECT_CREATABLE(F_RHITransientReadbackBufferManager_V2);
-        virtual void Build(const F_RHITransientReadbackBufferManagerBuildParams_V2& BuildParams);
+        ABYTEK_RA_DECLARE_OBJECT_CREATABLE(F_RHITransientReadbackBufferManager);
+        virtual void Build(const F_RHITransientReadbackBufferManagerBuildParams& BuildParams);
         void Release() override;
         
     public:
         void ReleasePages();
         
     public:
-        F_RHITransientReadbackBufferRange_V2 Allocate(Sz SizeInBytes);
+        F_RHITransientReadbackBufferRange Allocate(Sz SizeInBytes, Sz AlignmentInBytes = 256);
         void AddNewPage(Sz SizeInBytes);
     };
 }

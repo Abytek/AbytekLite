@@ -78,22 +78,21 @@ namespace Abytek
     public:
         void BeginUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
         void EndUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
-        void BeginPostUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
-        void EndPostUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
+        void FinalizeFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
         
     private:
         TF_ConcurrentQueue<F_GPUDataInstanceAllocation> _DeallocationQueue;
         void _FlushDeallocationQueue(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
         
     public:
-        TF_Optional<F_GPUDataInstanceAllocation> Allocate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, U32 NumInstances);
+        F_GPUDataInstanceAllocation Allocate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, U32 NumInstances);
         TS<F_GPUDataPage> AddNewPage(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, U32 SizeInInstances);
         
     private:
         void _RecreateBindGroupsIfNeeded(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
         
     public:
-        TF_Optional<F_GPUDataInstanceAllocation> New(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, U32 NumInstances = 1);
+        F_GPUDataInstanceAllocation New(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, U32 NumInstances = 1);
         void Delete(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, const F_GPUDataInstanceAllocation& Allocation);
         
     public:

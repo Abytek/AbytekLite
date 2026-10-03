@@ -3,7 +3,6 @@
 #include "Abytek/RHIClearUAVUIntPass.hpp"
 #include "Abytek/RHIContext.hpp"
 #include "Abytek/RHIDevice.hpp"
-#include "Abytek/RHITransientUploadBufferManager.hpp"
 #include "Abytek/RHIPipelineStateTemplateRuntime.hpp"
 #include "Abytek/RHIViewportPresentation.hpp"
 

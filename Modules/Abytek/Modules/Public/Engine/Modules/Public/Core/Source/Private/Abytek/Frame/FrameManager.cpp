@@ -125,9 +125,9 @@ namespace Abytek
                 TargetWorker = F_TaskWorker::GetCurrent();
             }
         }
-        H_TaskUtilities::Schedule(
-            TargetWorker,
-            [
+        {
+            F_TaskInstanceSet TaskInstanceSet;
+            TaskInstanceSet.Functor = [
                 this, 
                 Frame, 
                 NumParamTypesOnMain, 
@@ -141,7 +141,7 @@ namespace Abytek
                     static_cast<F_FrameParamTypeIndex>(NumParamTypesOnMain), 
                     static_cast<F_FrameParamTypeIndex>(NumParamTypesForParallelUpdate)
                 );
-                
+            
                 //
                 _LateProcessingQueue.Push(
                     [
@@ -160,10 +160,12 @@ namespace Abytek
                         );
                     }
                 );
-            },
-            E_TaskPriority::EXTREME,
-            ABYTEK_NAME("FrameManager::ParallelUpdate")
-        );
+            };
+            TaskInstanceSet.Priority = E_TaskPriority::EXTREME;
+            TaskInstanceSet.Name = ABYTEK_NAME("FrameManager::ParallelUpdate");
+            TaskInstanceSet.StackSize = E_TaskStackSize::EXTREME;
+            H_TaskUtilities::Schedule(TargetWorker, ABYTEK_MOVE(TaskInstanceSet));
+        }
         
         // For the case of late flushing (typically used for E_FramesInFlightMode::NONE)
         if (auto LateFlushMode = Frame->GetLateFlushMode())

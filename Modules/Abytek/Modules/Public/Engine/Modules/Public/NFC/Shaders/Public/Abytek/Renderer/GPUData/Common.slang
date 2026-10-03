@@ -3,6 +3,7 @@ module Common;
 namespace Abytek
 {
     public typealias F_GPUDataInstanceAddress = uint2;
+    public static F_GPUDataInstanceAddress INVALID_GPU_DATA_INSTANCE_ADDRESS = uint2(0xFFFFFFFF, 0xFFFFFFFF);
     public struct H_GPUDataInstanceAddress
     {
         public static void Pack(out F_GPUDataInstanceAddress OutInstanceAddress, uint PageIndex, uint LocalIndex)
@@ -26,4 +27,17 @@ namespace Abytek
             OutLocalIndex = GetLocalIndex(InstanceAddress);
         }
     }
+
+    public struct F_GPUDataInstanceSetHeader
+    {
+        public F_GPUDataInstanceAddress Address;
+        public uint Num = 0;
+        private uint ___Padding___ = 0;
+    }
+
+    public struct F_InstanceSetHeadersUniformData
+    {
+        public uint Num = 0;
+        private uint3 ___Padding___ = 0;
+    };
 }

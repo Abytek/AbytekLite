@@ -16,16 +16,20 @@ namespace Abytek
         
         _GPUData = BuildParams.GPUData; 
         _Num = BuildParams.Num;
-        _GPUData->_RegisterInstanceSet(ABYTEK_WTHIS());
+        
         _Allocation = _GPUData->GetStorage()->New(SubmissionItemContainer, _Num);
+        
+        _GPUData->_RegisterInstanceSet(ABYTEK_WTHIS());
     }
     void F_GPUDataInstanceSet::Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
+        _GPUData->_UnregisterInstanceSet(ABYTEK_WTHIS());
+        
         if (_Allocation)
         {
-            _GPUData->GetStorage()->Delete(SubmissionItemContainer, *_Allocation);
+            _GPUData->GetStorage()->Delete(SubmissionItemContainer, _Allocation);
         }
-        _GPUData->_UnregisterInstanceSet(ABYTEK_WTHIS());
+        
         _Num = 0;
         _GPUData = {};
         
@@ -36,7 +40,6 @@ namespace Abytek
     {
         ABYTEK_ENGINE_NFC_ASSERT(_GPUData->IsUpdatePhase()) << "Cannot update instance sets outside update phase";
         ABYTEK_ENGINE_NFC_ASSERT(_Allocation) << "Cannot upload component on GPU data instance set having invalid allocation";
-        const auto& Allocation = *_Allocation;
         auto Process = H_RHI::GetMainProcess();
         auto ComponentSizeInBytes = _GPUData->GetComponentIndexToSizeInBytes()[ComponentIndex];
         auto ComponentClass = _GPUData->GetComponentIndexToClass()[ComponentIndex];
@@ -55,10 +58,12 @@ namespace Abytek
             break;
         }
         
-        auto CachedData = Process->GetArena()->CacheData({
-            ((const U8*)DataPtr),
-            ((const U8*)DataPtr) + NumUpload * ComponentSizeInBytes,
-        });
+        auto CachedData = Process->GetArena()->CacheData(
+            TF_Span<const U8>(
+                ((const U8*)DataPtr),
+                ((const U8*)DataPtr) + Sz(NumUpload * ComponentSizeInBytes)
+            )
+        );
         for (auto& UploadCandidate : _UploadCandidates)
         {
             if (UploadCandidate.ComponentIndex == ComponentIndex)
@@ -71,10 +76,20 @@ namespace Abytek
         UploadCandidate.ComponentIndex = ComponentIndex;
         UploadCandidate.CachedData = CachedData;
         _UploadCandidates.push_back(UploadCandidate);
+        
+        _MarkDirty();
     }
     void F_GPUDataInstanceSet::UploadComponents(const TW_Valid<F_GPUDataComponentType>& ComponentType, const void* DataPtr)
     {
         UploadComponents(_GPUData->GetComponentTypeIndex(ComponentType), DataPtr);
+    }
+
+    F_GPUDataInstanceSetHeader F_GPUDataInstanceSet::GetHeader() const
+    {
+        F_GPUDataInstanceSetHeader Result;
+        Result.Address = F_GPUDataInstanceAddress::From(_Allocation);
+        Result.Num = _Allocation ? _Num : 0;
+        return Result;
     }
 
     void F_GPUDataInstanceSet::_MarkDirty()

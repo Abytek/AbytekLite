@@ -3,6 +3,7 @@
 #include "Abytek/Base.Serializable.prerequisites.pch.hpp"
 #include "Abytek/Serializable.hpp"
 #include "Abytek/SerializableObjectData.hpp"
+#include "Abytek/SerializableObjectFlag.hpp"
 #include "Abytek/SerializableEnvironment.hpp"
 #include "Abytek/JSON.hpp"
 
@@ -12,21 +13,6 @@ namespace Abytek
     class A_SerializableObject;
     class F_SerializableEnvironment;
     class F_SerializablePackage;
-    
-    enum class E_SerializableObjectFlag : U8
-    {
-        NONE = 0x0,
-        CDO = 0x1,
-        DEFAULT = NONE
-    };
-    ABYTEK_DEFINE_FLAG_OPERATORS(E_SerializableObjectFlag);
-    ABYTEK_ENUM_REFLECTOR_LOCALNS(E_SerializableObjectFlag)
-    {
-        ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::E_SerializableObjectFlag"));
-        ABYTEK_REFLECT_ENUM_VALUE(NONE);
-        ABYTEK_REFLECT_ENUM_VALUE(CDO);
-        ABYTEK_REFLECT_ENUM_VALUE(DEFAULT);
-    }
     
     struct F_SerializableObjectInitParams
     {
@@ -409,17 +395,17 @@ namespace Abytek
         B8 MarkPackageDirty();
         
     public:
-        TS<A_SerializableObject> CreateDefaultSerializableSubobject(
+        TS<A_SerializableObject> CreateSerializableSubobjectDelayLoading(
             const F_Name& SubobjectName, 
             const TF_ReflectionTypeHandle<A_SerializableObject>& Type
         ) const;
         template<typename __F_Object>
-        TS<__F_Object> CreateDefaultSerializableSubobject(
+        TS<__F_Object> CreateSerializableSubobjectDelayLoading(
             const F_Name& SubobjectName, 
             const TF_ReflectionTypeHandle<__F_Object>& Type = TF_ReflectionTypeHandle<__F_Object>(F_ReflectionContext::GetGlobal())
         ) const
         {
-            return CreateDefaultSerializableSubobject(
+            return CreateSerializableSubobjectDelayLoading(
                 SubobjectName,
                 Type.template Cast<A_SerializableObject>()
             ).FastCast<__F_Object>();
@@ -452,14 +438,8 @@ namespace Abytek
             ABYTEK_BASE_SERIALIZABLE_ASSERT(
                 dynamic_cast<A_SerializableObject*>(CastedObjectRawP) == ((A_SerializableObject*)CastedObjectRawP)
             );
-            if (!CastedObjectRawP->HasSerializableFlags(E_SerializableObjectFlag::CDO))
-            {
-                if (CastedObjectRawP->IsLoaded())
-                {
-                    CastedObjectRawP->CallUnload();
-                }
-                ((A_SerializableObject*)CastedObjectRawP)->CleanUp();
-            }
+            ((A_SerializableObject*)CastedObjectRawP)->CleanUp();
+            CastedObjectRawP->CallUnload();
             CastedObjectRawP->GetDefaultObjectReleaser()(ObjectRawP);
         }
     }

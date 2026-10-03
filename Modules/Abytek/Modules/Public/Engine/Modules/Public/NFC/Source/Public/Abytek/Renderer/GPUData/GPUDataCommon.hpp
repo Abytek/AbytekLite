@@ -7,7 +7,7 @@ namespace Abytek
 {
     class F_GPUDataPage;
     
-    struct F_GPUDataInstanceAllocation
+    struct ABYTEK_ENGINE_NFC_API F_GPUDataInstanceAllocation
     {
         TS<F_GPUDataPage> Page;
         U32 BeginLocalIndex = 0;
@@ -27,10 +27,30 @@ namespace Abytek
         }
     };
     
-    struct F_GPUDataInstanceAddress
+    struct ABYTEK_ENGINE_NFC_API F_GPUDataInstanceAddress
     {
-        U32 PageIndex = 0;
-        U32 LocalIndex = 0;
+        U32 PageIndex = ABYTEK_U32_MAX;
+        U32 LocalIndex = ABYTEK_U32_MAX;
+        
+        ABYTEK_FORCE_INLINE B8 IsValid() const noexcept
+        {
+            return (
+                (PageIndex == ABYTEK_U32_MAX)    
+                && (LocalIndex == ABYTEK_U32_MAX)    
+            );
+        }
+        ABYTEK_FORCE_INLINE explicit operator B8 () const noexcept
+        {
+            return IsValid();
+        }
+        
+        static F_GPUDataInstanceAddress From(const F_GPUDataInstanceAllocation& Allocation, U32 OffsetInInstances = 0);
+    };
+    
+    struct ABYTEK_ALIGN(16) ABYTEK_ENGINE_NFC_API F_GPUDataInstanceSetHeader
+    {
+        F_GPUDataInstanceAddress Address;
+        U32 Num = 0;
     };
     
     namespace GPUData

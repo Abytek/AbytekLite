@@ -40,6 +40,7 @@ namespace Abytek
         
     private:
         F_RenderCoreRHIConfig _RHIConfig;
+        B8 _DebugGeneratedShaders = false;
         TF_Vector<TS<F_RenderRegistry>> _Dependencies;
         
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
@@ -55,6 +56,10 @@ namespace Abytek
         ABYTEK_FORCE_INLINE const auto& GetRHIConfig() const noexcept
         {
             return _RHIConfig;
+        }
+        ABYTEK_FORCE_INLINE auto GetDebugGeneratedShaders() const noexcept
+        {
+            return _DebugGeneratedShaders;
         }
         ABYTEK_FORCE_INLINE const auto& GetDependencies() const noexcept
         {

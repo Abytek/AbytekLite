@@ -72,7 +72,8 @@ namespace Abytek
     {
         ABYTEK_RHI_CAPTURE_EVENT_SCOPE(
             SubmissionItemContainer,  
-            ABYTEK_TEXT("Abytek::F_CameraComponentRenderProxy::Draw(") + *GetDebugName() + ABYTEK_TEXT(")")
+            ABYTEK_TEXT("Abytek::F_CameraComponentRenderProxy::Draw(") + *GetDebugName() + ABYTEK_TEXT(")"),
+            F_Vector3_F32(0.8f, 0.4f, 1.0f)
         );
         OnDraw_RenderTask(SubmissionItemContainer);
     }

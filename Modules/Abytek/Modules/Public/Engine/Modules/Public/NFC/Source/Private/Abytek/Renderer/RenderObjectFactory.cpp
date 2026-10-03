@@ -10,4 +10,13 @@ namespace Abytek
     A_RenderObjectFactory::~A_RenderObjectFactory()
     {
     }
+
+    TS<A_RenderPrimitiveProcessor_Simple> A_RenderObjectFactory::CreatePrimitiveProcessor_Simple()
+    {
+        return {};
+    }
+    TS<A_RenderPrimitiveSet_Simple> A_RenderObjectFactory::CreatePrimitiveSet_Simple()
+    {
+        return {};
+    }
 }

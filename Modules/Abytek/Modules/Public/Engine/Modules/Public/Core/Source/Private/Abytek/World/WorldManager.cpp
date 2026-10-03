@@ -83,9 +83,6 @@ namespace Abytek
     }
     void F_WorldManager::OnStartup() 
     {
-    }
-    void F_WorldManager::OnPostStartup() 
-    {
         // Create main world
         {
             F_WorldConfig WorldConfig;
@@ -141,6 +138,9 @@ namespace Abytek
             }
             _MainWorld = F_World::Create(WorldConfig);
         }
+    }
+    void F_WorldManager::OnPostStartup() 
+    {
     }
     void F_WorldManager::OnTick()
     {

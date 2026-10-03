@@ -170,18 +170,27 @@ namespace Abytek
     void F_RenderPack::OnLoad()
     {
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
-        PrepareTemplates(
-            GetEnvironment(), 
-            ABYTEK_WTHIS().DynamicCast<A_RenderPackTemplateMap>()
-        );
+        if (!HasSerializableFlags(E_SerializableObjectFlag::CDO))
+        {
+            PrepareTemplates(
+                GetEnvironment(), 
+                ABYTEK_WTHIS().DynamicCast<A_RenderPackTemplateMap>()
+            );
+        }
 #endif
         
         _IsTemplatesLoaded = true;
-        SetupRenderable();
+        if (!HasSerializableFlags(E_SerializableObjectFlag::CDO))
+        {
+            SetupRenderable();
+        }
     }
     void F_RenderPack::OnUnload()
     {
-        CleanUpRenderable();
+        if (!HasSerializableFlags(E_SerializableObjectFlag::CDO))
+        {
+            CleanUpRenderable();
+        }
         _IsTemplatesLoaded = false;
     }
 

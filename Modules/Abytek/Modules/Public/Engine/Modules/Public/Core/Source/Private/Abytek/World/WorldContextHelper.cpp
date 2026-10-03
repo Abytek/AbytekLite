@@ -18,6 +18,7 @@ namespace Abytek
     {
         return WorldContext->GetEnvironment()->EnsurePackage(Name);
     }
+    
     TW<A_SerializableObject> H_WorldContext::FindObject(
         const TW_Valid<A_WorldContext>& WorldContext,
         const F_Name& Name
@@ -25,6 +26,7 @@ namespace Abytek
     {
         return WorldContext->GetEnvironment()->FindObject(Name);
     }
+    
     TS<A_SerializableObject> H_WorldContext::CreateObject(
         const TW_Valid<A_WorldContext>& WorldContext,
         const F_Name& Name,
@@ -47,6 +49,35 @@ namespace Abytek
     )
     {
         return WorldContext->GetEnvironment()->PopulateObject(
+            OutObject,
+            Name,
+            PackageName,
+            Type
+        );
+    }
+
+    TS<A_SerializableObject> H_WorldContext::CreateObjectDelayLoading(
+        const TW_Valid<A_WorldContext>& WorldContext,
+        const F_Name& Name, 
+        const F_Name& PackageName, 
+        const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+    )
+    {
+        return WorldContext->GetEnvironment()->CreateObjectDelayLoading(
+            Name,
+            PackageName,
+            Type
+        );
+    }
+    B8 H_WorldContext::PopulateObjectDelayLoading(
+        const TW_Valid<A_WorldContext>& WorldContext,
+        TS<A_SerializableObject>& OutObject, 
+        const F_Name& Name, 
+        const F_Name& PackageName,
+        const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+    )
+    {
+        return WorldContext->GetEnvironment()->PopulateObjectDelayLoading(
             OutObject,
             Name,
             PackageName,

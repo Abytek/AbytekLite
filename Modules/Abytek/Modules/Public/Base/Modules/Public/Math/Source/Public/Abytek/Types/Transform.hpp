@@ -15,6 +15,9 @@ namespace Abytek
     template<typename __F_Element>
     struct TF_Transform
     {
+        ABYTEK_BEGIN_REFLECTOR(I_Serializable)
+        ABYTEK_END_REFLECTOR(TF_Transform);
+        
         using F_Element = __F_Element;
         using F_Vector3 = TF_Vector3<F_Element>;
         using F_Quaternion = TF_Quaternion<F_Element>;
@@ -39,6 +42,13 @@ namespace Abytek
             return MakeTranslationMatrix(Position) * Rotation.GetMatrix4x4() * MakeScaleMatrix4x4(Scale);
         }
     };
+    template<typename __F_Element>
+    ABYTEK_REFLECT(TF_Transform<__F_Element>)
+    {
+        ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(Position);
+        ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(Rotation);
+        ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(Scale);
+    }
     
     using F_Transform = TF_Transform<F32>;
     using F_Transform_F32 = TF_Transform<F32>;

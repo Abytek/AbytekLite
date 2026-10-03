@@ -444,10 +444,13 @@ namespace Abytek
             const auto& BoundUniformDataBinding = BoundUniformDataBindings[UniformDataBindingIndex];
             
             const auto& UniformData = SlotData.GetUniformData(CompiledUniformDataBinding.SlotIndex);
-            auto BufferDataView = Arena->CacheData({
-                (U8*)UniformData.GetPayloadPtr(),
-                (Sz)UniformData.SizeInBytes
-            });
+            auto UniformDataPtr = UniformData.GetPayloadPtr();
+            auto BufferDataView = Arena->CacheData(
+                TF_Span<const U8>(
+                    (const U8*)UniformDataPtr,
+                    (const U8*)UniformDataPtr + Sz(UniformData.SizeInBytes)
+                )
+            );
             
             DirectX12RHIProcessQueries::Compile::F_UploadConstantData Query;
             Query.ConstantDataRange = BoundUniformDataBinding.ConstantDataRange;

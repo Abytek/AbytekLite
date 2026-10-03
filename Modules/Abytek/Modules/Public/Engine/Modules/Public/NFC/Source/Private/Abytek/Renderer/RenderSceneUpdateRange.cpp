@@ -44,10 +44,10 @@ namespace Abytek
                 GetBeginFunctionName()
             );
             UpdateFunction->AddDependency(
-                F_PrimaryUpdateRange::GetEndFunctionName()
+                F_World::GetInitUpdateFunctionName()
             );
             UpdateFunction->AddReverseDependency(
-                F_PreShutdownUpdateRange::GetBeginFunctionName()  
+                F_World::GetStartupUpdateFunctionName()  
             );
         }
         {
@@ -59,10 +59,10 @@ namespace Abytek
                 GetEndFunctionName()
             );
             UpdateFunction->AddDependency(
-                GetBeginFunctionName()
+                F_World::GetShutdownUpdateFunctionName()
             );
             UpdateFunction->AddReverseDependency(
-                F_PreShutdownUpdateRange::GetBeginFunctionName()  
+                F_World::GetReleaseUpdateFunctionName()  
             );
         }
     }
@@ -78,6 +78,15 @@ namespace Abytek
         H_TaskUtilities::AddTag(GetTaskTag());
         _SynchronizationSection.Begin();
         
+        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
+            []
+            {
+                ABYTEK_RHI_PUSH_CAPTURE_EVENT_SCOPE_MAIN(
+                    ABYTEK_DEBUG_NAME("Abytek::RenderSceneUpdate"),
+                    F_Vector3_F32 { 0.25f, 1.0f, 0.75f }
+                );
+            }
+        );
         for (const auto& World : F_WorldManager::GetInstance()->GetWorlds())
         {
             if (auto WorldRenderResource = F_WorldRenderResource::Get_MainTask(World))
@@ -105,6 +114,12 @@ namespace Abytek
                 );
             }
         }
+        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
+            []
+            {
+                ABYTEK_RHI_POP_CAPTURE_EVENT_SCOPE_MAIN();
+            }
+        );
         
         _SynchronizationSection.End();
         H_TaskUtilities::RemoveTag(GetTaskTag());

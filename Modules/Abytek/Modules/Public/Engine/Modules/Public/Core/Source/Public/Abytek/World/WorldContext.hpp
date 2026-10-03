@@ -22,7 +22,7 @@ namespace Abytek
     private:
         
     public:
-        TW_Valid<F_World> GetWorld() const override;
+        TW_Valid<F_World> GetWorld() const final;
         
     public:
         A_WorldContext(const F_SerializableObjectInitParams& InitParams);

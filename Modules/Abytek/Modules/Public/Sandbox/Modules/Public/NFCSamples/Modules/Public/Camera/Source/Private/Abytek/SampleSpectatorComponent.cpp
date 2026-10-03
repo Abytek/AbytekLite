@@ -16,12 +16,12 @@ namespace Abytek
     F_SampleSpectatorComponent::F_SampleSpectatorComponent(const F_SerializableObjectInitParams& InitParams) :
         A_ActorComponent(InitParams)
     {
-        _CanvasComponent = CreateDefaultSerializableSubobject<F_CanvasComponent>(
+        _CanvasComponent = CreateSerializableSubobjectDelayLoading<F_CanvasComponent>(
             ABYTEK_NAME("CanvasComponent")    
         );
         AddChildInstanceComponent(_CanvasComponent);
         
-        _CameraComponent = CreateDefaultSerializableSubobject<F_CameraComponent>(
+        _CameraComponent = CreateSerializableSubobjectDelayLoading<F_CameraComponent>(
             ABYTEK_NAME("CameraComponent")    
         );
         AddChildInstanceComponent(_CameraComponent);

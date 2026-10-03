@@ -14,6 +14,8 @@ namespace Abytek
     struct F_RenderViewFamilyBuildParams;
     class A_Renderer;
     struct F_RendererBuildParams;
+    class A_RenderPrimitiveProcessor_Simple;
+    class A_RenderPrimitiveSet_Simple;
     
     class ABYTEK_ENGINE_NFC_API A_RenderObjectFactory : public A_Object
     {
@@ -37,5 +39,9 @@ namespace Abytek
         virtual TS<A_RenderViewFamily> CreateViewFamily() = 0;
         virtual TS<A_RenderView> CreateView() = 0;
         virtual TS<A_Renderer> CreateRenderer() = 0;
+        
+    public:
+        virtual TS<A_RenderPrimitiveProcessor_Simple> CreatePrimitiveProcessor_Simple();
+        virtual TS<A_RenderPrimitiveSet_Simple> CreatePrimitiveSet_Simple();
     };
 }

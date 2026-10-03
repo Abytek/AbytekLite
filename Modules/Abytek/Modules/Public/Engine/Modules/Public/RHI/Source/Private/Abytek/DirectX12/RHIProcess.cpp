@@ -21,7 +21,6 @@
 #include "Abytek/DirectX12/RHIPipelineStateProxy.hpp"
 #include "Abytek/DirectX12/RHIResourceSyncPass.hpp"
 #include "Abytek/DirectX12/RHIEventStack.hpp"
-#include "Abytek/RHITransientUploadBufferManager.hpp"
 #include "Abytek/DirectX12/RHIViewportPresentation.hpp"
 
 
@@ -97,6 +96,14 @@ namespace Abytek
                     auto SubmissionList = RACreateAndBuildShared<A_RHISubmissionList>(ABYTEK_WTHIS());
 #ifdef ABYTEK_DEBUG_INFO
                     SubmissionList->SetDebugName(ABYTEK_DEBUG_NAME("Abytek::RHIUpload"));   
+#endif
+#ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
+                    SubmissionList->SetCaptureEventState(
+                        F_RHICaptureEventState::Make(
+                            SubmissionList->GetDebugName(),
+                            F_Vector3_F32(0.5f, 1.0f, 0.5f)
+                        )
+                    );   
 #endif
                     _UploadResources(SubmissionList);
                     H_TaskUtilities::Switch();
@@ -2771,13 +2778,13 @@ namespace Abytek
         ABYTEK_PROFILER_EVENT();
         for (const auto& Context : GetContexts())
         {
-            auto TransientUploadBufferManager = Context->GetTransientUploadBufferManager_V2();
+            auto TransientUploadBufferManager = Context->GetTransientUploadBufferManager();
             for (const auto& Page : TransientUploadBufferManager->SectionData.Pages)
             {
                 DirectX12RHIProcessData::Execution::F_TransientUploadBuffer Buffer;
                 Buffer.BufferProxy = Page->GetBuffer()->GetProxy().StaticCast<A_RHIResourceProxy>();
                 
-                F_RHITransientUploadBufferCandidate_V2 Candidate;
+                F_RHITransientUploadBufferCandidate Candidate;
                 while (Page->Queue.TryPop(Candidate))
                 {
                     Buffer.Candidates.push_back(ABYTEK_MOVE(Candidate));
@@ -2792,13 +2799,13 @@ namespace Abytek
         ABYTEK_PROFILER_EVENT();
         for (const auto& Context : GetContexts())
         {
-            auto TransientReadbackBufferManager = Context->GetTransientReadbackBufferManager_V2();
+            auto TransientReadbackBufferManager = Context->GetTransientReadbackBufferManager();
             for (const auto& Page : TransientReadbackBufferManager->SectionData.Pages)
             {
                 DirectX12RHIProcessData::Execution::F_TransientReadbackBuffer Buffer;
                 Buffer.BufferProxy = Page->GetBuffer()->GetProxy().StaticCast<A_RHIResourceProxy>();
                 
-                F_RHITransientReadbackBufferCandidate_V2 Candidate;
+                F_RHITransientReadbackBufferCandidate Candidate;
                 while (Page->Queue.TryPop(Candidate))
                 {
                     Buffer.Candidates.push_back(ABYTEK_MOVE(Candidate));
@@ -3041,6 +3048,9 @@ namespace Abytek
             DirectX12RHIDescriptorManagerQueries::F_Init ForwardQuery;
             ForwardQuery.DescriptorIndex = Query.DescriptorAllocation.BeginOffset;
             ForwardQuery.D3D12DescriptorDesc = CastedResourceViewProxy->GetDescriptorDesc();
+#ifdef ABYTEK_DEBUG_INFO
+            ForwardQuery.DebugName = CastedResourceViewProxy->GetDebugName();
+#endif
             
             DescriptorManagerProxy->Queues.Init.Push(ForwardQuery);
             
@@ -3101,6 +3111,9 @@ namespace Abytek
             DirectX12RHIDescriptorManagerQueries::F_Init ForwardQuery;
             ForwardQuery.DescriptorIndex = Query.DescriptorAllocation.BeginOffset;
             ForwardQuery.D3D12DescriptorDesc = CastedSamplerProxy->GetDescriptorDesc();
+#ifdef ABYTEK_DEBUG_INFO
+            ForwardQuery.DebugName = CastedSamplerProxy->GetDebugName();
+#endif
             
             DescriptorManagerProxy->Queues.Init.Push(ForwardQuery);
             

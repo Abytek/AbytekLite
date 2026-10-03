@@ -13,7 +13,7 @@ namespace Abytek
     class ABYTEK_ENGINE_RHI_API F_DirectX12RHIReadbackBufferPass : public A_RHIReadbackBufferPass, public A_DirectX12RHIPassExtension
     {
     private:
-        F_RHITransientReadbackBufferRange_V2 _TransientReadbackBufferRange;
+        F_RHITransientReadbackBufferRange _TransientReadbackBufferRange;
 
     public:
         ABYTEK_FORCE_INLINE const auto& GetTransientReadbackBufferRange() const noexcept

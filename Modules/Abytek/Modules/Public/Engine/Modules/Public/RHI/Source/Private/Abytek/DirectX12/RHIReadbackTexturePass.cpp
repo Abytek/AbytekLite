@@ -73,7 +73,7 @@ namespace Abytek
             );
         }
         
-        _TransientReadbackBufferRange = Context->GetTransientReadbackBufferManager_V2()->Allocate(
+        _TransientReadbackBufferRange = Context->GetTransientReadbackBufferManager()->Allocate(
               D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT - 1
               + ReadbackSizeInBytes
         );

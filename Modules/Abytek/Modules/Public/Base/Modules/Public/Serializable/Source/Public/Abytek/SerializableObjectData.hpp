@@ -41,11 +41,6 @@ namespace Abytek
         F_Name Path;
         TF_Vector<F_Name> ReferencePaths;
         
-        TS<A_SerializableObject> CreateObject(
-            const TW_Valid<F_SerializableEnvironment>& Environment,
-            const TS<F_SerializablePackage>& Package
-        ) const;
-        
         friend F_FeedbackStatus operator << (F_ArchiveReadWriteView& View, const F_SerializableObjectHeader& Value)
         {
             ABYTEK_FEEDBACK_STATUS_CHECK(View << static_cast<const F_SerializableObjectPayloadRange&>(Value));

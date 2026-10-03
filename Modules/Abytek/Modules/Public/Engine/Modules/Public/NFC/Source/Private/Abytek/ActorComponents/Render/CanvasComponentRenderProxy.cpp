@@ -238,7 +238,8 @@ namespace Abytek
     {
         ABYTEK_RHI_CAPTURE_EVENT_SCOPE(
             SubmissionItemContainer,  
-            ABYTEK_TEXT("Abytek::F_CanvasComponentRenderProxy::FinalizeOutput(") + *GetDebugName() + ABYTEK_TEXT(")")
+            ABYTEK_TEXT("Abytek::F_CanvasComponentRenderProxy::FinalizeOutput(") + *GetDebugName() + ABYTEK_TEXT(")"),
+            F_Vector3_F32(1.0f, 0.25f, 1.0f)
         );
         
         // Output display
@@ -339,7 +340,8 @@ namespace Abytek
         {
             ABYTEK_RHI_CAPTURE_EVENT_SCOPE(
                 SubmissionItemContainer,  
-                ABYTEK_TEXT("Abytek::F_CanvasComponentRenderProxy::PrepareNewFrame(") + *GetDebugName() + ABYTEK_TEXT(")")
+                ABYTEK_TEXT("Abytek::F_CanvasComponentRenderProxy::PrepareNewFrame(") + *GetDebugName() + ABYTEK_TEXT(")"),
+                F_Vector3_F32(0.5f, 0.5f, 1.0f)
             );
             if (_RTV_RTTexture_Mono)
             {

@@ -155,6 +155,13 @@ namespace Abytek
                 &Query.D3D12DescriptorDesc.D3D12CBVDesc, 
                 D3D12CPUDescriptorHandle
             );
+            ABYTEK_ENGINE_RHI_ASSERT(!FAILED(D3D12Device->GetDeviceRemovedReason())) 
+                << "Failed to create constant buffer view" 
+#ifdef ABYTEK_DEBUG_INFO
+                << ", resource view: " 
+                << Query.DebugName
+                ;
+#endif
             break;
         case DirectX12SharedAPIWrapper::E_DescriptorType::SRV:
             D3D12Device->CreateShaderResourceView(
@@ -162,6 +169,13 @@ namespace Abytek
                 &Query.D3D12DescriptorDesc.D3D12SRVDesc, 
                 D3D12CPUDescriptorHandle
             );
+            ABYTEK_ENGINE_RHI_ASSERT(!FAILED(D3D12Device->GetDeviceRemovedReason())) 
+                << "Failed to create shader resource view" 
+#ifdef ABYTEK_DEBUG_INFO
+                << ", resource view: " 
+                << Query.DebugName
+                ;
+#endif
             break;
         case DirectX12SharedAPIWrapper::E_DescriptorType::UAV:
             D3D12Device->CreateUnorderedAccessView(
@@ -170,6 +184,13 @@ namespace Abytek
                 &Query.D3D12DescriptorDesc.D3D12UAVDesc, 
                 D3D12CPUDescriptorHandle
             );
+            ABYTEK_ENGINE_RHI_ASSERT(!FAILED(D3D12Device->GetDeviceRemovedReason())) 
+                << "Failed to create unordered access view" 
+#ifdef ABYTEK_DEBUG_INFO
+                << ", resource view: " 
+                << Query.DebugName
+                ;
+#endif
             break;
         case DirectX12SharedAPIWrapper::E_DescriptorType::RTV:
             D3D12Device->CreateRenderTargetView(
@@ -177,6 +198,13 @@ namespace Abytek
                 &Query.D3D12DescriptorDesc.D3D12RTVDesc,
                 D3D12CPUDescriptorHandle
             );
+            ABYTEK_ENGINE_RHI_ASSERT(!FAILED(D3D12Device->GetDeviceRemovedReason())) 
+                << "Failed to create render target view" 
+#ifdef ABYTEK_DEBUG_INFO
+                << ", resource view: " 
+                << Query.DebugName
+                ;
+#endif
             break;
         case DirectX12SharedAPIWrapper::E_DescriptorType::DSV:
             D3D12Device->CreateDepthStencilView(
@@ -184,12 +212,26 @@ namespace Abytek
                 &Query.D3D12DescriptorDesc.D3D12DSVDesc, 
                 D3D12CPUDescriptorHandle
             );
+            ABYTEK_ENGINE_RHI_ASSERT(!FAILED(D3D12Device->GetDeviceRemovedReason())) 
+                << "Failed to create depth stencil view" 
+#ifdef ABYTEK_DEBUG_INFO
+                << ", resource view: " 
+                << Query.DebugName
+                ;
+#endif
             break;
         case DirectX12SharedAPIWrapper::E_DescriptorType::SAMPLER:
             D3D12Device->CreateSampler(
                 &Query.D3D12DescriptorDesc.D3D12SamplerDesc, 
                 D3D12CPUDescriptorHandle
             );
+            ABYTEK_ENGINE_RHI_ASSERT(!FAILED(D3D12Device->GetDeviceRemovedReason())) 
+                << "Failed to create sampler" 
+#ifdef ABYTEK_DEBUG_INFO
+                << ", sampler: " 
+                << Query.DebugName
+                ;
+#endif
             break;
         default:
             ABYTEK_ENGINE_RHI_ASSERT(false) << "Unknown init type";

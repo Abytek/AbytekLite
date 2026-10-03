@@ -49,7 +49,7 @@ namespace Abytek
                 F_RenderSceneUpdateRange::GetEndFunctionName()
             );
             UpdateFunction->AddReverseDependency(
-                F_PreShutdownUpdateRange::GetBeginFunctionName()  
+                F_HighLevelUpdateRange::GetEndFunctionName()  
             );
         }
         {
@@ -64,7 +64,7 @@ namespace Abytek
                 GetBeginFunctionName()
             );
             UpdateFunction->AddReverseDependency(
-                F_PreShutdownUpdateRange::GetBeginFunctionName()  
+                F_HighLevelUpdateRange::GetEndFunctionName()  
             );
         }
     }
@@ -84,7 +84,8 @@ namespace Abytek
             []
             {
                 ABYTEK_RHI_PUSH_CAPTURE_EVENT_SCOPE_MAIN(
-                    ABYTEK_DEBUG_NAME("Abytek::RenderScenePostUpdate")
+                    ABYTEK_DEBUG_NAME("Abytek::RenderScenePostUpdate"),
+                    F_Vector3_F32 { 0.3f, 0.8f, 1.0f }
                 );
             }
         );

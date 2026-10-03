@@ -1,0 +1,42 @@
+#pragma once
+
+import Abytek.SRPVisibilityBuffer;
+
+#define ABYTEK_SRP_GET_VISIBILITY_BUFFER_OPAQUE(Name) ___Abytek_VisibilityBuffer_Opaque_##Name
+#define ABYTEK_SRP_GET_VISIBILITY_BUFFER_OPAQUE_STRUCT(Name) ___H_Abytek_VisibilityBuffer_Opaque_##Name
+
+#define ABYTEK_SRP_DEFINE_VISIBILITY_BUFFER_OPAQUE_RO(Name)                                                       \
+    public Texture2D<Abytek::F_SRPVisibilityCandidate> ABYTEK_SRP_GET_VISIBILITY_BUFFER_OPAQUE(Name);             \
+    public struct ABYTEK_SRP_GET_VISIBILITY_BUFFER_OPAQUE_STRUCT(Name)                                            \
+    {                                                                                                             \
+        public static Abytek::F_SRPVisibilityCandidate Load(uint2 Coord)                                          \
+        {                                                                                                         \
+            Texture2D<Abytek::F_SRPVisibilityCandidate> Buffer = ABYTEK_SRP_GET_VISIBILITY_BUFFER_OPAQUE(Name); \
+            return Buffer[Coord];                                                                                 \
+        }                                                                                                         \
+    }
+
+#define ABYTEK_SRP_DEFINE_VISIBILITY_BUFFER_OPAQUE_RW(Name)                                                       \
+    public RWTexture2D<Abytek::F_SRPVisibilityCandidate> ABYTEK_SRP_GET_VISIBILITY_BUFFER_OPAQUE(Name);           \
+    public struct ABYTEK_SRP_GET_VISIBILITY_BUFFER_OPAQUE_STRUCT(Name)                                            \
+    {                                                                                                             \
+        public static Abytek::F_SRPVisibilityCandidate Load(uint2 Coord)                                          \
+        {                                                                                                         \
+            RWTexture2D<Abytek::F_SRPVisibilityCandidate> Buffer = ABYTEK_SRP_GET_VISIBILITY_BUFFER_OPAQUE(Name); \
+            return Buffer[Coord];                                                                                 \
+        }                                                                                                         \
+        public static void Store(uint2 Coord, Abytek::F_SRPVisibilityCandidate Value)                            \
+        {                                                                                                         \
+            RWTexture2D<Abytek::F_SRPVisibilityCandidate> Buffer = ABYTEK_SRP_GET_VISIBILITY_BUFFER_OPAQUE(Name); \
+            Buffer[Coord] = Value;                                                                                \
+        }                                                                                                         \
+        public static void Output(uint2 Coord, Abytek::F_SRPVisibilityCandidate Value)                            \
+        {                                                                                                         \
+            RWTexture2D<Abytek::F_SRPVisibilityCandidate> Buffer = ABYTEK_SRP_GET_VISIBILITY_BUFFER_OPAQUE(Name); \
+            InterlockedMax(Buffer[Coord], Value);                                                                 \
+        }                                                                                                         \
+    }
+
+#define ABYTEK_SRP_LOAD_VISIBILITY_BUFFER_OPAQUE(Name, ...) ABYTEK_SRP_GET_VISIBILITY_BUFFER_OPAQUE_STRUCT(Name)::Load(__VA_ARGS__)
+#define ABYTEK_SRP_STORE_VISIBILITY_BUFFER_OPAQUE(Name, ...) ABYTEK_SRP_GET_VISIBILITY_BUFFER_OPAQUE_STRUCT(Name)::Store(__VA_ARGS__)
+#define ABYTEK_SRP_OUTPUT_VISIBILITY_BUFFER_OPAQUE(Name, ...) ABYTEK_SRP_GET_VISIBILITY_BUFFER_OPAQUE_STRUCT(Name)::Output(__VA_ARGS__)

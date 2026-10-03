@@ -7,7 +7,7 @@ namespace Abytek
 {
     ABYTEK_REFLECT(F_SerializableEnvironment)
     {
-        ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::F_SerializableEnvironment"));    
+        ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::F_SerializableEnvironment"));
     }
     
     F_SerializableEnvironment::F_SerializableEnvironment(const F_SerializableEnvironmentBuildParams& BuildParams) :
@@ -21,19 +21,7 @@ namespace Abytek
 
     void F_SerializableEnvironment::_OnAddCDOType(const TF_ReflectionTypeHandle<A_SerializableObject>& Type)
     {
-        const auto& TypeMedata = Type->GetMetadata();
-        auto MetadataElementName = A_SerializableObject::GetMetadataElementName_Creator();
-        ABYTEK_BASE_SERIALIZABLE_ASSERT(TypeMedata.HasElement(MetadataElementName)) << "Type not have serializable object creator metadata: " << Type->GetFullName();
-        const auto& MetadataElement = TypeMedata.Get(MetadataElementName);
-        const auto& Creator = AnyCast<A_SerializableObject::F_Creator>(MetadataElement);
-        
-        F_SerializableObjectInitParams ObjectInitParams;
-        ObjectInitParams.Type = Type;
-        ObjectInitParams.Environment = ABYTEK_WTHIS();
-        ObjectInitParams.Flags = E_SerializableObjectFlag::CDO;
-        auto Object = Creator(ObjectInitParams);
-        
-        _CDOs[Type] = Object;
+        _CDOs[Type] = CreateCDO(Type);
     }
     void F_SerializableEnvironment::_OnRemoveCDOType(const TF_ReflectionTypeHandle<A_SerializableObject>& Type)
     {
@@ -245,68 +233,8 @@ namespace Abytek
         OutObjectPathSet = ABYTEK_MOVE(ObjectPathSet);
         OutPackages = ABYTEK_MOVE(Packages);
     }
-    void F_SerializableEnvironment::LoadObjects(
-        const TF_SmallVector<F_Name, 1>& ObjectPaths,
-        TF_SmallVector<TS<A_SerializableObject>, 1>& OutObjects
-    )
-    {
-        
-        TF_SmallVector<F_Name, 1> AnalyzedOrderedObjectPaths;
-        TF_Set<F_Name> AnalyzedObjectPathSet;
-        TF_Map<F_Name, TS<F_SerializablePackage>> AnalyzedPackages;
-        AnalyzeObjectPaths(
-            ObjectPaths,
-            AnalyzedOrderedObjectPaths,
-            AnalyzedObjectPathSet,
-            AnalyzedPackages
-        );
-        
-        TF_SmallVector<std::pair<TS<A_SerializableObject>, F_SerializableObjectHeader>, 1> ObjectsAndHeaders;
-        for (const auto& AnalyzedObjectPath : AnalyzedOrderedObjectPaths)
-        {
-            F_Name ObjectName;
-            F_Name PackageName;
-            ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
-                ParseObjectPath(AnalyzedObjectPath, ObjectName, PackageName)
-            );
-         
-            if (auto Object = FindObject(ObjectName))
-            {
-                OutObjects.push_back(ShareObject(Object));
-                continue;
-            }
-            
-            TS<F_SerializablePackage> Package;
-            {
-                auto It = AnalyzedPackages.find(PackageName);
-                ABYTEK_BASE_SERIALIZABLE_ASSERT(It != AnalyzedPackages.end()) << "Not found package: " << PackageName;
-                Package = It->second;
-            }
-            
-            F_SerializableObjectHeader ObjectHeader;
-            B8 FoundObjectHeader = Package->SearchLastObjectHeader(AnalyzedObjectPath, ObjectHeader);
-            ABYTEK_BASE_SERIALIZABLE_ASSERT(FoundObjectHeader) << "Not found object with path: " << AnalyzedObjectPath;
-            auto Object = ObjectHeader.CreateObject(ABYTEK_WTHIS(), Package);
-            ObjectsAndHeaders.push_back({
-                Object,
-                ObjectHeader
-            });
-        }
-        for (const auto& [ Object, ObjectHeader ] : ObjectsAndHeaders)
-        {
-            if (!Object->IsLoaded())
-            {
-                Object->CallLoad();
-            }
-        }
-        
-        for (const auto& [ Object, ObjectHeader ] : ObjectsAndHeaders)
-        {
-            OutObjects.push_back(Object);
-        }
-    }
 
-    void F_SerializableEnvironment::CreateObjectsWihtoutLoading(
+    void F_SerializableEnvironment::CreateObjectsWithoutLoading(
         const TF_SmallVector<F_SerializableObjectCreationParams, 1>& CreationParamsList,
         TF_SmallVector<TS<A_SerializableObject>, 1>& OutObjects
     )
@@ -359,7 +287,11 @@ namespace Abytek
                 F_SerializableObjectHeader ObjectHeader;
                 B8 FoundObjectHeader = Package->SearchLastObjectHeader(AnalyzedObjectPath, ObjectHeader);
                 ABYTEK_BASE_SERIALIZABLE_ASSERT(FoundObjectHeader) << "Not found object with path: " << AnalyzedObjectPath;
-                auto Object = ObjectHeader.CreateObject(ABYTEK_WTHIS(), Package);
+                auto Object = ForceCreateObjectDelayLoading(
+                    ObjectName,
+                    PackageName,
+                    ObjectHeader.Type
+                );
                 Object->_IsLoadedFromPackage = true;
                 ObjectsCreatedFromPackage.push_back(Object);
             }
@@ -377,7 +309,7 @@ namespace Abytek
                 }
             }
             
-            auto Object = ForceCreateObjectWithoutLoading(
+            auto Object = ForceCreateObjectDelayLoading(
                 CreationParams.Name,    
                 CreationParams.PackageName,    
                 CreationParams.Type    
@@ -394,19 +326,20 @@ namespace Abytek
         TF_SmallVector<TS<A_SerializableObject>, 1>& OutObjects
     )
     {
-        ABYTEK_BASE_SERIALIZABLE_ASSERT(_AllowCreateObjectWithLoading) << "Already in an object creation scope with loading";
-        _AllowCreateObjectWithLoading = false;
-        CreateObjectsWihtoutLoading(
+        ABYTEK_BASE_SERIALIZABLE_ASSERT(IsEnabledObjectLoading()) << "Not enabled object loading";
+        DisableObjectLoading();
+        CreateObjectsWithoutLoading(
             CreationParamsList,
             OutObjects
         );
+        EnableObjectLoading();
         LoadEnqueuedObjects();
-        _AllowCreateObjectWithLoading = true;
     }
-    TS<A_SerializableObject> F_SerializableEnvironment::ForceCreateObjectWithoutLoading(
+    TS<A_SerializableObject> F_SerializableEnvironment::ForceCreateObjectDelayLoading(
         const F_Name& Name, 
         const F_Name& PackageName,
-        const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+        const TF_ReflectionTypeHandle<A_SerializableObject>& Type,
+        E_SerializableObjectFlag Flags
     )
     {
         ABYTEK_BASE_SERIALIZABLE_ASSERT(Type) << "Invalid type for object: " << Name;
@@ -415,6 +348,7 @@ namespace Abytek
         InitParams.Type = Type;
         InitParams.Environment = ABYTEK_WTHIS();
         InitParams.Name = Name;
+        InitParams.Flags = Flags;
         if (PackageName)
         {
             InitParams.PackageName = PackageName;
@@ -427,10 +361,12 @@ namespace Abytek
         const auto& MetadataElement = TypeMetadata.Get(A_SerializableObject::GetMetadataElementName_Creator());
         const auto& Creator = AnyCast<A_SerializableObject::F_Creator>(MetadataElement);
         auto Object = Creator(InitParams);
+        _ObjectsToLoad.Push(Object);
         return Object;
     }
     void F_SerializableEnvironment::LoadEnqueuedObjects()
     {
+        ABYTEK_BASE_SERIALIZABLE_ASSERT(IsEnabledObjectLoading()) << "Not enabled object loading";
         TS<A_SerializableObject> Object;
         while (_ObjectsToLoad.TryPop(Object))
         {
@@ -441,7 +377,7 @@ namespace Abytek
             Object->CallLoad();
         }
     }
-    TS<A_SerializableObject> F_SerializableEnvironment::CreateObjectWithoutLoading(
+    TS<A_SerializableObject> F_SerializableEnvironment::CreateObjectDelayLoading(
         const F_Name& Name,
         const F_Name& PackageName, 
         const TF_ReflectionTypeHandle<A_SerializableObject>& Type
@@ -459,7 +395,7 @@ namespace Abytek
             && (!PackageName)    
         )
         {
-            auto Object = ForceCreateObjectWithoutLoading(
+            auto Object = ForceCreateObjectDelayLoading(
                 Name,    
                 PackageName,    
                 Type    
@@ -472,7 +408,7 @@ namespace Abytek
         CreationParams.Type = Type;
         CreationParams.Name = Name;
         CreationParams.PackageName = PackageName;
-        CreateObjectsWihtoutLoading(
+        CreateObjectsWithoutLoading(
             { CreationParams },
             CreatedObjects
         );
@@ -493,16 +429,31 @@ namespace Abytek
         const TF_ReflectionTypeHandle<A_SerializableObject>& Type
     )
     {
-        ABYTEK_BASE_SERIALIZABLE_ASSERT(_AllowCreateObjectWithLoading) << "Already in an object creation scope with loading";
-        _AllowCreateObjectWithLoading = false;
-        auto Object = CreateObjectWithoutLoading(
+        ABYTEK_BASE_SERIALIZABLE_ASSERT(IsEnabledObjectLoading()) << "Not enabled object loading";
+        DisableObjectLoading();
+        auto Object = CreateObjectDelayLoading(
             Name,
             PackageName,
             Type
         );
+        EnableObjectLoading();
         LoadEnqueuedObjects();
-        _AllowCreateObjectWithLoading = true;
         return Object;
+    }
+    B8 F_SerializableEnvironment::PopulateObjectDelayLoading(
+        TS<A_SerializableObject>& OutObject, 
+        const F_Name& Name,
+        const F_Name& PackageName, 
+        const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+    )
+    {
+        auto Object = CreateObjectDelayLoading(
+            Name,
+            PackageName,
+            Type
+        );
+        OutObject = Object;
+        return !Object->IsLoadedFromPackage();
     }
     B8 F_SerializableEnvironment::PopulateObject(
         TS<A_SerializableObject>& OutObject, 
@@ -518,6 +469,16 @@ namespace Abytek
         );
         OutObject = Object;
         return !Object->IsLoadedFromPackage();
+    }
+
+    TS<A_SerializableObject> F_SerializableEnvironment::CreateCDO(const TF_ReflectionTypeHandle<A_SerializableObject>& Type)
+    {
+        return ForceCreateObjectDelayLoading(
+            {},
+            {},
+            Type,
+            E_SerializableObjectFlag::CDO
+        );
     }
 
     TS<F_SerializablePackage> F_SerializableEnvironment::EnsurePackage(const F_Name& PackageName)
@@ -550,5 +511,16 @@ namespace Abytek
             Result->AddCDOType(CDOType);
         }
         return Result;
+    }
+
+    void F_SerializableEnvironment::EnableObjectLoading()
+    {
+        ABYTEK_BASE_SERIALIZABLE_ASSERT(!_IsEnabledObjectLoading) << "Already enabled object loading";
+        _IsEnabledObjectLoading = true;
+    }
+    void F_SerializableEnvironment::DisableObjectLoading()
+    {
+        ABYTEK_BASE_SERIALIZABLE_ASSERT(_IsEnabledObjectLoading) << "Not enabled object loading";
+        _IsEnabledObjectLoading = false;
     }
 }

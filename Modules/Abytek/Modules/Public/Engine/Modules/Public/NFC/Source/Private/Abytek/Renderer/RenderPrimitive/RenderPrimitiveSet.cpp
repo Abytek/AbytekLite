@@ -1,22 +1,30 @@
 ﻿#include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveSet.hpp"
 #include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveManager.hpp"
+#include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveProcessor.hpp"
 #include "Abytek/Renderer/GPUData/GPUDataInstanceSet.hpp"
 
 
 namespace Abytek
 {
-    void F_RenderPrimitiveSet::Init(
+    TW_Valid<F_RenderPrimitiveManager> A_RenderPrimitiveSet::GetManager() const
+    {
+        return _Processor->GetManager();
+    }
+    void A_RenderPrimitiveSet::InitPrimitiveSet(
         const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
-        const F_RenderPrimitiveSetBuildParams& BuildParams
+        const TW_Valid<A_RenderPrimitiveProcessor>& Processor,
+        const F_RenderPrimitiveSetConfig& Config
     )
     {
         InitMinimal(SubmissionItemContainer);
         
-        _Manager = BuildParams.Manager;
-        _Num = BuildParams.Num;
+        ABYTEK_ENGINE_NFC_ASSERT(Processor) << "Invalid processor";
+        _Processor = Processor;
+        
+        _Num = Config.Num;
         
         F_GPUDataInstanceSetBuildParams GPUDataInstanceSetBuildParams;
-        GPUDataInstanceSetBuildParams.GPUData = _Manager->GetGPUData().Weak();
+        GPUDataInstanceSetBuildParams.GPUData = _Processor->GetGPUData().Weak();
         GPUDataInstanceSetBuildParams.Num = _Num;
 #ifdef ABYTEK_DEBUG_INFO
         _GPUDataInstanceSet = F_GPUDataInstanceSet::CreateAndInit_WithDebugName(
@@ -29,37 +37,20 @@ namespace Abytek
             SubmissionItemContainer, 
             GPUDataInstanceSetBuildParams
         );
+        
+        _Processor->_RegisterInstanceSet(ABYTEK_WTHIS());
     }
-    void F_RenderPrimitiveSet::Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
+    void A_RenderPrimitiveSet::Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
+        _Processor->_UnregisterInstanceSet(ABYTEK_WTHIS());
+        
         _GPUDataInstanceSet->Release(SubmissionItemContainer);
         _GPUDataInstanceSet = {};
         
         _Num = 0;
-        _Manager = {};
+        
+        _Processor = {};
         
         A_RenderObject::Release(SubmissionItemContainer);
-    }
-
-    void F_RenderPrimitiveSet::UploadComponents_Transform(const RenderPrimitive::F_Component_Transform* ValuePtr)
-    {
-        _GPUDataInstanceSet->UploadComponents(
-            _Manager->GetComponentIndex_Transform(),
-            ValuePtr
-        );
-    }
-    void F_RenderPrimitiveSet::UploadComponents_InverseTransposeTransform(const RenderPrimitive::F_Component_InverseTransposeTransform* ValuePtr)
-    {
-        _GPUDataInstanceSet->UploadComponents(
-            _Manager->GetComponentIndex_InverseTransposeTransform(),
-            ValuePtr
-        );
-    }
-    void F_RenderPrimitiveSet::UploadComponents_MeshHandle(const RenderPrimitive::F_Component_MeshHandle* ValuePtr)
-    {
-        _GPUDataInstanceSet->UploadComponents(
-            _Manager->GetComponentIndex_MeshHandle(),
-            ValuePtr
-        );
     }
 }

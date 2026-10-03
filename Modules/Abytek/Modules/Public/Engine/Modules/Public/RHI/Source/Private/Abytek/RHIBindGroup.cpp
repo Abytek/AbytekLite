@@ -93,7 +93,8 @@ namespace Abytek
     void A_RHIBindGroup::BindResourceView(
         U32 Index,
         const TS_Valid<A_RHIResource>& Resource,
-        const F_RHIResourceAccess& Access
+        const F_RHIResourceAccess& Access,
+        E_RHIFormat Format
     )
     {
         ABYTEK_ENGINE_RHI_CONTEXT_CHILD_VALIDATE();
@@ -104,10 +105,16 @@ namespace Abytek
             BuildParams.Context = GetContext();
             BuildParams.Resource = Resource;
             BuildParams.Access = Access;
-            BindResourceView(
-                Index,
-                RACreateAndBuildShared<A_RHIResourceView>(BuildParams)
+            BuildParams.Format = Format;
+            auto ResourceView = RACreateAndBuildShared<A_RHIResourceView>(BuildParams);
+#ifdef ABYTEK_DEBUG_INFO
+            ResourceView->SetDebugName(
+                *GetDebugName()
+                + ABYTEK_TEXT(".")
+                + *GetTemplateRuntime()->GetTemplate().FastCast<A_RHIBindGroupTemplate>()->GetSlots()[Index].Name
             );
+#endif
+            BindResourceView(Index, ResourceView);
         }
         else if (FlagHas(Archetype, E_RHIResourceArchetype::TEXTURE))
         {
@@ -115,10 +122,16 @@ namespace Abytek
             BuildParams.Context = GetContext();
             BuildParams.Resource = Resource;
             BuildParams.Access = Access;
-            BindResourceView(
-                Index,
-                RACreateAndBuildShared<A_RHIResourceView>(BuildParams)
+            BuildParams.Format = Format;
+            auto ResourceView = RACreateAndBuildShared<A_RHIResourceView>(BuildParams);
+#ifdef ABYTEK_DEBUG_INFO
+            ResourceView->SetDebugName(
+                *GetDebugName()
+                + ABYTEK_TEXT(".")
+                + *GetTemplateRuntime()->GetTemplate().FastCast<A_RHIBindGroupTemplate>()->GetSlots()[Index].Name
             );
+#endif
+            BindResourceView(Index, ResourceView);
         }
         else if (FlagHas(Archetype, E_RHIResourceArchetype::BUFFER))
         {
@@ -126,10 +139,16 @@ namespace Abytek
             BuildParams.Context = GetContext();
             BuildParams.Resource = Resource;
             BuildParams.Access = Access;
-            BindResourceView(
-                Index,
-                RACreateAndBuildShared<A_RHIResourceView>(BuildParams)
+            BuildParams.Format = Format;
+            auto ResourceView = RACreateAndBuildShared<A_RHIResourceView>(BuildParams);
+#ifdef ABYTEK_DEBUG_INFO
+            ResourceView->SetDebugName(
+                *GetDebugName()
+                + ABYTEK_TEXT(".")
+                + *GetTemplateRuntime()->GetTemplate().FastCast<A_RHIBindGroupTemplate>()->GetSlots()[Index].Name
             );
+#endif
+            BindResourceView(Index, ResourceView);
         }
         else
         {
@@ -320,9 +339,14 @@ namespace Abytek
         );
     }
 
-    void A_RHIBindGroup::BindResourceView(const F_Name& Name, const TS_Valid<A_RHIResource>& Resource, const F_RHIResourceAccess& Access)
+    void A_RHIBindGroup::BindResourceView(
+        const F_Name& Name, 
+        const TS_Valid<A_RHIResource>& Resource, 
+        const F_RHIResourceAccess& Access,
+        E_RHIFormat Format
+    )
     {
-        BindResourceView(*_TemplateRuntime->GetTemplate().FastCast<A_RHIBindGroupTemplate>()->FindSlotIndex(Name), Resource, Access);
+        BindResourceView(*_TemplateRuntime->GetTemplate().FastCast<A_RHIBindGroupTemplate>()->FindSlotIndex(Name), Resource, Access, Format);
     }
     void A_RHIBindGroup::BindResourceView(const F_Name& Name, const TS_Valid<A_RHIResource>& Resource)
     {

@@ -37,8 +37,9 @@ namespace Abytek
         const TW_Valid<A_RenderPackTemplateMap>& RenderPackTemplateMap
     )
     {
-        TF_Vector<TF_Function<F_FeedbackStatus(TF_Vector<TS<A_RHITemplate>>& OutTemplates)>> Commands;
+        TF_Vector<TF_Function<void(TF_Vector<TS<A_RHITemplate>>& OutTemplates)>> Commands;
         TF_Set<F_RHITemplateHashCode> TemplateHashCodesToCompile;
+        TF_Set<F_RHITemplateHashCode> TemplateHashCodes;
         
         TF_Vector<TF_ReflectionTypeHandle<F_GlobalRenderBinding>> GlobalRenderBindingTypes;
         {
@@ -71,7 +72,14 @@ namespace Abytek
             const auto& MetadataElement = Metadata.Get(MetadataElementName);
             const auto& CastedMetadataElement = AnyCast<F_GlobalRenderBinding::F_Metadata_BuildCommandsAndCompilationSet>(MetadataElement);
             ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
-                CastedMetadataElement(ABYTEK_STHIS(), SerializableEnvironment, RenderPackTemplateMap, Commands, TemplateHashCodesToCompile)
+                CastedMetadataElement(
+                    ABYTEK_STHIS(), 
+                    SerializableEnvironment, 
+                    RenderPackTemplateMap, 
+                    Commands, 
+                    TemplateHashCodesToCompile,
+                    TemplateHashCodes
+                )
             );
         }
             
@@ -106,10 +114,27 @@ namespace Abytek
             const auto& MetadataElement = Metadata.Get(MetadataElementName);
             const auto& CastedMetadataElement = AnyCast<F_GlobalRenderPipeline::F_Metadata_BuildCommandsAndCompilationSet>(MetadataElement);
             ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
-                CastedMetadataElement(ABYTEK_STHIS(), SerializableEnvironment, RenderPackTemplateMap, Commands, TemplateHashCodesToCompile)
+                CastedMetadataElement(
+                    ABYTEK_STHIS(), 
+                    SerializableEnvironment, 
+                    RenderPackTemplateMap, 
+                    Commands, 
+                    TemplateHashCodesToCompile,
+                    TemplateHashCodes
+                )
             );
         }
         
+        {
+            auto LastTemplates = RenderPackTemplateMap->GetTemplates();
+            for (const auto& [TemplateHashCode, _] : LastTemplates)
+            {
+                if (!TemplateHashCodes.contains(TemplateHashCode))
+                {
+                    RenderPackTemplateMap->RemoveTemplate(TemplateHashCode);
+                }
+            }
+        }
         for (const auto& TemplateHashCode : TemplateHashCodesToCompile)
         {
             if (RenderPackTemplateMap->HasTemplate(TemplateHashCode))
@@ -122,7 +147,7 @@ namespace Abytek
         TF_Vector<TS<A_RHITemplate>> NewTemplates;
         for (const auto& Command : Commands)
         {
-            ABYTEK_FEEDBACK_STATUS_CHECK_HARD(Command(NewTemplates));
+            Command(NewTemplates);
         }
         for (const auto& Template : NewTemplates)
         {

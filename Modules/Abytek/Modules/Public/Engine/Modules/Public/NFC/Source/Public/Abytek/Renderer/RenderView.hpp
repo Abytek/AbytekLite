@@ -3,6 +3,7 @@
 #include "Abytek/Renderer/RenderObject.hpp"
 #include "Abytek/ActorComponents/CameraComponent.hpp"
 #include "Abytek/GlobalRenderBinding.hpp"
+#include "Abytek/RHIBufferInlineAllocator.hpp"
 
 
 namespace Abytek
@@ -60,6 +61,7 @@ namespace Abytek
         F_CameraProjectionOptions _ProjectionOptions;
         F_RenderViewUniformData _UniformData;
         
+        TS<F_RHIBufferInlineAllocator> _UAVDataAllocator;
         TS<A_RHIBindGroup> _UniformBindGroup;
         TS<A_RHIResourceView> _RTV;
         F_RHIViewportScissorConfig _DefaultViewportScissorConfig;
@@ -121,6 +123,10 @@ namespace Abytek
             return _UniformData.ProjectionMatrix;
         }
         
+        ABYTEK_FORCE_INLINE const auto& GetUAVDataAllocator() const noexcept
+        {
+            return _UAVDataAllocator;
+        }
         ABYTEK_FORCE_INLINE const auto& GetUniformBindGroup() const noexcept
         {
             return _UniformBindGroup;

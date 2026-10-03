@@ -52,12 +52,37 @@ function(Abytek_Engine_NFC_ImportFP16)
     message(STATUS "Imported FP16")
 endfunction()
 
+function(Abytek_Engine_NFC_CheckMeshoptimizer)
+    message(STATUS "Checking meshoptimizer")
+    if(NOT EXISTS "${ABYTEK_DEPENDENCIES_DIR}/meshoptimizer")
+        Abytek_GitHelper_Clone(
+            PROJECT_NAME "meshoptimizer"
+            GIT_URL "https://github.com/Abytek/meshoptimizer"
+            GIT_COMMIT "9e1f07b159d3cb777f1c67ed31fc11fd117986f4"
+            GIT_BRANCH "master"
+            DIRECTORY "${ABYTEK_DEPENDENCIES_DIR}"
+            UPDATE_SUBMODULES
+        )
+    endif()
+    message(STATUS "Checked meshoptimizer")
+endfunction()
+function(Abytek_Engine_NFC_ImportMeshoptimizer)
+    message(STATUS "Importing meshoptimizer")
+    add_subdirectory("${ABYTEK_DEPENDENCIES_DIR}/meshoptimizer" "${ABYTEK_DEPENDENCIES_DIR}/meshoptimizer/Build")
+    target_link_libraries(${CurrentTarget}
+        PUBLIC
+            meshoptimizer
+    )
+    message(STATUS "Imported meshoptimizer")
+endfunction()
+
 
 if(ABYTEK_MODULE_PHASE_INIT)
     set(NFC.MacroName ABYTEK_ENGINE_NFC)
 
     Abytek_Engine_NFC_CheckSTB()
     Abytek_Engine_NFC_CheckFP16()
+    Abytek_Engine_NFC_CheckMeshoptimizer()
 endif()
 
 if(ABYTEK_MODULE_PHASE_GLOBAL_SHARE)
@@ -71,6 +96,7 @@ endif()
 if(ABYTEK_MODULE_PHASE_TARGET_CREATED)
     Abytek_Engine_NFC_ImportSTB()
     Abytek_Engine_NFC_ImportFP16()
+    Abytek_Engine_NFC_ImportMeshoptimizer()
 
     list(APPEND NFC.PublicDependencies
         MFC

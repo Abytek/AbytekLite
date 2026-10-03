@@ -42,14 +42,11 @@ namespace Abytek
     }
     void F_RenderGeometryStorage::EndUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-    }
-    void F_RenderGeometryStorage::BeginPostUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
-    {
         _RecreateBindGroupIfNeeded(SubmissionItemContainer);
-        _FlushDeallocationQueue(SubmissionItemContainer);
     }
-    void F_RenderGeometryStorage::EndPostUpdate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
+    void F_RenderGeometryStorage::FinalizeFrame(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
+        _FlushDeallocationQueue(SubmissionItemContainer);
     }
 
     void F_RenderGeometryStorage::_FlushDeallocationQueue(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
@@ -72,6 +69,7 @@ namespace Abytek
                     if (auto Allocation = Page->Allocate(SizeInBytes, AlignmentInBytes))
                     {
                         Result = ABYTEK_MOVE(Allocation);
+                        return;
                     }
                 }
                 if (auto Page = AddNewPage(SubmissionItemContainer, SizeInBytes + AlignmentInBytes))
@@ -79,6 +77,7 @@ namespace Abytek
                     if (auto Allocation = Page->Allocate(SizeInBytes, AlignmentInBytes))
                     {
                         Result = ABYTEK_MOVE(Allocation);
+                        return;
                     }
                 }
             }
@@ -224,6 +223,154 @@ namespace Abytek
         return false;
     }
     void F_RenderGeometryStorage::RemoveMeshData_Simple(
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
+        const F_RenderGeometryAllocation& GeometryAllocation
+    )
+    {
+        _DeallocationQueue.Push(GeometryAllocation);
+    }
+
+    B8 F_RenderGeometryStorage::AddMeshData_ECMS(
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
+        const F_ECMSMeshDataROView& MeshDataView,
+        F_RenderGeometryAllocation& OutGeometryAllocation,
+        F_RenderGeometryAllocationStructure_ECMS& OutGeometryAllocationStructure
+    )
+    {
+        ABYTEK_RHI_CAPTURE_EVENT_SCOPE(
+            SubmissionItemContainer,
+            ABYTEK_NAME("Abytek::F_RenderGeometryStorage::AddMeshData_ECMS")
+        );
+        
+        U32 SizeInBytes = 0;
+        
+        F_RenderGeometryAllocationStructure_ECMS GeometryAllocationStructure;
+                
+        GeometryAllocationStructure.Meshlets_LocalOffsetInBytes = static_cast<U32>(
+            AlignAddress_PO2(SizeInBytes, ABYTEK_ALIGNOF(F_ECMSMeshData))
+        );
+        GeometryAllocationStructure.NumMeshlets = static_cast<U32>(MeshDataView.GetMeshletCount());
+        SizeInBytes += GeometryAllocationStructure.NumMeshlets * sizeof(F_ECMSMeshlet);
+        
+        GeometryAllocationStructure.Triangles_LocalOffsetInBytes = static_cast<U32>(
+            AlignAddress_PO2(SizeInBytes, ABYTEK_ALIGNOF(F_ECMSMeshTriangle))
+        );
+        GeometryAllocationStructure.NumTriangles = static_cast<U32>(MeshDataView.GetTriangleCount());
+        SizeInBytes += GeometryAllocationStructure.NumTriangles * sizeof(F_ECMSMeshTriangle);
+        
+        GeometryAllocationStructure.VertexIndices_LocalOffsetInBytes = static_cast<U32>(
+            AlignAddress_PO2(SizeInBytes, ABYTEK_ALIGNOF(F_ECMSGlobalVertexIndex))
+        );
+        GeometryAllocationStructure.NumVertexIndices = static_cast<U32>(MeshDataView.GetVertexIndexCount());
+        SizeInBytes += GeometryAllocationStructure.NumVertexIndices * sizeof(F_ECMSGlobalVertexIndex);
+                
+        GeometryAllocationStructure.NumVertices = static_cast<U32>(MeshDataView.GetVertexCount());
+        
+        GeometryAllocationStructure.Positions_LocalOffsetInBytes = static_cast<U32>(
+            AlignAddress_PO2(SizeInBytes, ABYTEK_ALIGNOF(F_Vector3_F32))
+        );
+        SizeInBytes += GeometryAllocationStructure.NumVertices * sizeof(F_Vector3_F32);
+                
+        GeometryAllocationStructure.Normals_LocalOffsetInBytes = static_cast<U32>(
+            AlignAddress_PO2(SizeInBytes, ABYTEK_ALIGNOF(F_Vector3_F32))
+        );
+        SizeInBytes += GeometryAllocationStructure.NumVertices * sizeof(F_Vector3_F32);
+                
+        GeometryAllocationStructure.TangentsAndSigns_LocalOffsetInBytes = static_cast<U32>(
+            AlignAddress_PO2(SizeInBytes, ABYTEK_ALIGNOF(F_Vector3_F32))
+        );
+        SizeInBytes += GeometryAllocationStructure.NumVertices * sizeof(F_Vector4_F32);
+                
+        GeometryAllocationStructure.UVs_LocalOffsetInBytes = static_cast<U32>(
+            AlignAddress_PO2(SizeInBytes, ABYTEK_ALIGNOF(F_Vector2_F32))
+        );
+        SizeInBytes += GeometryAllocationStructure.NumVertices * sizeof(F_Vector2_F32);
+        
+        if (SizeInBytes == 0)
+        {
+            return false;
+        }
+        
+        if (auto GeometryAllocation = Allocate(SubmissionItemContainer, SizeInBytes))
+        {
+            H_RHISubmissionUtilities::UploadBuffer(
+                SubmissionItemContainer,
+                TF_Span<const U8>(
+                    (const U8*)MeshDataView.Meshlets.data(), 
+                    (const U8*)(MeshDataView.Meshlets.data() + MeshDataView.Meshlets.size()) 
+                ),
+                GeometryAllocation->Page->GetRHIBuffer(),
+                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.Meshlets_LocalOffsetInBytes,
+                ABYTEK_NAME("Meshlets")
+            );
+            H_RHISubmissionUtilities::UploadBuffer(
+                SubmissionItemContainer,
+                TF_Span<const U8>(
+                    (const U8*)MeshDataView.Triangles.data(), 
+                    (const U8*)(MeshDataView.Triangles.data() + MeshDataView.Triangles.size()) 
+                ),
+                GeometryAllocation->Page->GetRHIBuffer(),
+                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.Triangles_LocalOffsetInBytes,
+                ABYTEK_NAME("Triangles")
+            );
+            H_RHISubmissionUtilities::UploadBuffer(
+                SubmissionItemContainer,
+                TF_Span<const U8>(
+                    (const U8*)MeshDataView.VertexIndices.data(), 
+                    (const U8*)(MeshDataView.VertexIndices.data() + MeshDataView.VertexIndices.size()) 
+                ),
+                GeometryAllocation->Page->GetRHIBuffer(),
+                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.VertexIndices_LocalOffsetInBytes,
+                ABYTEK_NAME("VertexIndices")
+            );
+            H_RHISubmissionUtilities::UploadBuffer(
+                SubmissionItemContainer,
+                TF_Span<const U8>(
+                    (const U8*)MeshDataView.Positions.data(), 
+                    (const U8*)(MeshDataView.Positions.data() + MeshDataView.Positions.size()) 
+                ),
+                GeometryAllocation->Page->GetRHIBuffer(),
+                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.Positions_LocalOffsetInBytes,
+                ABYTEK_NAME("Positions")
+            );
+            H_RHISubmissionUtilities::UploadBuffer(
+                SubmissionItemContainer,
+                TF_Span<const U8>(
+                    (const U8*)MeshDataView.Normals.data(), 
+                    (const U8*)(MeshDataView.Normals.data() + MeshDataView.Normals.size()) 
+                ),
+                GeometryAllocation->Page->GetRHIBuffer(),
+                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.Normals_LocalOffsetInBytes,
+                ABYTEK_NAME("Normals")
+            );
+            H_RHISubmissionUtilities::UploadBuffer(
+                SubmissionItemContainer,
+                TF_Span<const U8>(
+                    (const U8*)MeshDataView.TangentsAndSigns.data(), 
+                    (const U8*)(MeshDataView.TangentsAndSigns.data() + MeshDataView.TangentsAndSigns.size()) 
+                ),
+                GeometryAllocation->Page->GetRHIBuffer(),
+                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.TangentsAndSigns_LocalOffsetInBytes,
+                ABYTEK_NAME("TangentsAndSigns")
+            );
+            H_RHISubmissionUtilities::UploadBuffer(
+                SubmissionItemContainer,
+                TF_Span<const U8>(
+                    (const U8*)MeshDataView.UVs.data(), 
+                    (const U8*)(MeshDataView.UVs.data() + MeshDataView.UVs.size()) 
+                ),
+                GeometryAllocation->Page->GetRHIBuffer(),
+                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.UVs_LocalOffsetInBytes,
+                ABYTEK_NAME("UVs")
+            );
+            
+            OutGeometryAllocation = *GeometryAllocation;
+            OutGeometryAllocationStructure = GeometryAllocationStructure;
+            return true;
+        }
+        return false;
+    }
+    void F_RenderGeometryStorage::RemoveMeshData_ECMS(
         const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
         const F_RenderGeometryAllocation& GeometryAllocation
     )

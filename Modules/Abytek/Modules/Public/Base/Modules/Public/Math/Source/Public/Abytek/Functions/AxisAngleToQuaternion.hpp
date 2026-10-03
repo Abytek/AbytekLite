@@ -5,6 +5,7 @@
 #include "Abytek/Types/Quaternion.hpp"
 #include "Abytek/Functions/Cos.hpp"
 #include "Abytek/Functions/Sin.hpp"
+#include "Abytek/Operators/VectorVector.hpp"
 
 
 namespace Abytek

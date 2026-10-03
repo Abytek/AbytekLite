@@ -13,7 +13,7 @@ namespace Abytek
         auto Context = GetContext();
         if (HasWork())
         {
-            _TransientReadbackBufferRange = Context->GetTransientReadbackBufferManager_V2()->Allocate(
+            _TransientReadbackBufferRange = Context->GetTransientReadbackBufferManager()->Allocate(
                 GetSizeInBytes()
             );
             _TransientReadbackBufferRange.Readback(

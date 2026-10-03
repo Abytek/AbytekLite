@@ -23,7 +23,7 @@ Abytek::F_CanvasApplyOffscreenTexturePSInput MainVS(Abytek::F_CanvasApplyOffscre
     };
 
     Abytek::F_CanvasApplyOffscreenTexturePSInput PSInput;
-    PSInput.ClipPosition = ClipPositions[VSInput.VertexId];
+    PSInput.ClipOrPixelPosition = ClipPositions[VSInput.VertexId];
     PSInput.Texcoord = Texcoords[VSInput.VertexId];
     return PSInput;
 }

@@ -9,7 +9,7 @@ namespace Abytek
 
     public struct F_CanvasApplyOffscreenTexturePSInput
     {
-        public float4 ClipPosition : SV_Position;
+        public float4 ClipOrPixelPosition : SV_Position;
         public float2 Texcoord : TEXCOORD;
     };
 }

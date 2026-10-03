@@ -53,7 +53,7 @@ namespace Abytek
         TF_Function<void()> ExternalInitFunction;
     };
     
-    enum class E_ApplicationState : U16
+    enum class E_ApplicationState : U8
     {
         NONE = 0x0,
         INITIALIZING = 0x1,
@@ -63,7 +63,7 @@ namespace Abytek
         SHUTDOWN = 0x10,
         LLA_RELEASING = 0x20,
         RELEASING = 0x40,
-        CLOSED = 0x40,
+        CLOSED = 0x80,
         
         ALL_HIGH_LEVEL = STARTUP | TICKING | SHUTDOWN,
         ALL = INITIALIZING | LLA_INITIALIZING | ALL_HIGH_LEVEL | LLA_RELEASING | RELEASING | CLOSED

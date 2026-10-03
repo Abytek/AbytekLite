@@ -30,11 +30,11 @@ namespace Abytek
         U32 AlignmentInBytes = 0;
         E_GPUDataComponentTypeClass Class = E_GPUDataComponentTypeClass::DEFAULT;
         
-        template<typename __F_GPUData, typename __F_GPUDataComponentType, E_GPUDataComponentTypeClass __Class = E_GPUDataComponentTypeClass::DEFAULT>
+        template<typename __F_GPUData, typename __F_GPUDataComponentType>
         static F_GPUDataComponentTypeConfig Make(
             const TS<F_RenderRegistryRuntime>& RenderRegistryRuntime, 
             const F_Name InName = __F_GPUDataComponentType::GetStaticName(),
-            E_GPUDataComponentTypeClass InClass = __Class
+            E_GPUDataComponentTypeClass InClass = __F_GPUDataComponentType::GetStaticClass()
         );
     };
     struct F_GPUDataComponentTypeBuildParams : F_GPUDataComponentTypeConfig
@@ -110,12 +110,12 @@ namespace Abytek
     namespace GPUData
     {
         template<typename __F_GPUData, typename __F_GPUDataComponentType>
-        struct TF_SRVBinding : F_GlobalRenderBinding
+        struct TF_ComponentTypeSRVBinding : F_GlobalRenderBinding
         {
             static constexpr E_ReflectMode DefaultReflectMode = E_ReflectMode::INLINE;
             ABYTEK_GLOBAL_RENDER_BINDING(
-                TF_SRVBinding, 
-                ABYTEK_TEXT("Abytek::GPUData::TF_SRVBinding<")
+                TF_ComponentTypeSRVBinding, 
+                ABYTEK_TEXT("Abytek::GPUData::TF_ComponentTypeSRVBinding<")
                 + *__F_GPUData::GetStaticName() 
                 + ABYTEK_TEXT(", ")
                 + *__F_GPUDataComponentType::GetStaticName() 
@@ -149,12 +149,12 @@ namespace Abytek
             }
         };
         template<typename __F_GPUData, typename __F_GPUDataComponentType>
-        struct TF_UAVBinding : F_GlobalRenderBinding
+        struct TF_ComponentTypeUAVBinding : F_GlobalRenderBinding
         {
             static constexpr E_ReflectMode DefaultReflectMode = E_ReflectMode::INLINE;
             ABYTEK_GLOBAL_RENDER_BINDING(
-                TF_UAVBinding, 
-                ABYTEK_TEXT("Abytek::GPUData::TF_UAVBinding<")
+                TF_ComponentTypeUAVBinding, 
+                ABYTEK_TEXT("Abytek::GPUData::TF_ComponentTypeUAVBinding<")
                 + *__F_GPUData::GetStaticName() 
                 + ABYTEK_TEXT(", ")
                 + *__F_GPUDataComponentType::GetStaticName() 
@@ -191,7 +191,7 @@ namespace Abytek
         namespace Internal
         {
             template<typename __F_GPUData, typename __F_GPUDataComponentType>
-            static F_FeedbackStatus AddBindGroupToPipelineStateTemplate(
+            static F_FeedbackStatus AddBindGroupToPipelineState(
                 F_RHIPipelineStateTemplateCompileParams& PipelineStateTemplateCompileParams,
                 const F_RHIResourceAccess Access
             )
@@ -220,7 +220,7 @@ namespace Abytek
                 {
                     PipelineStateTemplateCompileParams.BindGroups.push_back(
                         F_RHIPipelineStateTemplateBindGroup::Make(
-                            TF_SRVBinding<__F_GPUData, __F_GPUDataComponentType>::GetTemplateHashCode()
+                            TF_ComponentTypeSRVBinding<__F_GPUData, __F_GPUDataComponentType>::GetTemplateHashCode()
                         )
                     );
                     return F_FeedbackStatus::MakeSucceeded();
@@ -229,17 +229,22 @@ namespace Abytek
                 {
                     PipelineStateTemplateCompileParams.BindGroups.push_back(
                         F_RHIPipelineStateTemplateBindGroup::Make(
-                            TF_UAVBinding<__F_GPUData, __F_GPUDataComponentType>::GetTemplateHashCode()
+                            TF_ComponentTypeUAVBinding<__F_GPUData, __F_GPUDataComponentType>::GetTemplateHashCode()
                         )
                     );
                     return F_FeedbackStatus::MakeSucceeded();
                 }
                 return F_FeedbackStatus::MakeFailed(ABYTEK_TEXT("Invalid access"));
             }
+            template<typename __F_GPUData, typename __F_GPUDataComponentType>
+            static TS<A_RHIBindGroup> GetComponentTypeBindGroup(
+                const TS<F_GPUData>& GPUData,
+                const F_RHIResourceAccess Access
+            );
         }
     }
     
-    template<typename __F_GPUData, typename __F_GPUDataComponentType, E_GPUDataComponentTypeClass __Class = E_GPUDataComponentTypeClass::DEFAULT>
+    template<typename __F_GPUData, typename __F_GPUDataComponentType>
     F_GPUDataComponentTypeConfig F_GPUDataComponentTypeConfig::Make(
         const TS<F_RenderRegistryRuntime>& RenderRegistryRuntime, 
         const F_Name InName,
@@ -249,10 +254,10 @@ namespace Abytek
         F_GPUDataComponentTypeConfig Result;
         Result.Name = InName;
         Result.SRVBinding = static_cast<F_GlobalRenderBinding>(
-            GPUData::TF_SRVBinding<__F_GPUData, __F_GPUDataComponentType>::Instantiate(RenderRegistryRuntime)
+            GPUData::TF_ComponentTypeSRVBinding<__F_GPUData, __F_GPUDataComponentType>::Instantiate(RenderRegistryRuntime)
         );
         Result.UAVBinding = static_cast<F_GlobalRenderBinding>(
-            GPUData::TF_UAVBinding<__F_GPUData, __F_GPUDataComponentType>::Instantiate(RenderRegistryRuntime)
+            GPUData::TF_ComponentTypeUAVBinding<__F_GPUData, __F_GPUDataComponentType>::Instantiate(RenderRegistryRuntime)
         );
         Result.SizeInBytes = sizeof(__F_GPUDataComponentType);
         Result.AlignmentInBytes = ABYTEK_ALIGNOF(__F_GPUDataComponentType);
@@ -295,13 +300,25 @@ namespace Abytek
             static Abytek::E_GPUDataComponentTypeClass GetStaticClass() { return Abytek::Internal::TH_GPUDataComponentType_GetStaticName<Name>::Invoke(); } \
              \
             template<typename __F_GPUData> \
-            static Abytek::F_FeedbackStatus AddBindGroupToPipelineStateTemplate( \
+            static Abytek::F_FeedbackStatus AddBindGroupToPipelineState( \
                 Abytek::F_RHIPipelineStateTemplateCompileParams& PipelineStateTemplateCompileParams, \
                 const Abytek::F_RHIResourceAccess Access = Abytek::F_RHIResourceAccess::MakeSRV() \
             ) \
             { \
-                return Abytek::GPUData::Internal::AddBindGroupToPipelineStateTemplate<__F_GPUData, Name>( \
+                return Abytek::GPUData::Internal::AddBindGroupToPipelineState<__F_GPUData, Name>( \
                     PipelineStateTemplateCompileParams, \
+                    Access \
+                ); \
+            } \
+             \
+            template<typename __F_GPUData> \
+            static Abytek::TS<Abytek::A_RHIBindGroup> GetBindGroup( \
+                const Abytek::TS<Abytek::F_GPUData>& GPUData, \
+                const Abytek::F_RHIResourceAccess Access = Abytek::F_RHIResourceAccess::MakeSRV() \
+            ) \
+            { \
+                return Abytek::GPUData::Internal::GetComponentTypeBindGroup<__F_GPUData, Name>( \
+                    GPUData, \
                     Access \
                 ); \
             } \

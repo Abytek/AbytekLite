@@ -27,10 +27,12 @@ namespace Abytek
         }
     };
     
-    struct ABYTEK_ALIGN(8) F_RenderGeometryAddress
+    struct ABYTEK_ALIGN(8) ABYTEK_ENGINE_NFC_API F_RenderGeometryAddress
     {
         U32 PageIndex = 0;
         U32 OffsetInBytes = 0;
+        
+        static F_RenderGeometryAddress From(const F_RenderGeometryAllocation& GeometryAllocation);
     };
     
     struct ABYTEK_ALIGN(16) F_RenderGeometryAllocationStructure_Simple
@@ -57,6 +59,37 @@ namespace Abytek
             U32 Index,
             const F_RenderGeometryAllocation& GeometryAllocation,
             const F_RenderGeometryAllocationStructure_Simple& GeometryAllocationStructure
+        );
+    };
+    
+    struct ABYTEK_ALIGN(16) F_RenderGeometryAllocationStructure_ECMS
+    {
+        U32 NumMeshlets = 0;
+        U32 Meshlets_LocalOffsetInBytes = 0;
+        
+        U32 NumTriangles = 0;
+        U32 Triangles_LocalOffsetInBytes = 0;
+        
+        U32 NumVertexIndices = 0;
+        U32 VertexIndices_LocalOffsetInBytes = 0;
+        
+        U32 NumVertices = 0;
+        U32 Positions_LocalOffsetInBytes = 0;
+        U32 Normals_LocalOffsetInBytes = 0;
+        U32 TangentsAndSigns_LocalOffsetInBytes = 0;
+        U32 UVs_LocalOffsetInBytes = 0;
+    };
+    struct ABYTEK_ALIGN(16) ABYTEK_ENGINE_NFC_API F_StaticMeshGeometryUniformData_ECMS
+    {
+        F_RenderGeometryAllocationStructure_ECMS GeometryAllocationStructure;
+        F_RenderGeometryAddress GeometryAddress;
+        U32 Index = 0;
+        U32 ___Padding___ = 0;
+        
+        static F_StaticMeshGeometryUniformData_ECMS Make(
+            U32 Index,
+            const F_RenderGeometryAllocation& GeometryAllocation,
+            const F_RenderGeometryAllocationStructure_ECMS& GeometryAllocationStructure
         );
     };
 }

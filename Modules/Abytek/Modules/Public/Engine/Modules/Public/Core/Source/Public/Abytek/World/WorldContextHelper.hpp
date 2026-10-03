@@ -19,6 +19,7 @@ namespace Abytek
             const TW_Valid<A_WorldContext>& WorldContext,
             const F_Name& Name
         );
+        
         static TW<A_SerializableObject> FindObject(
             const TW_Valid<A_WorldContext>& WorldContext,
             const F_Name& Name
@@ -31,6 +32,7 @@ namespace Abytek
         {
             return WorldContext->GetEnvironment()->FindObject<__F_Object>(Name);
         }
+        
         static TS<A_SerializableObject> CreateObject(
             const TW_Valid<A_WorldContext>& WorldContext,
             const F_Name& Name = {},
@@ -68,6 +70,50 @@ namespace Abytek
         )
         {
             return WorldContext->GetEnvironment()->PopulateObject<__F_Object>(
+                OutObject,
+                Name,
+                PackageName,
+                Type
+            );
+        }
+        
+        static TS<A_SerializableObject> CreateObjectDelayLoading(
+            const TW_Valid<A_WorldContext>& WorldContext,
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<A_SerializableObject>& Type = {}
+        );
+        template<typename __F_Object>
+        static TS<__F_Object> CreateObjectDelayLoading(
+            const TW_Valid<A_WorldContext>& WorldContext,
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<__F_Object>& Type = TF_ReflectionTypeHandle<__F_Object>(F_ReflectionContext::GetGlobal())
+            )
+        {
+            return WorldContext->GetEnvironment()->CreateObjectDelayLoading<__F_Object>(
+                Name,
+                PackageName,
+                Type
+            );
+        }
+        static B8 PopulateObjectDelayLoading(
+            const TW_Valid<A_WorldContext>& WorldContext,
+            TS<A_SerializableObject>& OutObject,
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<A_SerializableObject>& Type = {}
+        );
+        template<typename __F_Object>
+        static B8 PopulateObjectDelayLoading(
+            const TW_Valid<A_WorldContext>& WorldContext,
+            TS<__F_Object>& OutObject,
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<__F_Object>& Type = TF_ReflectionTypeHandle<__F_Object>(F_ReflectionContext::GetGlobal())
+        )
+        {
+            return WorldContext->GetEnvironment()->PopulateObjectDelayLoading<__F_Object>(
                 OutObject,
                 Name,
                 PackageName,

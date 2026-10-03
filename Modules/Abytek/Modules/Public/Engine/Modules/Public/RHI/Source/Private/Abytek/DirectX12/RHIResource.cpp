@@ -46,6 +46,10 @@ namespace Abytek
             {
                 Result |= D3D12_RESOURCE_STATE_INDEX_BUFFER;
             }
+            if (FlagHasAny(Access.GPU, E_RHIResourceGPUAccess::INDIRECT_ARGUMENT))
+            {
+                Result |= D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
+            }
             if (FlagHasAny(Access.GPU, E_RHIResourceGPUAccess::COPY_SOURCE))
             {
                 Result |= D3D12_RESOURCE_STATE_COPY_SOURCE;

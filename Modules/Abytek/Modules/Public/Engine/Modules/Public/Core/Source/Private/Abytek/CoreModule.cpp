@@ -79,6 +79,7 @@ namespace Abytek
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
         I_Cookable::_GlobalInit();
 #endif
+        F_World::GlobalInit();
         A_WorldSubsystem::GlobalInit();
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
         F_EBTCookManager::GlobalInit();
@@ -90,6 +91,7 @@ namespace Abytek
         F_EBTCookManager::GlobalRelease();
 #endif
         A_WorldSubsystem::GlobalRelease();
+        F_World::GlobalRelease();
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
         I_Cookable::_GlobalRelease();
 #endif

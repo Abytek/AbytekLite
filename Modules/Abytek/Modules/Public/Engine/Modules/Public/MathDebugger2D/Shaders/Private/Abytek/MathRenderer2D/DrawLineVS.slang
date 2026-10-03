@@ -70,6 +70,6 @@ Abytek::MathRenderer2D::F_PSInput MainVS(Abytek::MathRenderer2D::F_VSInput VSInp
     float4 WorldPosition = mul(DrawLineUniformData.Space.Transform, LocalPosition);
 
     Abytek::MathRenderer2D::F_PSInput PSInput;
-    PSInput.ClipPosition = mul(DrawLineUniformData.View.InvTransform, WorldPosition);
+    PSInput.ClipOrPixelPosition = mul(DrawLineUniformData.View.InvTransform, WorldPosition);
     return PSInput;
 }

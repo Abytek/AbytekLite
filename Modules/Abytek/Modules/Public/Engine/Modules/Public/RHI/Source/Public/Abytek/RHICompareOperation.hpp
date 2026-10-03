@@ -5,7 +5,7 @@
 
 namespace Abytek
 {
-    enum class E_RHICompareOperation : U16
+    enum class E_RHICompareOperation : U8
     {
         NONE,
         NEVER,

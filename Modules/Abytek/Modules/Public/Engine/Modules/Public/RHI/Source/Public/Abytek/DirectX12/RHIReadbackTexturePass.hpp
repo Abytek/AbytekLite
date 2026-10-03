@@ -12,7 +12,7 @@ namespace Abytek
     {
     private:
         TF_RHIImageView<true> _ImageView;
-        F_RHITransientReadbackBufferRange_V2 _TransientReadbackBufferRange;
+        F_RHITransientReadbackBufferRange _TransientReadbackBufferRange;
         U32 _NumSubresources = 0;
         TF_SmallVector<D3D12_PLACED_SUBRESOURCE_FOOTPRINT, 3> _SubImages_ReadbackFootprint;
         TF_SmallVector<U32, 6> _SubImages_NumRow;

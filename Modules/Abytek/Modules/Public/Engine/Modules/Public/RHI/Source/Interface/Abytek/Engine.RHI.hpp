@@ -89,7 +89,6 @@
 #include "Abytek/RHIRayTracePassProxy.hpp"
 #include "Abytek/RHIWorkGraphPass.hpp"
 #include "Abytek/RHIWorkGraphPassProxy.hpp"
-#include "Abytek/RHITransientUploadBufferManager.hpp"
 
 #include "Abytek/RHIFeature.hpp"
 

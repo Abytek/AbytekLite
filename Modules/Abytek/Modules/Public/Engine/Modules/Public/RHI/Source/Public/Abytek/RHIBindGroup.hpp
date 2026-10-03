@@ -169,7 +169,7 @@ namespace Abytek
     using F_RHIUniformData = TF_SmallVector<U8, 256>;
     using F_RHIUniformDataView = TF_Span<U8>;
     
-    enum class E_RHIBindGroupSlotType : U16
+    enum class E_RHIBindGroupSlotType : U8
     {
         NONE,
         RESOURCE_VIEW,
@@ -811,7 +811,8 @@ namespace Abytek
         virtual void BindResourceView(
             U32 Index,
             const TS_Valid<A_RHIResource>& Resource,
-            const F_RHIResourceAccess& Access
+            const F_RHIResourceAccess& Access,
+            E_RHIFormat Format = E_RHIFormat::NONE
         );
         virtual void BindResourceView(
             U32 Index,
@@ -882,7 +883,8 @@ namespace Abytek
         void BindResourceView(
             const F_Name& Name,
             const TS_Valid<A_RHIResource>& Resource,
-            const F_RHIResourceAccess& Access
+            const F_RHIResourceAccess& Access,
+            E_RHIFormat Format = E_RHIFormat::NONE
         );
         void BindResourceView(
             const F_Name& Name,

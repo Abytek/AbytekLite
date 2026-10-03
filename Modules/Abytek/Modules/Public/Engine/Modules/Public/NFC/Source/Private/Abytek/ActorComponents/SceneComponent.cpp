@@ -6,6 +6,10 @@ namespace Abytek
     ABYTEK_REFLECT(F_SceneComponent)
     {
         ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::F_SceneComponent"));
+        ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(_Parent); 
+        ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(_Childs);
+        ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(_IndexInParent);
+        ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(_LocalTransform);
     }
     
     F_SceneComponent::F_SceneComponent(const F_SerializableObjectInitParams& InitParams) :
@@ -23,42 +27,80 @@ namespace Abytek
     {
     }
 
-    void F_SceneComponent::OnParentChanged(const TW<F_SceneComponent>& LastParent)
+    void F_SceneComponent::OnParentChanged()
     {
     }
-    void F_SceneComponent::OnLocalTransformChanged(const F_Transform& LastLocalTransform)
+    void F_SceneComponent::OnTransformChanged()
     {
     }
 
     void F_SceneComponent::SetParent(const TW<F_SceneComponent>& Value)
     {
         TW<F_SceneComponent> LastParent = _Parent;
+        if (_Parent)
+        {
+            auto& Childs = _Parent->_Childs;
+            Childs.back()->_IndexInParent = _IndexInParent;
+            _IndexInParent = ~U32(0);
+            std::swap(
+                Childs[_IndexInParent],
+                Childs.back()
+            );
+            Childs.pop_back();
+        }
         _Parent = Value;
-        OnParentChanged(LastParent);
+        if (_Parent)
+        {
+            auto& Childs = _Parent->_Childs;
+            _IndexInParent = static_cast<U32>(Childs.size());
+            Childs.push_back(ABYTEK_WTHIS());
+        }
+        OnParentChanged();
+        
+        for (const auto& Child : _Childs)
+        {
+            Child->OnTransformChanged();
+        }
     }
     void F_SceneComponent::SetLocalTransform(const F_Transform& Value)
     {
-        F_Transform LastLocalTransform = _LocalTransform;
         _LocalTransform = Value;
-        OnLocalTransformChanged(LastLocalTransform);
+        OnTransformChanged();
+        
+        for (const auto& Child : _Childs)
+        {
+            Child->OnTransformChanged();
+        }
     }
     void F_SceneComponent::SetLocalPosition(const F_Vector3& Value)
     {
-        F_Transform LastLocalTransform = _LocalTransform;
         _LocalTransform.Position = Value;
-        OnLocalTransformChanged(LastLocalTransform);
+        OnTransformChanged();
+        
+        for (const auto& Child : _Childs)
+        {
+            Child->OnTransformChanged();
+        }
     }
     void F_SceneComponent::SetLocalRotation(const F_Rotator& Value)
     {
-        F_Transform LastLocalTransform = _LocalTransform;
         _LocalTransform.Rotation = Value;
-        OnLocalTransformChanged(LastLocalTransform);
+        OnTransformChanged();
+        
+        for (const auto& Child : _Childs)
+        {
+            Child->OnTransformChanged();
+        }
     }
     void F_SceneComponent::SetLocalScale(const F_Vector3& Value)
     {
-        F_Transform LastLocalTransform = _LocalTransform;
         _LocalTransform.Scale = Value;
-        OnLocalTransformChanged(LastLocalTransform);
+        OnTransformChanged();
+        
+        for (const auto& Child : _Childs)
+        {
+            Child->OnTransformChanged();
+        }
     }
 
     void F_SceneComponent::SetWorldPosition(const F_Vector3& Value)
