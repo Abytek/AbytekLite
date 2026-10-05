@@ -66,16 +66,9 @@ namespace Abytek
         {
         case DirectX12SharedRHITemplateSerializer::E_TemplateType::BIND_GROUP:
             {
-                F_RHIBindGroupTemplateBuildParams BuildParams;
+                F_RHIBindGroupTemplateConfig Config;
                 {
-                    ABYTEK_FEEDBACK_STATUS_CHECK(View >> BuildParams);
-                    BuildParams.Database = TemplateDatabase.Weak();
-                    BuildParams.CustomHashCode = TemplateHashCode;
-                }
-                
-                F_DirectX12SharedRHIBindGroupTemplateCompiledData CompiledData;
-                {
-                    ABYTEK_FEEDBACK_STATUS_CHECK(View >> CompiledData);
+                    ABYTEK_FEEDBACK_STATUS_CHECK(View >> Config);
                 }
                 
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
@@ -86,30 +79,27 @@ namespace Abytek
                 }
 #endif
                 
+                F_DirectX12SharedRHIBindGroupTemplateCompiledData CompiledData;
+                {
+                    ABYTEK_FEEDBACK_STATUS_CHECK(View >> CompiledData);
+                }
+                
                 OutTemplate = TS<F_DirectX12SharedRHIBindGroupTemplate>()(
-                    ABYTEK_MOVE(BuildParams),    
+                    TemplateDatabase.Weak(),
+                    TemplateHashCode,
+                    Config,
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+                    CompileConfig,    
+#endif
                     ABYTEK_MOVE(CompiledData)    
                 );
-#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
-                if (View.HasDevelopmentBuild)
-                {
-                    OutTemplate.FastCast<F_DirectX12SharedRHIBindGroupTemplate>()->SetCompileConfig(CompileConfig);
-                }
-#endif
             }
             break;
         case DirectX12SharedRHITemplateSerializer::E_TemplateType::PIPELINE_STATE:
             {
-                F_RHIPipelineStateTemplateBuildParams BuildParams;
+                F_RHIPipelineStateTemplateConfig Config;
                 {
-                    ABYTEK_FEEDBACK_STATUS_CHECK(View >> BuildParams);
-                    BuildParams.Database = TemplateDatabase.Weak();
-                    BuildParams.CustomHashCode = TemplateHashCode;
-                }
-                
-                F_DirectX12SharedRHIPipelineStateTemplateCompiledData CompiledData;
-                {
-                    ABYTEK_FEEDBACK_STATUS_CHECK(View >> CompiledData);
+                    ABYTEK_FEEDBACK_STATUS_CHECK(View >> Config);
                 }
                 
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
@@ -122,14 +112,23 @@ namespace Abytek
                 }
 #endif
                 
+                F_DirectX12SharedRHIPipelineStateTemplateCompiledData CompiledData;
+                {
+                    ABYTEK_FEEDBACK_STATUS_CHECK(View >> CompiledData);
+                }
+                
                 OutTemplate = TS<F_DirectX12SharedRHIPipelineStateTemplate>()(
-                    ABYTEK_MOVE(BuildParams),    
+                    TemplateDatabase.Weak(),
+                    TemplateHashCode,
+                    Config,
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+                    CompileConfig,    
+#endif
                     ABYTEK_MOVE(CompiledData)    
                 );
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
                 if (View.HasDevelopmentBuild)
                 {
-                    OutTemplate.FastCast<F_DirectX12SharedRHIPipelineStateTemplate>()->SetCompileConfig(CompileConfig);
                     for (const auto& [_, SlangShaderFileVersion] : SlangShaderFileVersions)
                     {
                         OutTemplate.FastCast<F_DirectX12SharedRHIPipelineStateTemplate>()->AddSlangShaderFileVersion(SlangShaderFileVersion);
@@ -140,16 +139,9 @@ namespace Abytek
             break;
         case DirectX12SharedRHITemplateSerializer::E_TemplateType::ROOT_SIGNATURE:
             {
-                F_DirectX12SharedRHIRootSignatureTemplateBuildParams BuildParams;
+                F_DirectX12SharedRHIRootSignatureTemplateConfig Config;
                 {
-                    ABYTEK_FEEDBACK_STATUS_CHECK(View >> BuildParams);
-                    BuildParams.Database = TemplateDatabase.Weak();
-                    BuildParams.CustomHashCode = TemplateHashCode;
-                }
-                
-                F_DirectX12SharedRHIRootSignatureTemplateCompiledData CompiledData;
-                {
-                    ABYTEK_FEEDBACK_STATUS_CHECK(View >> CompiledData);
+                    ABYTEK_FEEDBACK_STATUS_CHECK(View >> Config);
                 }
                 
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
@@ -160,16 +152,20 @@ namespace Abytek
                 }
 #endif
                 
+                F_DirectX12SharedRHIRootSignatureTemplateCompiledData CompiledData;
+                {
+                    ABYTEK_FEEDBACK_STATUS_CHECK(View >> CompiledData);
+                }
+                
                 OutTemplate = TS<F_DirectX12SharedRHIRootSignatureTemplate>()(
-                    ABYTEK_MOVE(BuildParams),    
+                    TemplateDatabase.Weak(),
+                    TemplateHashCode,
+                    Config,
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+                    CompileConfig,    
+#endif
                     ABYTEK_MOVE(CompiledData)    
                 );
-#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
-                if (View.HasDevelopmentBuild)
-                {
-                    OutTemplate.FastCast<F_DirectX12SharedRHIRootSignatureTemplate>()->SetCompileConfig(CompileConfig);
-                }
-#endif
             }
             break;
         default:
@@ -206,11 +202,6 @@ namespace Abytek
                     ABYTEK_FEEDBACK_STATUS_CHECK(View << Config);
                 }
                 
-                {
-                    const auto& CompiledData = BindGroupTemplate->GetCompiledData();
-                    ABYTEK_FEEDBACK_STATUS_CHECK(View << CompiledData);
-                }
-                
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
                 if (View.HasDevelopmentBuild)
                 {
@@ -218,6 +209,11 @@ namespace Abytek
                     ABYTEK_FEEDBACK_STATUS_CHECK(View << CompileConfig);
                 }
 #endif
+                
+                {
+                    const auto& CompiledData = BindGroupTemplate->GetCompiledData();
+                    ABYTEK_FEEDBACK_STATUS_CHECK(View << CompiledData);
+                }
             }
             break;
         case DirectX12SharedRHITemplateSerializer::E_TemplateType::PIPELINE_STATE:
@@ -229,11 +225,6 @@ namespace Abytek
                     ABYTEK_FEEDBACK_STATUS_CHECK(View << Config);
                 }
                 
-                {
-                    const auto& CompiledData = PipelineStateTemplate->GetCompiledData();
-                    ABYTEK_FEEDBACK_STATUS_CHECK(View << CompiledData);
-                }
-                
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
                 if (View.HasDevelopmentBuild)
                 {
@@ -243,6 +234,11 @@ namespace Abytek
                     ABYTEK_FEEDBACK_STATUS_CHECK(View << SlangShaderFileVersions);
                 }
 #endif
+                
+                {
+                    const auto& CompiledData = PipelineStateTemplate->GetCompiledData();
+                    ABYTEK_FEEDBACK_STATUS_CHECK(View << CompiledData);
+                }
             }
             break;
         case DirectX12SharedRHITemplateSerializer::E_TemplateType::ROOT_SIGNATURE:
@@ -254,11 +250,6 @@ namespace Abytek
                     ABYTEK_FEEDBACK_STATUS_CHECK(View << Config);
                 }
                 
-                {
-                    const auto& CompiledData = RootSignatureTemplate->GetCompiledData();
-                    ABYTEK_FEEDBACK_STATUS_CHECK(View << CompiledData);
-                }
-                
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
                 if (View.HasDevelopmentBuild)
                 {
@@ -266,6 +257,11 @@ namespace Abytek
                     ABYTEK_FEEDBACK_STATUS_CHECK(View << CompileConfig);
                 }
 #endif
+                
+                {
+                    const auto& CompiledData = RootSignatureTemplate->GetCompiledData();
+                    ABYTEK_FEEDBACK_STATUS_CHECK(View << CompiledData);
+                }
             }
             break;
         default:

@@ -19,12 +19,11 @@ namespace Abytek
 
     void A_Renderable::SetupRenderable()
     {
-        TW<F_World> World = ABYTEK_WTHIS().DynamicCast<I_GetWorld>()->GetWorld();
-        _ShouldEnableProxy = World->HasFlags(E_WorldFlag::CREATE_RENDER_SCENE);
-        if (ShouldEnableProxy())
+        _RenderRegistryPort = FindRenderRegistryPort();
+        if (_RenderRegistryPort)
         {
             _RenderProxy = CreateRenderProxy();
-            _RenderProxy->Init(GetRenderRegistry());
+            _RenderProxy->Init(_RenderRegistryPort);
             if (IsRenderable())
             {
                 CreateRenderState();
@@ -33,20 +32,21 @@ namespace Abytek
     }
     void A_Renderable::CleanUpRenderable()
     {
-        if (ShouldEnableProxy())
+        if (_RenderRegistryPort)
         {
             if (CreatedRenderState())
             {
                 DestroyRenderState();
             }
-            _RenderProxy->Release(); 
+            _RenderProxy->Release(_RenderRegistryPort); 
             _RenderProxy = {};
         }
+        _RenderRegistryPort = {};
     }
 
     B8 A_Renderable::IsRenderable() const
     {
-        return ShouldEnableProxy();
+        return static_cast<B8>(_RenderRegistryPort);
     }
 
     void A_Renderable::OnCreateRenderState()
@@ -60,7 +60,7 @@ namespace Abytek
     {
         _CreatedRenderState = true;
 #ifdef ABYTEK_DEBUG_INFO
-        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
+        _RenderRegistryPort->EnqueueCommand(
             [RenderProxy = _RenderProxy, DebugName = ABYTEK_WTHIS().DynamicCast<A_Object>()->GetDebugName()]
             {
                 RenderProxy->SetDebugName(DebugName);
@@ -68,24 +68,28 @@ namespace Abytek
         );
 #endif
         OnCreateRenderState();
-        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
-            [RenderProxy = _RenderProxy]
+        _RenderRegistryPort->EnqueueCommand(
+            [RenderProxy = _RenderProxy, RenderRegistryPortData = _RenderRegistryPort->GetData()]
             {
-                RenderProxy->OnCreateRenderState_RenderTask(H_RHI::GetMainSubmissionQueue());
+                RenderProxy->OnCreateRenderState_RenderTask(
+                    RenderRegistryPortData->GetSubmissionItemContainer()
+                );
             }
         );
     }
     void A_Renderable::DestroyRenderState()
     {
         OnDestroyRenderState();
-        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
-            [RenderProxy = _RenderProxy]
+        _RenderRegistryPort->EnqueueCommand(
+            [RenderProxy = _RenderProxy, RenderRegistryPortData = _RenderRegistryPort->GetData()]
             {
-                RenderProxy->OnDestroyRenderState_RenderTask(H_RHI::GetMainSubmissionQueue());
+                RenderProxy->OnDestroyRenderState_RenderTask(
+                    RenderRegistryPortData->GetSubmissionItemContainer()
+                );
             }
         );
 #ifdef ABYTEK_DEBUG_INFO
-        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
+        _RenderRegistryPort->EnqueueCommand(
             [RenderProxy = _RenderProxy]
             {
                 RenderProxy->SetDebugName({});
@@ -108,5 +112,11 @@ namespace Abytek
         return H_WorldContext::GetUnit<F_RenderCoreManager>(
             ABYTEK_WTHIS().DynamicCast<I_GetWorld>()->GetWorld()    
         )->GetMainRegistry();
+    }
+
+    TS<A_RenderRegistryPort> A_Renderable::FindRenderRegistryPort() const
+    {
+        auto RenderRegistry = GetRenderRegistry();
+        return RenderRegistry->GetMainPort();
     }
 }

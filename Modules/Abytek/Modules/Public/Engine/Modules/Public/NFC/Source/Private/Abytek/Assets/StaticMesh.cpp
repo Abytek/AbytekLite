@@ -345,6 +345,34 @@ namespace Abytek
         RecreateRenderState();
     }
 
+    void F_StaticMesh::SetLevels(const TF_Span<const F_StaticMeshLevel>& Levels)
+    {
+        if (auto RenderProxy = GetRenderProxy())
+        {
+            TF_Vector<F_StaticMeshLevelRenderProxy> LevelProxies;
+            LevelProxies.reserve(Levels.size());
+            for (const auto& Level : Levels)
+            {
+                F_StaticMeshLevelRenderProxy LevelProxy;
+                if (auto LevelMeshRenderProxy = Level.Mesh->GetRenderProxy())
+                {
+                    LevelProxy.MeshRenderProxy = LevelMeshRenderProxy.FastCast<F_StaticMeshRenderProxy>();
+                }
+                LevelProxies.push_back(LevelProxy);
+            }
+            
+            H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
+                [
+                    CastedRenderProxy = RenderProxy.FastCast<F_StaticMeshRenderProxy>(),
+                    CachedLevelProxies = ABYTEK_MOVE(LevelProxies)
+                ]
+                {
+                    CastedRenderProxy->_LevelRenderProxies = ABYTEK_MOVE(CachedLevelProxies);
+                }
+            );
+        }
+    }
+
     void F_StaticMesh::UpdateSetting(const F_StaticMeshSetting& Setting)
     {
         _Setting = Setting;

@@ -11,6 +11,34 @@
 
 namespace Abytek
 {
+    ABYTEK_REFLECT(F_WorldRenderResourceOwner)
+    {
+        ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::F_WorldRenderResourceOwner"));
+    }
+    
+    F_WorldRenderResourceOwner::F_WorldRenderResourceOwner(const F_SerializableObjectInitParams& InitParams) :
+        A_WorldContext(InitParams)
+    {
+        _Manager = H_WorldContext::GetUnit<F_RendererManager>(ABYTEK_WTHIS());
+    }
+    F_WorldRenderResourceOwner::~F_WorldRenderResourceOwner()
+    {
+    }
+
+    void F_WorldRenderResourceOwner::OnLoad()
+    {
+        SetupRenderable();
+    }
+    void F_WorldRenderResourceOwner::OnUnload()
+    {
+        CleanUpRenderable();
+    }
+
+    TS<A_RenderProxy> F_WorldRenderResourceOwner::CreateRenderProxy()
+    {
+        return TS<F_WorldRenderResource>()(ABYTEK_WTHIS());
+    }
+
     ABYTEK_REFLECT(F_RendererManager)
     {
         ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::F_RendererManager"));
@@ -47,7 +75,13 @@ namespace Abytek
                 RenderPathType
             );
         }
-        SetupRenderable();
+        {
+            _WorldRenderResourceOwner = H_WorldContext::CreateObjectDelayLoading<F_WorldRenderResourceOwner>(
+                GetWorld()  
+            );
+            // Force load
+            _WorldRenderResourceOwner->CallLoad();
+        }
     }
     void F_RendererManager::OnStartup()
     {
@@ -57,21 +91,7 @@ namespace Abytek
     }
     void F_RendererManager::OnRelease()
     {
-        CleanUpRenderable();
+        _WorldRenderResourceOwner = {};
         _RenderPath = {};
-    }
-
-    B8 F_RendererManager::IsRenderable() const
-    {
-        if (!A_Renderable::IsRenderable())
-        {
-            return false;
-        }
-        return GetWorld()->HasFlags(E_WorldFlag::CREATE_RENDER_SCENE);
-    }
-
-    TS<A_RenderProxy> F_RendererManager::CreateRenderProxy()
-    {
-        return TS<F_WorldRenderResource>()(ABYTEK_WTHIS());
     }
 }

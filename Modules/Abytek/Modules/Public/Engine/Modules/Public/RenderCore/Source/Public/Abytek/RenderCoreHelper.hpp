@@ -9,7 +9,6 @@ namespace Abytek
     class F_RenderRegistry;
     class F_RenderRegistryRuntime;
     class F_GlobalRenderPack;
-    class F_RenderPackProxy;
     struct F_RenderCoreRHIConfig;
     
     struct ABYTEK_ENGINE_RENDER_CORE_API H_RenderCore
@@ -49,19 +48,6 @@ namespace Abytek
         static TS<F_GlobalRenderPack> GetGlobalPack(
             const TW_Valid<A_WorldContext>& WorldContext    
         );
-        
-        static B8 IsRootTemplate(const TW_Valid<A_RHITemplate>& Template)
-        {
-            if (Template.CheckPolymorphism<A_RHIBindGroupTemplate>())
-            {
-                return true;
-            }
-            if (Template.CheckPolymorphism<A_RHIPipelineStateTemplate>())
-            {
-                return true;
-            }
-            return false;
-        }
         
         template<typename __F_Namespace>
         static constexpr F_RHITemplateHashCode GenerateBaseDependencyHashCodeForTemplates(F_RHITemplateHashCode RawHashCode = 0)

@@ -367,9 +367,6 @@ namespace Abytek
             return !(A == B);
         }
     };
-    struct F_RHIPipelineStateTemplateBuildParams : F_RHITemplateBuildParamsBase, F_RHIPipelineStateTemplateConfig
-    {
-    };
 
     struct F_RHIPipelineStateTemplateShader
     {
@@ -659,7 +656,8 @@ namespace Abytek
             return F_FeedbackStatus::MakeSucceeded();
         }
     };
-    struct F_RHIPipelineStateTemplateCompileParams : F_RHIPipelineStateTemplateBuildParams, F_RHIPipelineStateTemplateCompileConfig
+    
+    struct F_RHIPipelineStateTemplateCompileParams : A_RHITemplateCompileParams, F_RHIPipelineStateTemplateConfig, F_RHIPipelineStateTemplateCompileConfig
     {
     };
     
@@ -720,7 +718,14 @@ namespace Abytek
         }
 
     protected:
-        A_RHIPipelineStateTemplate(const F_RHIPipelineStateTemplateBuildParams& BuildParams);
+        A_RHIPipelineStateTemplate(
+            const TW_Valid<A_RHITemplateDatabase>& Database,
+            F_RHITemplateHashCode HashCode,
+            const F_RHIPipelineStateTemplateConfig& Config
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+            , const F_RHIPipelineStateTemplateCompileConfig& CompileConfig
+#endif
+        );
 
     public:
         ~A_RHIPipelineStateTemplate() override;
@@ -730,14 +735,32 @@ namespace Abytek
         
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
     public:
-        void SetCompileConfig(const F_RHIPipelineStateTemplateCompileConfig& X)
-        {
-            _CompileConfig = X;
-        }
         void AddSlangShaderFileVersion(const F_RHISlangShaderFileVersion& X)
         {
             _SlangShaderFileVersions.insert({ X.Path, X });
         }
 #endif
+        
+    protected:
+        void PostCreateExportedData(const TS<A_RHITemplateExportedData>& ExportedData) const override;
+    };
+    
+    struct A_RHIPipelineStateTemplateExportedData : A_RHITemplateExportedData
+    {
+        F_RHIPipelineStateTemplateConfig Config;
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        F_RHIPipelineStateTemplateCompileConfig CompileConfig;
+        TF_Map<F_Text, F_RHISlangShaderFileVersion> SlangShaderFileVersions;
+#endif
+        
+    protected:
+        void PostCreateTemplate(const TS<A_RHITemplate>& Template) const override
+        {
+            A_RHITemplateExportedData::PostCreateTemplate(Template);
+            for (const auto& [_, SlangShaderFileVersion] : SlangShaderFileVersions)
+            {
+                Template.FastCast<A_RHIPipelineStateTemplate>()->AddSlangShaderFileVersion(SlangShaderFileVersion);
+            }
+        }
     };
 }

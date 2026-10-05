@@ -18,9 +18,5 @@ namespace Abytek
         {
             public F_RenderGeometryAddress Address;
         };
-        public struct F_Component_GeometryAllocationStructure_ECMS
-        {
-            public F_RenderGeometryAllocationStructure_ECMS AllocationStructure;
-        };
     }
 }

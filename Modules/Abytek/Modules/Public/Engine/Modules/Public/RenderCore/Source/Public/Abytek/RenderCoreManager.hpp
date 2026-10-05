@@ -12,7 +12,6 @@ namespace Abytek
     class F_RenderRegistryRuntime;
     class F_RenderCorePack;
     class F_GlobalRenderPack;
-    class F_RenderPackProxy;
     
     class ABYTEK_ENGINE_RENDER_CORE_API F_RenderCoreManager final : public A_WorldSubsystem
     {

@@ -5,7 +5,7 @@ __exported import Abytek.Renderer.ECMSMeshData;
 namespace Abytek
 {
     public typealias F_RenderGeometryAddress = uint2;
-    
+    public static F_RenderGeometryAddress INVALID_RENDER_GEOMETRY_ADDRESS = F_RenderGeometryAddress(~uint(0), ~uint(0));
     public struct H_RenderGeometryAddress
     {
         public static void Pack(out F_RenderGeometryAddress OutGeometryAddress, uint PageIndex, uint OffsetInBytes)
@@ -42,7 +42,6 @@ namespace Abytek
     };
     public struct F_StaticMeshGeometryUniformData_Simple
     {
-        public F_RenderGeometryAllocationStructure_Simple GeometryAllocationStructure;
         public F_RenderGeometryAddress GeometryAddress;
         private uint2 ___Padding___ = uint2(0);
     };
@@ -68,7 +67,6 @@ namespace Abytek
     };
     public struct F_StaticMeshGeometryUniformData_ECMS
     {
-        public F_RenderGeometryAllocationStructure_ECMS GeometryAllocationStructure;
         public F_RenderGeometryAddress GeometryAddress;
         private uint2 ___Padding___ = uint2(0);
     };

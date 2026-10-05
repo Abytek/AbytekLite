@@ -29,48 +29,39 @@ namespace Abytek
     public:
         F_RHICommonCompilationStatus D3DCompileBindGroupTemplate(
             const F_RHIBindGroupTemplateCompileParams& CompileParams,
-            const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
             TS<A_RHIBindGroupTemplate>& OutCompiledObject
         );
         F_RHICommonCompilationStatus D3DCompilePipelineStateTemplate(
             const F_RHIPipelineStateTemplateCompileParams& CompileParams,
-            const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
             TS<A_RHIPipelineStateTemplate>& OutCompiledObject
         );
         F_RHICommonCompilationStatus D3DCompileRootSignatureTemplate(
             const F_DirectX12SharedRHIRootSignatureTemplateCompileParams& CompileParams,
-            const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
             TS<F_DirectX12SharedRHIRootSignatureTemplate>& OutCompiledObject
         );
 
     public:
         F_RHICommonCompilationStatus ValidateBindGroupTemplate(
-            const F_RHIBindGroupTemplateCompileParams& CompileParams,
-            const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase
+            const F_RHIBindGroupTemplateCompileParams& CompileParams
         ) override;
         F_RHICommonCompilationStatus ValidatePipelineStateTemplate(
-            const F_RHIPipelineStateTemplateCompileParams& CompileParams,
-            const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase
+            const F_RHIPipelineStateTemplateCompileParams& CompileParams
         ) override;
         F_RHICommonCompilationStatus ValidateRootSignatureTemplate(
-            const F_DirectX12SharedRHIRootSignatureTemplateCompileParams& CompileParams,
-            const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase
+            const F_DirectX12SharedRHIRootSignatureTemplateCompileParams& CompileParams
         );
 
     public:
         F_RHICommonCompilationStatus CompileBindGroupTemplate(
             const F_RHIBindGroupTemplateCompileParams& CompileParams,
-            const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
             TS<A_RHIBindGroupTemplate>& OutCompiledObject
         ) override;
         F_RHICommonCompilationStatus CompilePipelineStateTemplate(
             const F_RHIPipelineStateTemplateCompileParams& CompileParams,
-            const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
             TS<A_RHIPipelineStateTemplate>& OutCompiledObject
         ) override;
         F_RHICommonCompilationStatus CompileRootSignatureTemplate(
             const F_DirectX12SharedRHIRootSignatureTemplateCompileParams& CompileParams,
-            const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
             TS<F_DirectX12SharedRHIRootSignatureTemplate>& OutCompiledObject
         );
     };

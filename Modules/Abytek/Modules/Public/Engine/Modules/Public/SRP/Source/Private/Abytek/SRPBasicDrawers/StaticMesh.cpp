@@ -91,8 +91,7 @@ namespace Abytek
                     StaticMeshBindGroup->BindUniformData(ABYTEK_NAME("StaticMeshUniformData"), StaticMeshUniformData);
                     {
                         auto GeometryUniformData = F_StaticMeshGeometryUniformData_Simple::Make(
-                            Resource->GeometryAllocation,
-                            Resource->GeometryAllocationStructure
+                            Resource->GeometryAllocation
                         );
                         StaticMeshBindGroup->BindUniformData(ABYTEK_NAME("StaticMeshGeometryUniformData_Simple"), GeometryUniformData);
                     }
@@ -124,8 +123,7 @@ namespace Abytek
                     StaticMeshBindGroup->BindUniformData(ABYTEK_NAME("StaticMeshUniformData"), StaticMeshUniformData);
                     {
                         auto GeometryUniformData = F_StaticMeshGeometryUniformData_ECMS::Make(
-                            Resource->GeometryAllocation,
-                            Resource->GeometryAllocationStructure
+                            Resource->GeometryAllocation
                         );
                         StaticMeshBindGroup->BindUniformData(ABYTEK_NAME("StaticMeshGeometryUniformData_ECMS"), GeometryUniformData);
                     }

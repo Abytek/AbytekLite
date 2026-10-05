@@ -853,3 +853,14 @@ namespace Abytek
 
 
 #define ABYTEK_MEMBER_OFFSET(T, Member) offsetof(T, Member)
+
+
+#define ABYTEK_DEFAULT_COPY_OPERATORS(...) \
+            __VA_ARGS__(const __VA_ARGS__& X) = default; \
+            __VA_ARGS__& operator = (const __VA_ARGS__& X) = default
+#define ABYTEK_DEFAULT_MOVE_OPERATORS(...) \
+            __VA_ARGS__(__VA_ARGS__&& X) = default; \
+            __VA_ARGS__& operator = (__VA_ARGS__&& X) = default
+#define ABYTEK_DEFAULT_COPY_AND_MOVE_OPERATORS(...) \
+            ABYTEK_DEFAULT_COPY_OPERATORS(__VA_ARGS__); \
+            ABYTEK_DEFAULT_MOVE_OPERATORS(__VA_ARGS__)

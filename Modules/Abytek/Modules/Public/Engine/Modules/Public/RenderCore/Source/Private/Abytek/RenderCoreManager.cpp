@@ -3,7 +3,6 @@
 #include "Abytek/World/WorldContextHelper.hpp"
 #include "Abytek/ApplicationMountHelper.hpp"
 #include "Abytek/RenderPack.hpp"
-#include "Abytek/RenderPackProxy.hpp"
 #include "Abytek/RenderFeatureSets.hpp"
 #include "Abytek/GlobalRenderPack.hpp"
 #include "Abytek/ModuleList.hpp"
@@ -34,6 +33,7 @@ namespace Abytek
             _MainFeatureSupports.Model = E_RHIFeatureModel::DEFAULT;
             
             F_RenderRegistryBuildParams BuildParams;
+            BuildParams.World = GetWorld();
             BuildParams.RHIConfig.API = F_RHISubsystem::GetInstance()->GetActiveAPI();
             BuildParams.RHIConfig.FeatureSupports = _MainFeatureSupports;
 #ifdef ABYTEK_ENGINE_RHI_ENABLE_DRIVER_DEBUGGER
@@ -54,6 +54,9 @@ namespace Abytek
                 F_GlobalRenderPack::GetStaticName(),
                 F_GlobalRenderPack::GetStaticPackageName()
             );
+            
+            // Force load
+            _GlobalRenderPack->CallLoad();
         }
     }
     void F_RenderCoreManager::OnStartup()

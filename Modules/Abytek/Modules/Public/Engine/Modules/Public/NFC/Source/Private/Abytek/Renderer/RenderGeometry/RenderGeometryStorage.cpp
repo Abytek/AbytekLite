@@ -1,4 +1,6 @@
 #include "Abytek/Renderer/RenderGeometry/RenderGeometryStorage.hpp"
+
+#include "Abytek/Assets/Render/StaticMeshRenderProxy.hpp"
 #include "Abytek/Renderer/RenderGeometry/RenderGeometryPage.hpp"
 #include "Abytek/Renderer/RenderScene.hpp"
 
@@ -136,7 +138,7 @@ namespace Abytek
             ABYTEK_NAME("Abytek::F_RenderGeometryStorage::AddMeshData_Simple")
         );
         
-        U32 SizeInBytes = 0;
+        U32 SizeInBytes = sizeof(F_RenderGeometryAllocationStructure_Simple);
         
         F_RenderGeometryAllocationStructure_Simple GeometryAllocationStructure;
                 
@@ -165,6 +167,13 @@ namespace Abytek
         
         if (auto GeometryAllocation = Allocate(SubmissionItemContainer, SizeInBytes))
         {
+            H_RHISubmissionUtilities::UploadBuffer(
+                SubmissionItemContainer,
+                H_Frame::GetArena(E_FrameParamType::RENDER)->CacheBytes(GeometryAllocationStructure),
+                GeometryAllocation->Page->GetRHIBuffer(),
+                GeometryAllocation->BeginOffsetInBytes,
+                ABYTEK_NAME("GeometryAllocationStructure")
+            );
             H_RHISubmissionUtilities::UploadBuffer(
                 SubmissionItemContainer,
                 TF_Span<const U8>(
@@ -242,7 +251,7 @@ namespace Abytek
             ABYTEK_NAME("Abytek::F_RenderGeometryStorage::AddMeshData_ECMS")
         );
         
-        U32 SizeInBytes = 0;
+        U32 SizeInBytes = sizeof(F_RenderGeometryAllocationStructure_ECMS);
         
         F_RenderGeometryAllocationStructure_ECMS GeometryAllocationStructure;
                 
@@ -293,6 +302,13 @@ namespace Abytek
         
         if (auto GeometryAllocation = Allocate(SubmissionItemContainer, SizeInBytes))
         {
+            H_RHISubmissionUtilities::UploadBuffer(
+                SubmissionItemContainer,
+                H_Frame::GetArena(E_FrameParamType::RENDER)->CacheBytes(GeometryAllocationStructure),
+                GeometryAllocation->Page->GetRHIBuffer(),
+                GeometryAllocation->BeginOffsetInBytes,
+                ABYTEK_NAME("GeometryAllocationStructure")
+            );
             H_RHISubmissionUtilities::UploadBuffer(
                 SubmissionItemContainer,
                 TF_Span<const U8>(
@@ -371,6 +387,89 @@ namespace Abytek
         return false;
     }
     void F_RenderGeometryStorage::RemoveMeshData_ECMS(
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
+        const F_RenderGeometryAllocation& GeometryAllocation
+    )
+    {
+        _DeallocationQueue.Push(GeometryAllocation);
+    }
+
+    B8 F_RenderGeometryStorage::AddMeshData_LOD(
+        const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
+        const TF_Span<const F_StaticMeshLevelRenderProxy>& LevelRenderProxies,
+        E_StaticMeshDataType DataType,
+        F_RenderGeometryAllocation& OutGeometryAllocation,
+        F_RenderGeometryAllocationStructure_LOD& OutGeometryAllocationStructure
+    )
+    {
+        ABYTEK_RHI_CAPTURE_EVENT_SCOPE(
+            SubmissionItemContainer,
+            ABYTEK_NAME("Abytek::F_RenderGeometryStorage::AddMeshData_LOD")
+        );
+        
+        U32 SizeInBytes = sizeof(F_RenderGeometryAllocationStructure_LOD);
+        
+        F_RenderGeometryAllocationStructure_LOD GeometryAllocationStructure;
+        
+        GeometryAllocationStructure.NumLevels = static_cast<U32>(LevelRenderProxies.size());
+        SizeInBytes += GeometryAllocationStructure.NumLevels * sizeof(U32);
+        
+        GeometryAllocationStructure.GeometryAddresses_LocalOffsetInBytes = static_cast<U32>(
+            AlignAddress_PO2(SizeInBytes, ABYTEK_ALIGNOF(F_RenderGeometryAddress))
+        );
+        SizeInBytes += GeometryAllocationStructure.NumLevels * sizeof(F_RenderGeometryAddress);
+        
+        if (SizeInBytes == 0)
+        {
+            return false;
+        }
+        
+        TF_Vector<F_RenderGeometryAddress> GeometryAddresses;
+        
+        for (const auto& LevelRenderProxy : LevelRenderProxies)
+        {
+            F_RenderGeometryAddress GeometryAddress;
+            if (LevelRenderProxy.MeshRenderProxy)
+            {
+                if (
+                    const auto& Resource_ECMS = LevelRenderProxy.MeshRenderProxy->GetResource_ECMS();
+                    (DataType == E_StaticMeshDataType::ECMS)
+                    && Resource_ECMS
+                )
+                {
+                    GeometryAddress = F_RenderGeometryAddress::From(Resource_ECMS->GeometryAllocation);
+                }
+            }
+            GeometryAddresses.push_back(GeometryAddress);
+        }
+            
+        if (auto GeometryAllocation = Allocate(SubmissionItemContainer, SizeInBytes))
+        {
+            H_RHISubmissionUtilities::UploadBuffer(
+                SubmissionItemContainer,
+                H_Frame::GetArena(E_FrameParamType::RENDER)->CacheBytes(GeometryAllocationStructure),
+                GeometryAllocation->Page->GetRHIBuffer(),
+                GeometryAllocation->BeginOffsetInBytes,
+                ABYTEK_NAME("GeometryAllocationStructure")
+            );
+            H_RHISubmissionUtilities::UploadBuffer(
+                SubmissionItemContainer,
+                TF_Span<const U8>(
+                    (const U8*)GeometryAddresses.data(), 
+                    (const U8*)(GeometryAddresses.data() + GeometryAddresses.size()) 
+                ),
+                GeometryAllocation->Page->GetRHIBuffer(),
+                GeometryAllocation->BeginOffsetInBytes + GeometryAllocationStructure.GeometryAddresses_LocalOffsetInBytes,
+                ABYTEK_NAME("GeometryAddresses")
+            );
+            
+            OutGeometryAllocation = *GeometryAllocation;
+            OutGeometryAllocationStructure = GeometryAllocationStructure;
+            return true;
+        }
+        return false;
+    }
+    void F_RenderGeometryStorage::RemoveMeshData_LOD(
         const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
         const F_RenderGeometryAllocation& GeometryAllocation
     )

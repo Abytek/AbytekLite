@@ -6,15 +6,28 @@
 
 namespace Abytek
 {
-    A_RHIPipelineStateTemplate::A_RHIPipelineStateTemplate(const F_RHIPipelineStateTemplateBuildParams& BuildParams) :
-        A_RHITemplate(BuildParams),
-        _Config(static_cast<const F_RHIPipelineStateTemplateConfig&>(BuildParams))
+    A_RHIPipelineStateTemplate::A_RHIPipelineStateTemplate(
+        const TW_Valid<A_RHITemplateDatabase>& Database,
+        F_RHITemplateHashCode HashCode,
+        const F_RHIPipelineStateTemplateConfig& Config
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        , const F_RHIPipelineStateTemplateCompileConfig& CompileConfig
+#endif
+    ) :
+        A_RHITemplate(
+            Database,
+            HashCode
+        ),
+        _Config(Config)
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        , _CompileConfig(CompileConfig)
+#endif
     {
-        for (const auto& BindGroup : BuildParams.BindGroups)
+        for (const auto& BindGroup : Config.BindGroups)
         {
             F_RHITemplateHashCode BindGroupTemplateHashCode = BindGroup.TemplateHashCode;
             _BindGroupTemplates.push_back(
-                BuildParams.Database->GetTemplate(BindGroupTemplateHashCode)
+                Database->GetTemplate(BindGroupTemplateHashCode)
                 .FastCast<A_RHIBindGroupTemplate>()
             );
             EnsureDependencyHashCode(BindGroupTemplateHashCode);
@@ -30,5 +43,15 @@ namespace Abytek
         BuildParams.Context = Context;
         BuildParams.Template = ABYTEK_STHIS();
         return RACreateAndBuildShared<A_RHIPipelineStateTemplateRuntime>(BuildParams);
+    }
+
+    void A_RHIPipelineStateTemplate::PostCreateExportedData(const TS<A_RHITemplateExportedData>& ExportedData) const
+    {
+        A_RHITemplate::PostCreateExportedData(ExportedData);
+        const auto& CastedExportedData = ExportedData.FastCast<A_RHIPipelineStateTemplateExportedData>();
+        CastedExportedData->Config = _Config;
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        CastedExportedData->CompileConfig = _CompileConfig;
+#endif
     }
 }

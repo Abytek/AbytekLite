@@ -5,7 +5,7 @@
 namespace Abytek
 {
     A_RenderableComponentProxy::A_RenderableComponentProxy(const TW_Valid<A_RenderableComponent>& Component) :
-        A_WorldContextRenderProxy(Component)
+        A_WorldRenderResourceChild(Component)
     {
     }
     A_RenderableComponentProxy::~A_RenderableComponentProxy()

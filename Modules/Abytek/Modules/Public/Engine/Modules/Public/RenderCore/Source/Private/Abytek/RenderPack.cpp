@@ -1,7 +1,6 @@
 ﻿#include "Abytek/RenderPack.hpp"
 #include "Abytek/RenderCoreHelper.hpp"
 #include "Abytek/RenderRegistry.hpp"
-#include "Abytek/RenderPackProxy.hpp"
 #include "Abytek/Development/Cook/CookProfile.hpp"
 #include "Abytek/Development/Cook/CookSettingContainer.hpp"
 #include "Abytek/Development/RenderCore/RenderCoreCookSetting.hpp"
@@ -40,7 +39,10 @@ namespace Abytek
     void A_RenderPackTemplateMap::AddTemplate(const TS<A_RHITemplate>& Template)
     {
         ABYTEK_ENGINE_RENDER_CORE_ASSERT(!HasTemplate(Template->GetHashCode())) << "Already added template with hash code: " << Template->GetHashCode();
+        
         _Templates.insert({ Template->GetHashCode(), Template });
+        _SortedTemplates.push_back(Template.Weak());
+        
         OnAddTemplate(Template);
         OnModifyTemplates();
         for (const auto& RefTemplateHashCode : Template->GetDependencyHashCodes())
@@ -51,9 +53,19 @@ namespace Abytek
     void A_RenderPackTemplateMap::RemoveTemplate(F_RHITemplateHashCode HashCode)
     {
         ABYTEK_ENGINE_RENDER_CORE_ASSERT(HasTemplate(HashCode)) << "Not added template with hash code: " << HashCode;
+        
         OnModifyTemplates();
         OnRemoveTemplate(HashCode);
-        _Templates.erase(_Templates.find(HashCode));
+        
+        auto It = _Templates.find(HashCode);
+        _SortedTemplates.erase(
+            std::find(
+                _SortedTemplates.begin(),
+                _SortedTemplates.end(),
+                It->second.Weak()
+            )  
+        );
+        _Templates.erase(It);
     }
     void A_RenderPackTemplateMap::EnsureTemplate(const TS<A_RHITemplate>& Template)
     {
@@ -71,12 +83,10 @@ namespace Abytek
         
         while (true)
         {
-            B8 HasAnyTemplateToRemove = false;
-            
             TF_Set<F_RHITemplateHashCode> UsedTemplateHashCodes;
             for (const auto& [TemplateHashCode, Template] : Templates)
             {
-                if (H_RenderCore::IsRootTemplate(Template.Weak()))
+                if (Template->IsRootTemplate())
                 {
                     if (!UsedTemplateHashCodes.contains(TemplateHashCode))
                     {
@@ -101,10 +111,13 @@ namespace Abytek
                 }
                 NewTemplateHashCodesToRemove.push_back(TemplateHashCode);
             }
+            
+            B8 HasAnyTemplateToRemove = !NewTemplateHashCodesToRemove.empty();
             for (const auto& TemplateHashCode : NewTemplateHashCodesToRemove)
             {
                 Templates.erase(Templates.find(TemplateHashCode));
             }
+            
             TemplateHashCodesToRemove.insert(
                 TemplateHashCodesToRemove.end(), 
                 NewTemplateHashCodesToRemove.begin(), 
@@ -138,6 +151,33 @@ namespace Abytek
     }
     F_RenderPackTemplateMap::~F_RenderPackTemplateMap()
     {
+    }
+
+    F_RenderPackData::F_RenderPackData(
+        const TW_Valid<F_RenderPack>& Pack,
+        const TS<A_RenderRegistryPortData>& PortData
+    ) :
+        _Pack(Pack),
+        _PortData(PortData)
+    {
+    }
+    F_RenderPackData::~F_RenderPackData()
+    {
+    }
+
+    void F_RenderPackData::OnAddTemplate(const TS<A_RHITemplate>& Template)
+    {
+        auto TemplateRuntimeDatabase = _PortData->GetRegistryRuntime()->GetTemplateRuntimeDatabase();
+        _TemplateRuntimes[Template->GetHashCode()] = TemplateRuntimeDatabase->GetOrActivateRuntime(Template);
+    }
+    void F_RenderPackData::OnRemoveTemplate(F_RHITemplateHashCode HashCode)
+    {
+        _TemplateRuntimes.erase(_TemplateRuntimes.find(HashCode));
+    }
+
+    void F_RenderPackData::EnqueueCommand(TF_Function<void()>&& Command)
+    {
+        _PortData->GetPort()->EnqueueCommand(ABYTEK_MOVE(Command));
     }
 
     ABYTEK_REFLECT(F_RenderPack)
@@ -182,14 +222,22 @@ namespace Abytek
         _IsTemplatesLoaded = true;
         if (!HasSerializableFlags(E_SerializableObjectFlag::CDO))
         {
-            SetupRenderable();
+            _Registry->_RegistryPack(ABYTEK_WTHIS());
+            for (const auto& Port : _Registry->GetPorts())
+            {
+                AddData(Port->GetData());
+            }
         }
     }
     void F_RenderPack::OnUnload()
     {
         if (!HasSerializableFlags(E_SerializableObjectFlag::CDO))
         {
-            CleanUpRenderable();
+            for (const auto& Port : _Registry->GetPorts())
+            {
+                RemoveData(Port->GetData());
+            }
+            _Registry->_UnregistryPack(ABYTEK_WTHIS());
         }
         _IsTemplatesLoaded = false;
     }
@@ -272,41 +320,6 @@ namespace Abytek
         return F_FeedbackStatus::MakeSucceeded();
     }
 
-    void F_RenderPack::OnCreateRenderState()
-    {
-        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
-            [
-                RenderProxy = GetRenderProxy().FastCast<F_RenderPackProxy>(),
-                Registry = _Registry
-            ]
-            {
-                RenderProxy->_Registry = Registry;
-                RenderProxy->_RegistryRuntime = Registry->GetOrActiveRuntime(
-                    H_RHI::GetMainContext()
-                );
-            }
-        );
-        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
-            [
-                RenderProxy = GetRenderProxy().FastCast<F_RenderPackProxy>(),
-                Templates = GetTemplates()
-            ]
-            {
-                for (const auto& [TemplateHashCode, Template] : Templates)
-                {
-                    RenderProxy->EnsureTemplate(Template);
-                }
-            }
-        );
-    }
-    void F_RenderPack::OnDestroyRenderState()
-    {
-    }
-    TS<A_RenderProxy> F_RenderPack::CreateRenderProxy()
-    {
-        return TS<F_RenderPackProxy>()(ABYTEK_WTHIS());
-    }
-
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
     void F_RenderPack::PrepareTemplates(
         const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
@@ -322,17 +335,24 @@ namespace Abytek
         {
             return;
         }
-        if (IsRenderable())
+        if (!_DataList.empty())
         {
-            H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
-                [
-                    RenderProxy = GetRenderProxy().FastCast<F_RenderPackProxy>(),
-                    CachedTemplate = Template
-                ]
-                {
-                    RenderProxy->AddTemplate(CachedTemplate);
-                }
-            );
+            auto ExportedData = Template->ExportData();
+            for (const auto& Data : _DataList)
+            {
+                Data->EnqueueCommand(
+                    [
+                        CachedData = Data,
+                        CachedExportedData = ExportedData
+                    ]
+                    {
+                        auto TemplateDatabase = CachedData->GetPortData()->GetRegistryRuntime()->GetTemplateDatabase();
+                        CachedData->AddTemplate(
+                            CachedExportedData->Import(TemplateDatabase.Weak())
+                        );
+                    }
+                );
+            }
         }
     }
     void F_RenderPack::OnRemoveTemplate(F_RHITemplateHashCode HashCode)
@@ -342,15 +362,15 @@ namespace Abytek
         {
             return;
         }
-        if (IsRenderable())
+        for (const auto& Data : _DataList)
         {
-            H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
+            Data->EnqueueCommand(
                 [
-                    RenderProxy = GetRenderProxy().FastCast<F_RenderPackProxy>(),
-                    CachedTemplate = Template
+                    CachedData = Data,
+                    CachedTemplateHashCode = Template->GetHashCode()
                 ]
                 {
-                    RenderProxy->RemoveTemplate(CachedTemplate->GetHashCode());
+                    CachedData->RemoveTemplate(CachedTemplateHashCode);
                 }
             );
         }
@@ -381,6 +401,99 @@ namespace Abytek
     void F_RenderPack::CleanUpAfterCooking()
     {
         _CookedTemplateMap = {};
+    }
+#endif
+
+    void F_RenderPack::AddData(const TS<A_RenderRegistryPortData>& PortData)
+    {
+        auto Data = TS<F_RenderPackData>()(ABYTEK_WTHIS(), PortData);
+        _DataList.push_back(Data);
+        
+        const auto& Templates = GetSortedTemplates();
+        TF_Vector<TS<A_RHITemplateExportedData>> ExportedDataList;
+        ExportedDataList.reserve(Templates.size());
+        for (const auto& Template : Templates)
+        {
+            ExportedDataList.push_back(Template->ExportData());
+        }
+        Data->EnqueueCommand(
+            [
+                CachedData = Data,
+                CachedExportedDataList = ABYTEK_MOVE(ExportedDataList)
+            ]
+            {
+                auto TemplateDatabase = CachedData->GetPortData()->GetRegistryRuntime()->GetTemplateDatabase();
+                for (const auto& ExportedData : CachedExportedDataList)
+                {
+                    CachedData->EnsureTemplate(
+                        ExportedData->Import(TemplateDatabase.Weak())
+                    );
+                }
+            }
+        );
+    }
+    void F_RenderPack::RemoveData(const TS<A_RenderRegistryPortData>& PortData)
+    {
+        for (auto It = _DataList.begin(); It != _DataList.end(); ++It)
+        {
+            const auto& Data = *It;
+            if (Data->GetPortData() == PortData)
+            {
+                _DataList.erase(It);
+                break;
+            }
+        }
+    }
+
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+    void F_RenderPack::ExecuteExclusiveTemplateCompilation(
+        const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
+        const TW_Valid<A_RenderPackTemplateMap>& RenderPackTemplateMap,
+        const TF_Set<F_RHITemplateHashCode>& TemplateHashCodesToCompile,
+        const TF_Set<F_RHITemplateHashCode>& RootTemplateHashCodes, 
+        TF_Function<void(TF_Vector<TS<A_RHITemplate>>& OutNewTemplates)>&& MainWork
+    )
+    {
+        auto Registry = F_RenderRegistry::GetSerializableEnvironmentMetadataElement_Registry(SerializableEnvironment);
+        auto TemplateDatabase = Registry->GetTemplateDatabase();
+        
+        {
+            auto LastTemplates = RenderPackTemplateMap->GetTemplates();
+            for (const auto& [TemplateHashCode, Template] : LastTemplates)
+            {
+                if (!Template->IsRootTemplate())
+                {
+                    continue;
+                }
+                if (!RootTemplateHashCodes.contains(TemplateHashCode))
+                {
+                    RenderPackTemplateMap->RemoveTemplate(TemplateHashCode);
+                }
+            }
+        }
+        for (const auto& TemplateHashCode : TemplateHashCodesToCompile)
+        {
+            if (RenderPackTemplateMap->HasTemplate(TemplateHashCode))
+            {
+                RenderPackTemplateMap->RemoveTemplate(TemplateHashCode);
+            }
+        }
+        RenderPackTemplateMap->RemoveUnusedTemplates();
+        
+        TF_Vector<TS<A_RHITemplate>> NewTemplates;
+        MainWork(NewTemplates);
+        
+        TF_Vector<TS<A_RHITemplate>> AllNewTemplates; // with non-root templates
+        A_RHITemplate::GatherSortedListWithDependencies(
+            TemplateDatabase.Weak(),
+            NewTemplates,
+            AllNewTemplates
+        );
+        
+        for (const auto& Template : AllNewTemplates)
+        {
+            RenderPackTemplateMap->AddTemplate(Template);
+        }
     }
 #endif
 }

@@ -1,6 +1,5 @@
 #include "Abytek/RHICompiler.hpp"
 #include "Abytek/DirectX12Shared/RHICompiler.hpp"
-
 #include "Abytek/RHITemplateDatabase.hpp"
 
 
@@ -16,8 +15,7 @@ namespace Abytek
     }
 
     F_RHICommonCompilationStatus A_RHICompiler::ValidateBindGroupTemplate(
-        const F_RHIBindGroupTemplateCompileParams& CompileParams,
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase
+        const F_RHIBindGroupTemplateCompileParams& CompileParams
     )
     {
         if (!CompileParams.Database)
@@ -60,8 +58,7 @@ namespace Abytek
         return F_RHICommonCompilationStatus::MakeSucceeded();
     }
     F_RHICommonCompilationStatus A_RHICompiler::ValidatePipelineStateTemplate(
-        const F_RHIPipelineStateTemplateCompileParams& CompileParams,
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase
+        const F_RHIPipelineStateTemplateCompileParams& CompileParams
     )
     {
         if (!CompileParams.Database)
@@ -83,7 +80,7 @@ namespace Abytek
             for (U32 BindGroupIndex = 0; BindGroupIndex < CompileParams.BindGroups.size(); ++BindGroupIndex)
             {
                 const auto& BindGroupSlot = CompileParams.BindGroups[BindGroupIndex];
-                if (!TemplateDatabase->HasTemplate(BindGroupSlot.TemplateHashCode))
+                if (!CompileParams.Database->HasTemplate(BindGroupSlot.TemplateHashCode))
                 {
                     return F_RHICommonCompilationStatus::MakeFailed(
                         ABYTEK_TEXT("Not found bind group template with hash code ")
@@ -92,7 +89,7 @@ namespace Abytek
                         + ToText(BindGroupIndex)
                     );
                 }
-                auto BindGroupTemplate = TemplateDatabase->GetTemplate(BindGroupSlot.TemplateHashCode)
+                auto BindGroupTemplate = CompileParams.Database->GetTemplate(BindGroupSlot.TemplateHashCode)
                     .FastCast<A_RHIBindGroupTemplate>();
                 const auto& Slots = BindGroupTemplate->GetSlots();
             
@@ -154,19 +151,17 @@ namespace Abytek
 
     F_RHICommonCompilationStatus A_RHICompiler::CompileBindGroupTemplate(
         const F_RHIBindGroupTemplateCompileParams& CompileParams,
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
         TS<A_RHIBindGroupTemplate>& OutCompiledObject
     )
     {
-        return ValidateBindGroupTemplate(CompileParams, TemplateDatabase);
+        return ValidateBindGroupTemplate(CompileParams);
     }
     F_RHICommonCompilationStatus A_RHICompiler::CompilePipelineStateTemplate(
         const F_RHIPipelineStateTemplateCompileParams& CompileParams,
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
         TS<A_RHIPipelineStateTemplate>& OutCompiledObject
     )
     {
-        return ValidatePipelineStateTemplate(CompileParams, TemplateDatabase);
+        return ValidatePipelineStateTemplate(CompileParams);
     }
 
     TU<A_RHICompiler> A_RHICompiler::Create(E_RHIAPI API)

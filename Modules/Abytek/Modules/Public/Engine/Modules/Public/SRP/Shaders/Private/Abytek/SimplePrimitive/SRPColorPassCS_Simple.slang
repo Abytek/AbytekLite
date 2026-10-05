@@ -42,11 +42,6 @@ ABYTEK_GPU_DATA_DEFINE_COMPONENT_TYPE_RO(
     GeometryAddress_ECMS,
     Abytek::RenderPrimitive::F_Component_GeometryAddress_ECMS
 );
-ABYTEK_GPU_DATA_DEFINE_COMPONENT_TYPE_RO(
-    RenderPrimitive_Simple,
-    GeometryAllocationStructure_ECMS,
-    Abytek::RenderPrimitive::F_Component_GeometryAllocationStructure_ECMS
-);
 
 public struct F_Params_CalculateVertexNDCPosition
 {
@@ -152,10 +147,6 @@ void MainCS(uint3 DispatchThreadId: SV_DispatchThreadID)
         RenderPrimitive_Simple,
         GeometryAddress_ECMS
     );
-    typealias H_GPUDataComponent_GeometryAllocationStructure = ABYTEK_GPU_DATA_GET_COMPONENT_TYPE_STRUCT(
-        RenderPrimitive_Simple,
-        GeometryAllocationStructure_ECMS
-    );
 
     float4x4 TransformMatrix = H_GPUDataComponent_Transform::Load(
         InstancedMeshlet.PrimitiveAddress
@@ -166,9 +157,10 @@ void MainCS(uint3 DispatchThreadId: SV_DispatchThreadID)
     Abytek::F_RenderGeometryAddress GeometryAddress = H_GPUDataComponent_GeometryAddress::Load(
         InstancedMeshlet.PrimitiveAddress
     ).Address;
-    Abytek::F_RenderGeometryAllocationStructure_ECMS GeometryAllocationStructure = H_GPUDataComponent_GeometryAllocationStructure::Load(
-        InstancedMeshlet.PrimitiveAddress
-    ).AllocationStructure;
+
+    Abytek::F_RenderGeometryAllocationStructure_ECMS GeometryAllocationStructure = Abytek::H_ECMSMesh::LoadGeometryAllocationStructure(
+        GeometryAddress
+    );
 
     Abytek::SRP::ECMS::F_DirectTriangle DirectTriangle = Abytek::SRP::ECMS::LoadDirectTriangle(
         GeometryAddress,

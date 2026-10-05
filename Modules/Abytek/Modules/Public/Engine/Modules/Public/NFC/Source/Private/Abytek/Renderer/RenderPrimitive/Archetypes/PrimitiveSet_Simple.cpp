@@ -35,8 +35,8 @@ namespace Abytek
     {
         UploadComponents_GeometryAddress_ECMS(&Value);
     }
-    void A_RenderPrimitiveSet_Simple::UploadComponent_GeometryAllocationStructure_ECMS(const RenderPrimitive::F_Component_GeometryAllocationStructure_ECMS& Value)
+    void A_RenderPrimitiveSet_Simple::UploadComponent_GeometryAddress_LOD(const RenderPrimitive::F_Component_GeometryAddress_LOD& Value)
     {
-        UploadComponents_GeometryAllocationStructure_ECMS(&Value);
+        UploadComponents_GeometryAddress_LOD(&Value);
     }
 }

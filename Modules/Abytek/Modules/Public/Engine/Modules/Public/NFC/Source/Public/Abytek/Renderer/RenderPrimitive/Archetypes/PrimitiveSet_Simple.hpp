@@ -34,13 +34,13 @@ namespace Abytek
         void Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
         
     public:
-        virtual void UploadComponents_Transform(const RenderPrimitive::F_Component_Transform* Values) = 0;
-        virtual void UploadComponents_InverseTransposeTransform(const RenderPrimitive::F_Component_Transform* Values) = 0;
-        virtual void UploadComponents_GeometryAddress_ECMS(const RenderPrimitive::F_Component_GeometryAddress_ECMS* Values) = 0;
-        virtual void UploadComponents_GeometryAllocationStructure_ECMS(const RenderPrimitive::F_Component_GeometryAllocationStructure_ECMS* Values) = 0;
+        virtual void UploadComponents_Transform(const RenderPrimitive::F_Component_Transform* Values) {}
+        virtual void UploadComponents_InverseTransposeTransform(const RenderPrimitive::F_Component_Transform* Values) {}
+        virtual void UploadComponents_GeometryAddress_ECMS(const RenderPrimitive::F_Component_GeometryAddress_ECMS* Values) {}
+        virtual void UploadComponents_GeometryAddress_LOD(const RenderPrimitive::F_Component_GeometryAddress_LOD* Values) {}
         void UploadComponent_Transform(const RenderPrimitive::F_Component_Transform& Value);
         void UploadComponent_InverseTransposeTransform(const RenderPrimitive::F_Component_Transform& Value);
         void UploadComponent_GeometryAddress_ECMS(const RenderPrimitive::F_Component_GeometryAddress_ECMS& Value);
-        void UploadComponent_GeometryAllocationStructure_ECMS(const RenderPrimitive::F_Component_GeometryAllocationStructure_ECMS& Value);
+        void UploadComponent_GeometryAddress_LOD(const RenderPrimitive::F_Component_GeometryAddress_LOD& Value);
     };
 }

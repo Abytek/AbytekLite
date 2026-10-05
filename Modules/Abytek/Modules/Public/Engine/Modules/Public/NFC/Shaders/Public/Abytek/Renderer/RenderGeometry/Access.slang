@@ -21,6 +21,14 @@ namespace Abytek
 
     public struct H_SimpleMesh
     {
+        public static F_RenderGeometryAllocationStructure_Simple LoadGeometryAllocationStructure(
+            F_RenderGeometryAddress GeometryAddress
+        )
+        {
+            return H_RenderGeometryAccess::GetPage(GeometryAddress).Load<F_RenderGeometryAllocationStructure_Simple>(
+                H_RenderGeometryAddress::GetOffsetInBytes(GeometryAddress)
+            );
+        }
         public static uint LoadVertexIndex(
             F_RenderGeometryAddress GeometryAddress,
             in F_RenderGeometryAllocationStructure_Simple GeometryAllocationStructure,
@@ -93,6 +101,14 @@ namespace Abytek
 
     public struct H_ECMSMesh
     {
+        public static F_RenderGeometryAllocationStructure_ECMS LoadGeometryAllocationStructure(
+            F_RenderGeometryAddress GeometryAddress
+        )
+        {
+            return H_RenderGeometryAccess::GetPage(GeometryAddress).Load<F_RenderGeometryAllocationStructure_ECMS>(
+                H_RenderGeometryAddress::GetOffsetInBytes(GeometryAddress)
+            );
+        }
         public static F_ECMSMeshlet LoadMeshlet(
             F_RenderGeometryAddress GeometryAddress,
             in F_RenderGeometryAllocationStructure_ECMS GeometryAllocationStructure,

@@ -15,6 +15,7 @@
 #include "Abytek/ActorComponents/PrimitiveComponent.hpp"
 #include "Abytek/ActorComponents/InputComponent.hpp"
 #include "Abytek/ActorComponents/InputComponentManager.hpp"
+#include "Abytek/ActorComponents/StaticMeshComponent.hpp"
 
 #include "Abytek/Renderer/RendererManager.hpp"
 #include "Abytek/Renderer/RenderPath.hpp"
@@ -24,15 +25,16 @@
 
 #include "Abytek/Renderer/GPUData/GPUDataStorage.hpp"
 
-#include "Abytek/Renderer/RenderPrimitive/Components/Component_Transform.hpp"
-#include "Abytek/Renderer/RenderPrimitive/Components/Component_InverseTransposeTransform.hpp"
-#include "Abytek/Renderer/RenderPrimitive/Components/Component_GeometryAddress_ECMS.hpp"
-#include "Abytek/Renderer/RenderPrimitive/Components/Component_GeometryAllocationStructure_ECMS.hpp"
+#include "Abytek/Renderer/RenderGeometry/RenderGeometryStorage.hpp"
+
 #include "Abytek/Renderer/RenderPrimitive/Archetypes/Data_Simple.hpp"
 #include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveManager.hpp"
 
 #include "Abytek/Assets/Texture.hpp"
 #include "Abytek/Assets/StaticMesh.hpp"
+#include "Abytek/Assets/MaterialInterface.hpp"
+#include "Abytek/Assets/Material.hpp"
+#include "Abytek/Assets/MaterialInstance.hpp"
 
 
 namespace Abytek
@@ -89,22 +91,23 @@ namespace Abytek
         
         RegisterStaticType<F_StaticMeshComponent>();
         
+        RegisterStaticType<F_WorldRenderResourceOwner>();
         RegisterStaticType<F_RendererManager>();
         RegisterStaticType<A_RenderPath>();
         RegisterStaticType<F_RenderViewUniformDataBinding>();
         RegisterStaticType<RenderGeometry::F_GlobalSRVBinding>();
         RegisterStaticType<RenderGeometry::F_GlobalUAVBinding>();
 
-        RegisterStaticType<RenderPrimitive::F_Component_Transform>();
-        RegisterStaticType<RenderPrimitive::F_Component_InverseTransposeTransform>();
-        RegisterStaticType<RenderPrimitive::F_Component_GeometryAddress_ECMS>();
-        RegisterStaticType<RenderPrimitive::F_Component_GeometryAllocationStructure_ECMS>();
         RegisterStaticType<RenderPrimitive::F_Data_Simple>();
         
         RegisterStaticType<F_Texture>();
         RegisterStaticType<F_TextureSetting>();
         RegisterStaticType<F_StaticMesh>();
         RegisterStaticType<F_StaticMeshSetting>();
+        RegisterStaticType<A_MaterialInterface>();
+        RegisterStaticType<F_MaterialRenderPack>();
+        RegisterStaticType<F_Material>();
+        RegisterStaticType<F_MaterialInstance>();
     }
 
     void F_NFCModule::OnInit()

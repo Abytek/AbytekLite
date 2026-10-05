@@ -3,6 +3,7 @@
 #include "Abytek/RenderRegistry.hpp"
 #include "Abytek/Development/CMake/CmakeToolchainUtilities.hpp"
 #include "Abytek/Development/Cook/CookProfile.hpp"
+#include "Abytek/World/World.hpp"
 
 
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
@@ -44,10 +45,12 @@ namespace Abytek
 
     void F_RenderCoreCookSetting::OnInit()
     {
+        auto World = F_World::GetMain();
         auto CookProfile = GetProfile();
         auto SerializableEnvironment = CookProfile->GetSerializableEnvironment();
             
         F_RenderRegistryBuildParams BuildParams;
+        BuildParams.World = World;
         BuildParams.RHIConfig = _RHIConfig;
         _RenderRegistry = TS<F_RenderRegistry>()(BuildParams);
         

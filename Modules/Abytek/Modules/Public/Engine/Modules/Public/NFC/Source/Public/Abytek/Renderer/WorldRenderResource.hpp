@@ -8,6 +8,7 @@ namespace Abytek
 {
     class A_WorldContext;
     class F_RendererManager;
+    class F_WorldRenderResourceOwner;
     class A_RenderObjectFactory;
     class A_RenderScene;
 
@@ -40,7 +41,7 @@ namespace Abytek
         }
         
     public:
-        F_WorldRenderResource(const TW_Valid<F_RendererManager>& RendererManager);
+        F_WorldRenderResource(const TW_Valid<F_WorldRenderResourceOwner>& Owner);
         ~F_WorldRenderResource() override;
         
     protected:

@@ -208,7 +208,7 @@ namespace Abytek
             );
         }
         template<typename __F>
-        std::remove_const_t<__F>& CacheData(const __F& Data)
+        std::remove_const_t<__F>& CacheData(__F& Data)
         {
             auto Span = CacheData(
                 TF_Span<__F>(
@@ -217,6 +217,34 @@ namespace Abytek
                 )
             );
             return *Span.data();
+        }
+        
+        template<typename __F>
+        TF_Span<U8> CacheBytes(const TF_Span<__F>& Data)
+        {
+            auto CachedData = CacheData(Data);
+            return TF_Span<U8>(
+                (U8*)CachedData.data(),    
+                (U8*)(CachedData.data() + CachedData.size())    
+            );
+        }
+        template<typename __F, auto __N>
+        TF_Span<U8> CacheBytes(const __F (&Data)[__N])
+        {
+            auto CachedData = CacheData(Data);
+            return TF_Span<U8>(
+                (U8*)CachedData.data(),    
+                (U8*)(CachedData.data() + CachedData.size())    
+            );
+        }
+        template<typename __F>
+        TF_Span<U8> CacheBytes(const __F& Data)
+        {
+            auto& CachedData = CacheData(Data);
+            return TF_Span<U8>(
+                (U8*)&CachedData,    
+                (U8*)(&CachedData + 1)    
+            );
         }
         
         void* AllocateData(Sz Size)
@@ -309,9 +337,37 @@ namespace Abytek
             return Arenas[WriteArenaIndex].CacheData(Data);
         }
         template<typename __F>
-        std::remove_const_t<__F>& CacheData(const __F& Data)
+        std::remove_const_t<__F>& CacheData(__F& Data)
         {
             return Arenas[WriteArenaIndex].CacheData(Data);
+        }
+        
+        template<typename __F>
+        TF_Span<U8> CacheBytes(const TF_Span<__F>& Data)
+        {
+            auto CachedData = CacheData(Data);
+            return TF_Span<U8>(
+                (U8*)CachedData.data(),    
+                (U8*)(CachedData.data() + CachedData.size())    
+            );
+        }
+        template<typename __F, auto __N>
+        TF_Span<U8> CacheBytes(const __F (&Data)[__N])
+        {
+            auto CachedData = CacheData(Data);
+            return TF_Span<U8>(
+                (U8*)CachedData.data(),    
+                (U8*)(CachedData.data() + CachedData.size())    
+            );
+        }
+        template<typename __F>
+        TF_Span<U8> CacheBytes(const __F& Data)
+        {
+            auto& CachedData = CacheData(Data);
+            return TF_Span<U8>(
+                (U8*)&CachedData,    
+                (U8*)(&CachedData + 1)    
+            );
         }
         
         void* AllocateData(Sz Size)

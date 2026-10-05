@@ -15,24 +15,28 @@ ConstantBuffer<Abytek::F_StaticMeshGeometryUniformData_Simple> StaticMeshGeometr
 [shader("vertex")]
 Abytek::F_SRPBasicStaticMeshVSOutput MainVS(Abytek::F_SRPBasicStaticMeshVSInput_Simple VSInput)
 {
+    Abytek::F_RenderGeometryAllocationStructure_Simple GeometryAllocationStructure = Abytek::H_SimpleMesh::LoadGeometryAllocationStructure(
+        StaticMeshGeometryUniformData_Simple.GeometryAddress
+    );
+
     uint VertexIndex = Abytek::H_SimpleMesh::LoadVertexIndex(
         StaticMeshGeometryUniformData_Simple.GeometryAddress,
-        StaticMeshGeometryUniformData_Simple.GeometryAllocationStructure,
+        GeometryAllocationStructure,
         VSInput.VertexId
     );
     float3 VertexPosition = Abytek::H_SimpleMesh::LoadVertexPosition(
         StaticMeshGeometryUniformData_Simple.GeometryAddress,
-        StaticMeshGeometryUniformData_Simple.GeometryAllocationStructure,
+        GeometryAllocationStructure,
         VertexIndex
     );
     float3 VertexNormal = Abytek::H_SimpleMesh::LoadVertexNormal(
         StaticMeshGeometryUniformData_Simple.GeometryAddress,
-        StaticMeshGeometryUniformData_Simple.GeometryAllocationStructure,
+        GeometryAllocationStructure,
         VertexIndex
     );
     float2 VertexUV = Abytek::H_SimpleMesh::LoadVertexUV(
         StaticMeshGeometryUniformData_Simple.GeometryAddress,
-        StaticMeshGeometryUniformData_Simple.GeometryAllocationStructure,
+        GeometryAllocationStructure,
         VertexIndex
     );
 

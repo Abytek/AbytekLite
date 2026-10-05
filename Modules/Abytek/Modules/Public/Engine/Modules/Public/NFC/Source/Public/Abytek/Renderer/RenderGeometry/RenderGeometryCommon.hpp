@@ -29,11 +29,12 @@ namespace Abytek
     
     struct ABYTEK_ALIGN(8) ABYTEK_ENGINE_NFC_API F_RenderGeometryAddress
     {
-        U32 PageIndex = 0;
-        U32 OffsetInBytes = 0;
+        U32 PageIndex = ~U32(0);
+        U32 OffsetInBytes = ~U32(0);
         
         static F_RenderGeometryAddress From(const F_RenderGeometryAllocation& GeometryAllocation);
     };
+    static inline F_RenderGeometryAddress INVALID_RENDER_GEOMETRY_ADDRESS = F_RenderGeometryAddress { ~U32(0), ~U32(0) };
     
     struct ABYTEK_ALIGN(16) F_RenderGeometryAllocationStructure_Simple
     {
@@ -50,13 +51,11 @@ namespace Abytek
     };
     struct ABYTEK_ALIGN(16) ABYTEK_ENGINE_NFC_API F_StaticMeshGeometryUniformData_Simple
     {
-        F_RenderGeometryAllocationStructure_Simple GeometryAllocationStructure;
         F_RenderGeometryAddress GeometryAddress;
         F_Vector2_U32 ___Padding___ = 0;
         
         static F_StaticMeshGeometryUniformData_Simple Make(
-            const F_RenderGeometryAllocation& GeometryAllocation,
-            const F_RenderGeometryAllocationStructure_Simple& GeometryAllocationStructure
+            const F_RenderGeometryAllocation& GeometryAllocation
         );
     };
     
@@ -79,13 +78,18 @@ namespace Abytek
     };
     struct ABYTEK_ALIGN(16) ABYTEK_ENGINE_NFC_API F_StaticMeshGeometryUniformData_ECMS
     {
-        F_RenderGeometryAllocationStructure_ECMS GeometryAllocationStructure;
         F_RenderGeometryAddress GeometryAddress;
         F_Vector2_U32 ___Padding___ = 0;
         
         static F_StaticMeshGeometryUniformData_ECMS Make(
-            const F_RenderGeometryAllocation& GeometryAllocation,
-            const F_RenderGeometryAllocationStructure_ECMS& GeometryAllocationStructure
+            const F_RenderGeometryAllocation& GeometryAllocation
         );
+    };
+    
+    struct ABYTEK_ALIGN(16) F_RenderGeometryAllocationStructure_LOD
+    {
+        U32 NumLevels = 0;
+        U32 GeometryAddresses_LocalOffsetInBytes = ~U32(0);
+        F_Vector2_U32 ___Padding___ = 0;
     };
 }

@@ -10,16 +10,16 @@ namespace Abytek
 {
     TS<F_WorldRenderResource> F_WorldRenderResource::Get_MainTask(const TW_Valid<A_WorldContext>& WorldContext)
     {
-        return H_WorldContext::GetUnit<F_RendererManager>(WorldContext)->GetRenderProxy().FastCast<F_WorldRenderResource>();
+        return H_WorldContext::GetUnit<F_RendererManager>(WorldContext)->GetWorldRenderResourceOwner()->GetRenderProxy().FastCast<F_WorldRenderResource>();
     }
 
-    F_WorldRenderResource::F_WorldRenderResource(const TW_Valid<F_RendererManager>& RendererManager) :
-        A_RenderProxy(RendererManager)
+    F_WorldRenderResource::F_WorldRenderResource(const TW_Valid<F_WorldRenderResourceOwner>& Owner) :
+        A_RenderProxy(Owner)
     {
 #ifdef ABYTEK_DEBUG_INFO
-        _WorldDebugName = RendererManager->GetWorld()->GetDebugName();
+        _WorldDebugName = Owner->GetWorld()->GetDebugName();
 #endif
-        auto RenderPath = RendererManager->GetRenderPath();
+        auto RenderPath = Owner->GetManager()->GetRenderPath();
         _RenderObjectFactory = RenderPath->CreateObjectFactory(ABYTEK_WTHIS());
     }
     F_WorldRenderResource::~F_WorldRenderResource()

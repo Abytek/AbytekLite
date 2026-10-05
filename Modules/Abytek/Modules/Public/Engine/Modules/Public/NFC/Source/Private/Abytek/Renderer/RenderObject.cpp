@@ -21,10 +21,6 @@ namespace Abytek
         return _WorldRenderResource->GetRenderRegistryRuntime();
     }
 
-    const F_RenderCoreRHIConfig& A_RenderObject::GetRHIConfig() const noexcept
-    {
-        return _WorldRenderResource->GetRHIConfig();
-    }
     const F_RHIFeatureSupports& A_RenderObject::GetRHIFeatureSupports() const noexcept
     {
         return _WorldRenderResource->GetRHIFeatureSupports();

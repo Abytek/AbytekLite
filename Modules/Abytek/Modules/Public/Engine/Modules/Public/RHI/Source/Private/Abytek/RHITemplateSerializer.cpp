@@ -52,98 +52,14 @@ namespace Abytek
         const TF_Vector<TS<A_RHITemplate>>& Templates
     )
     {
-        TF_Set<TS<A_RHITemplate>> FullyGatheredTemplateSet;
-        TF_Vector<TS<A_RHITemplate>> FullyGatheredTemplates;
-        {
-            TF_Vector<TS<A_RHITemplate>> TemplateToGather;
-            for (const auto& Template : Templates)
-            {
-                TemplateToGather.push_back(Template);
-            }
-            while (TemplateToGather.size() > 0)
-            {
-                TF_Vector<TS<A_RHITemplate>> CachedTemplateToGather = ABYTEK_MOVE(TemplateToGather);
-                for (const auto& Template : CachedTemplateToGather)
-                {
-                    if (FullyGatheredTemplateSet.contains(Template))
-                    {
-                        continue;
-                    }
-                    FullyGatheredTemplateSet.insert(Template);
-                    for (auto DependenyHashCode : Template->GetDependencyHashCodes())
-                    {
-                        TemplateToGather.push_back(TemplateDatabase->GetTemplate(DependenyHashCode));
-                    }
-                }
-            }
-            for (const auto& Template : FullyGatheredTemplateSet)
-            {
-                FullyGatheredTemplates.push_back(Template);
-            }
-        }
-        
-        auto NumFullyGatheredTemplates = FullyGatheredTemplates.size();
-        
-        TF_Map<F_RHITemplateHashCode, U32> TemplateHashCodeToIndex;
-        for (U32 TemplateIndex = 0; TemplateIndex < NumFullyGatheredTemplates; ++TemplateIndex)
-        {
-            const auto& Template = FullyGatheredTemplates[TemplateIndex];
-            TemplateHashCodeToIndex[Template->GetHashCode()] = TemplateIndex;
-        }
-        
-        TF_Vector<U32> TemplateDependencyLevels;
-        TemplateDependencyLevels.resize(NumFullyGatheredTemplates);
-        for (auto& TemplateDependencyLevel : TemplateDependencyLevels)
-        {
-            TemplateDependencyLevel = 0;
-        }
-        {
-            TF_Vector<U32> TemplateIndicesToUpdateDependencyLevels;
-            for (U32 TemplateIndex = 0; TemplateIndex < NumFullyGatheredTemplates; ++TemplateIndex)
-            {
-                TemplateIndicesToUpdateDependencyLevels.push_back(TemplateIndex);
-            }
-            while (TemplateIndicesToUpdateDependencyLevels.size() > 0)
-            {
-                TF_Vector<U32> CachedTemplateIndicesToUpdateDependencyLevels = ABYTEK_MOVE(TemplateIndicesToUpdateDependencyLevels);
-                for (U32 TemplateIndex : CachedTemplateIndicesToUpdateDependencyLevels)
-                {
-                    const auto& Template = FullyGatheredTemplates[TemplateIndex];
-                    auto& DependencyLevel = TemplateDependencyLevels[TemplateIndex];
-                    for (auto DependenyHashCode : Template->GetDependencyHashCodes())
-                    {
-                        auto DependencyIndex = TemplateHashCodeToIndex.find(DependenyHashCode)->second;
-                        auto& DependencyLevelOfDependency = TemplateDependencyLevels[DependencyIndex];
-                        DependencyLevelOfDependency = Max(DependencyLevelOfDependency, DependencyLevel + 1);
-                        TemplateIndicesToUpdateDependencyLevels.push_back(DependencyIndex);
-                    }
-                }
-            }
-        }
-        
-        TF_Vector<U32> TemplateRemap;
-        TemplateRemap.reserve(NumFullyGatheredTemplates);
-        for (U32 TemplateIndex = 0; TemplateIndex < NumFullyGatheredTemplates; ++TemplateIndex)
-        {
-            TemplateRemap.push_back(TemplateIndex);
-        }
-        boost::sort(
-            TemplateRemap,
-            [&](U32 A, U32 B)
-            {
-                auto TemplateDependencyLevelA = TemplateDependencyLevels[A];
-                auto TemplateDependencyLevelB = TemplateDependencyLevels[B];
-                return TemplateDependencyLevelB < TemplateDependencyLevelA;
-            }
+        TF_Vector<TS<A_RHITemplate>> TemplatesToWrite;
+        A_RHITemplate::GatherSortedListWithDependencies(
+            TemplateDatabase,
+            Templates,
+            TemplatesToWrite
         );
         
-        TF_Vector<TS<A_RHITemplate>> TemplatesToWrite;
-        for (auto TemplateIndex : TemplateRemap)
-        {
-            TemplatesToWrite.push_back(FullyGatheredTemplates[TemplateIndex]);
-        }
-        
-        ABYTEK_FEEDBACK_STATUS_CHECK(View << NumFullyGatheredTemplates);
+        ABYTEK_FEEDBACK_STATUS_CHECK(View << TemplatesToWrite.size());
         for (auto Template : TemplatesToWrite)
         {
             if (auto Status = TryWriteTemplate(View, TemplateDatabase, Template); !Status)

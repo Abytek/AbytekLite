@@ -100,8 +100,7 @@ namespace Abytek
                 GeometryGlobalSRVBindGroup,
                 RenderPrimitive::F_Component_Transform::GetBindGroup<RenderPrimitive::F_Data_Simple>(ProcessorGPUData),
                 RenderPrimitive::F_Component_InverseTransposeTransform::GetBindGroup<RenderPrimitive::F_Data_Simple>(ProcessorGPUData),
-                RenderPrimitive::F_Component_GeometryAddress_ECMS::GetBindGroup<RenderPrimitive::F_Data_Simple>(ProcessorGPUData),
-                RenderPrimitive::F_Component_GeometryAllocationStructure_ECMS::GetBindGroup<RenderPrimitive::F_Data_Simple>(ProcessorGPUData)
+                RenderPrimitive::F_Component_GeometryAddress_ECMS::GetBindGroup<RenderPrimitive::F_Data_Simple>(ProcessorGPUData)
             };
 
             H_RHISubmissionUtilities::DispatchCompute(

@@ -36,11 +36,6 @@ ABYTEK_GPU_DATA_DEFINE_COMPONENT_TYPE_RO(
     GeometryAddress_ECMS,
     Abytek::RenderPrimitive::F_Component_GeometryAddress_ECMS
 );
-ABYTEK_GPU_DATA_DEFINE_COMPONENT_TYPE_RO(
-    RenderPrimitive_Simple,
-    GeometryAllocationStructure_ECMS,
-    Abytek::RenderPrimitive::F_Component_GeometryAllocationStructure_ECMS
-);
 
 ABYTEK_SRP_ECMS_DEFINE_INSTANCED_MESHLET_BUFFER_RW(InstancedMeshlets);
 
@@ -93,20 +88,18 @@ void MainMS(
             RenderPrimitive_Simple,
             GeometryAddress_ECMS
         );
-        typealias H_GPUDataComponent_GeometryAllocationStructure = ABYTEK_GPU_DATA_GET_COMPONENT_TYPE_STRUCT(
-            RenderPrimitive_Simple,
-            GeometryAllocationStructure_ECMS
-        );
 
         H_GPUDataComponent_Transform::F_Value Component_Transform = H_GPUDataComponent_Transform::Load(PrimitiveVisibilityConfig.PrimitiveAddress);
         H_GPUDataComponent_InverseTransposeTransform::F_Value Component_InverseTransposeTransform = H_GPUDataComponent_InverseTransposeTransform::Load(PrimitiveVisibilityConfig.PrimitiveAddress);
         H_GPUDataComponent_GeometryAddress::F_Value Component_GeometryAddress = H_GPUDataComponent_GeometryAddress::Load(PrimitiveVisibilityConfig.PrimitiveAddress);
-        H_GPUDataComponent_GeometryAllocationStructure::F_Value Component_GeometryAllocationStructure = H_GPUDataComponent_GeometryAllocationStructure::Load(PrimitiveVisibilityConfig.PrimitiveAddress);
 
         TransformMatrix = Component_Transform.Matrix;
         InverseTransposeTransformMatrix = Component_InverseTransposeTransform.Matrix;
         GeometryAddress = Component_GeometryAddress.Address;
-        GeometryAllocationStructure = Component_GeometryAllocationStructure.AllocationStructure;
+        
+        GeometryAllocationStructure = Abytek::H_ECMSMesh::LoadGeometryAllocationStructure(
+            GeometryAddress
+        );
     }
 
     GroupMemoryBarrierWithGroupSync();

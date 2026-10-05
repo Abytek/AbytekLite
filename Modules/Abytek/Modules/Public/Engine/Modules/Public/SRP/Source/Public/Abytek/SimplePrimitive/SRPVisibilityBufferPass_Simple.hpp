@@ -100,9 +100,6 @@ namespace Abytek
                 ABYTEK_FEEDBACK_STATUS_CHECK(
                     RenderPrimitive::F_Component_GeometryAddress_ECMS::AddBindGroupToPipelineState<RenderPrimitive::F_Data_Simple>(Config)
                 );
-                ABYTEK_FEEDBACK_STATUS_CHECK(
-                    RenderPrimitive::F_Component_GeometryAllocationStructure_ECMS::AddBindGroupToPipelineState<RenderPrimitive::F_Data_Simple>(Config)
-                );
                 
                 ABYTEK_FEEDBACK_STATUS_CHECK(
                     RenderGeometry::SetupCompileParams(

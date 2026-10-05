@@ -4,7 +4,7 @@
 #include "Abytek/Renderer/RenderPrimitive/Components/Component_Transform.hpp"
 #include "Abytek/Renderer/RenderPrimitive/Components/Component_InverseTransposeTransform.hpp"
 #include "Abytek/Renderer/RenderPrimitive/Components/Component_GeometryAddress_ECMS.hpp"
-#include "Abytek/Renderer/RenderPrimitive/Components/Component_GeometryAllocationStructure_ECMS.hpp"
+#include "Abytek/Renderer/RenderPrimitive/Components/Component_GeometryAddress_LOD.hpp"
 #include "Abytek/Renderer/GPUData/GPUData.hpp"
 
 
@@ -21,7 +21,7 @@ namespace Abytek
                 F_Component_Transform,
                 F_Component_InverseTransposeTransform,
                 F_Component_GeometryAddress_ECMS,
-                F_Component_GeometryAllocationStructure_ECMS
+                F_Component_GeometryAddress_LOD
             );
         };
     }

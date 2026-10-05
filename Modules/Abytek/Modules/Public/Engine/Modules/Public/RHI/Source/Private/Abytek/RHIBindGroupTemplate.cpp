@@ -4,9 +4,22 @@
 
 namespace Abytek
 {
-    A_RHIBindGroupTemplate::A_RHIBindGroupTemplate(const F_RHIBindGroupTemplateBuildParams& BuildParams) :
-        A_RHITemplate(BuildParams),
-        _Config(static_cast<const F_RHIBindGroupTemplateConfig&>(BuildParams))
+    A_RHIBindGroupTemplate::A_RHIBindGroupTemplate(
+        const TW_Valid<A_RHITemplateDatabase>& Database,
+        F_RHITemplateHashCode HashCode,
+        const F_RHIBindGroupTemplateConfig& Config
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        , const F_RHIBindGroupTemplateCompileConfig& CompileConfig
+#endif
+    ) :
+        A_RHITemplate(
+            Database,
+            HashCode
+        ),
+        _Config(Config)
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        , _CompileConfig(CompileConfig)
+#endif
     {
     }
     A_RHIBindGroupTemplate::~A_RHIBindGroupTemplate()
@@ -52,5 +65,15 @@ namespace Abytek
     U32 A_RHIBindGroupTemplate::GetEncodedDataAlignmentInBytes()
     {
         return 0;
+    }
+
+    void A_RHIBindGroupTemplate::PostCreateExportedData(const TS<A_RHITemplateExportedData>& ExportedData) const
+    {
+        A_RHITemplate::PostCreateExportedData(ExportedData);
+        const auto& CastedExportedData = ExportedData.FastCast<A_RHIBindGroupTemplateExportedData>();
+        CastedExportedData->Config = _Config;
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        CastedExportedData->CompileConfig = _CompileConfig;
+#endif
     }
 }

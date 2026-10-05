@@ -23,6 +23,7 @@ ABYTEK_SRP_ECMS_DEFINE_INSTANCED_MESHLET_BUFFER_RW(InstancedMeshlets);
 groupshared bool GroupCulled;
 groupshared Abytek::SRP::ECMS::F_InstancedMeshlet InstancedMeshlet;
 groupshared Abytek::SRP::ECMS::F_InstancedMeshletId InstancedMeshletId;
+groupshared Abytek::F_RenderGeometryAllocationStructure_ECMS GeometryAllocationStructure;
 
 [shader("mesh")]
 [numthreads(NUM_THREADS, 1, 1)]
@@ -52,13 +53,17 @@ void MainMS(
         InstancedMeshlet.MeshletIndex = GroupID.x;
         InstancedMeshletId = ABYTEK_SRP_ECMS_PUSH_INSTANCED_MESHLET(InstancedMeshlets, InstancedMeshlet);
         GroupCulled |= (InstancedMeshletId == Abytek::SRP::ECMS::INVALID_INSTANCED_MESHLET_ID);
+        
+        GeometryAllocationStructure = Abytek::H_ECMSMesh::LoadGeometryAllocationStructure(
+            StaticMeshGeometryUniformData_ECMS.GeometryAddress
+        );
     }
 
     GroupMemoryBarrierWithGroupSync();
 
     Abytek::F_ECMSMeshlet Meshlet = Abytek::H_ECMSMesh::LoadMeshlet(
         StaticMeshGeometryUniformData_ECMS.GeometryAddress,
-        StaticMeshGeometryUniformData_ECMS.GeometryAllocationStructure,
+        GeometryAllocationStructure,
         GroupID.x
     );
     SetMeshOutputCounts(
@@ -75,23 +80,23 @@ void MainMS(
     {
         uint VertexIndex = Abytek::H_ECMSMesh::LoadVertexIndex(
             StaticMeshGeometryUniformData_ECMS.GeometryAddress,
-            StaticMeshGeometryUniformData_ECMS.GeometryAllocationStructure,
+            GeometryAllocationStructure,
             Meshlet.Offset_VertexIndices + GroupThreadID.x
         );
 
         float3 VertexPosition = Abytek::H_ECMSMesh::LoadVertexPosition(
             StaticMeshGeometryUniformData_ECMS.GeometryAddress,
-            StaticMeshGeometryUniformData_ECMS.GeometryAllocationStructure,
+            GeometryAllocationStructure,
             VertexIndex
         );
         float3 VertexNormal = Abytek::H_ECMSMesh::LoadVertexNormal(
             StaticMeshGeometryUniformData_ECMS.GeometryAddress,
-            StaticMeshGeometryUniformData_ECMS.GeometryAllocationStructure,
+            GeometryAllocationStructure,
             VertexIndex
         );
         float2 VertexUV = Abytek::H_ECMSMesh::LoadVertexUV(
             StaticMeshGeometryUniformData_ECMS.GeometryAddress,
-            StaticMeshGeometryUniformData_ECMS.GeometryAllocationStructure,
+            GeometryAllocationStructure,
             VertexIndex
         );
 
@@ -118,7 +123,7 @@ void MainMS(
     {
         Abytek::F_ECMSMeshTriangle Triangle = Abytek::H_ECMSMesh::LoadTriangle(
             StaticMeshGeometryUniformData_ECMS.GeometryAddress,
-            StaticMeshGeometryUniformData_ECMS.GeometryAllocationStructure,
+            GeometryAllocationStructure,
             Meshlet.Offset_Triangles + GroupThreadID.x
         );
 

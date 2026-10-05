@@ -5,20 +5,21 @@
    
 namespace Abytek
 {
+    class A_RenderRegistryPort;
     class A_RenderProxy;
     class F_RenderRegistry;
     
     class ABYTEK_ENGINE_RENDER_CORE_API A_Renderable
     {
     private:
-        B8 _ShouldEnableProxy = false;
+        TS<A_RenderRegistryPort> _RenderRegistryPort;
         TS<A_RenderProxy> _RenderProxy;
         B8 _CreatedRenderState = false;
         
     public:
-        ABYTEK_FORCE_INLINE auto ShouldEnableProxy() const noexcept
+        ABYTEK_FORCE_INLINE auto GetRenderRegistryPort() const noexcept
         {
-            return _ShouldEnableProxy;
+            return _RenderRegistryPort;
         }
         ABYTEK_FORCE_INLINE const auto& GetRenderProxy() const noexcept
         {
@@ -54,5 +55,8 @@ namespace Abytek
         
     public:
         TS<F_RenderRegistry> GetRenderRegistry() const;
+        
+    protected:
+        virtual TS<A_RenderRegistryPort> FindRenderRegistryPort() const;
     };
 }

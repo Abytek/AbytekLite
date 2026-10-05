@@ -125,34 +125,19 @@ namespace Abytek
             );
         }
         
-        {
-            auto LastTemplates = RenderPackTemplateMap->GetTemplates();
-            for (const auto& [TemplateHashCode, _] : LastTemplates)
+        ExecuteExclusiveTemplateCompilation(
+            SerializableEnvironment,
+            RenderPackTemplateMap,
+            TemplateHashCodesToCompile,
+            TemplateHashCodes,
+            [&](TF_Vector<TS<A_RHITemplate>>& OutNewTemplates)
             {
-                if (!TemplateHashCodes.contains(TemplateHashCode))
+                for (const auto& Command : Commands)
                 {
-                    RenderPackTemplateMap->RemoveTemplate(TemplateHashCode);
+                    Command(OutNewTemplates);
                 }
             }
-        }
-        for (const auto& TemplateHashCode : TemplateHashCodesToCompile)
-        {
-            if (RenderPackTemplateMap->HasTemplate(TemplateHashCode))
-            {
-                RenderPackTemplateMap->RemoveTemplate(TemplateHashCode);
-            }
-        }
-        RenderPackTemplateMap->RemoveUnusedTemplates();
-        
-        TF_Vector<TS<A_RHITemplate>> NewTemplates;
-        for (const auto& Command : Commands)
-        {
-            Command(NewTemplates);
-        }
-        for (const auto& Template : NewTemplates)
-        {
-            RenderPackTemplateMap->AddTemplate(Template);
-        }
+        );
     }
 #endif
 }

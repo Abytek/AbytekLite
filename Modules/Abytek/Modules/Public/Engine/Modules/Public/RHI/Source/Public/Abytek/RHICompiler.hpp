@@ -29,23 +29,19 @@ namespace Abytek
 
     public:
         virtual F_RHICommonCompilationStatus ValidateBindGroupTemplate(
-            const F_RHIBindGroupTemplateCompileParams& CompileParams,
-            const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase
+            const F_RHIBindGroupTemplateCompileParams& CompileParams
         );
         virtual F_RHICommonCompilationStatus ValidatePipelineStateTemplate(
-            const F_RHIPipelineStateTemplateCompileParams& CompileParams,
-            const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase
+            const F_RHIPipelineStateTemplateCompileParams& CompileParams
         );
 
     public:
         virtual F_RHICommonCompilationStatus CompileBindGroupTemplate(
             const F_RHIBindGroupTemplateCompileParams& CompileParams,
-            const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
             TS<A_RHIBindGroupTemplate>& OutCompiledObject
         );
         virtual F_RHICommonCompilationStatus CompilePipelineStateTemplate(
             const F_RHIPipelineStateTemplateCompileParams& CompileParams,
-            const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
             TS<A_RHIPipelineStateTemplate>& OutCompiledObject
         );
 

@@ -12,7 +12,7 @@ namespace Abytek
         U32 _ComponentIndex_Transform = ~U32(0);
         U32 _ComponentIndex_InverseTransposeTransform = ~U32(0);
         U32 _ComponentIndex_GeometryAddress_ECMS = ~U32(0);
-        U32 _ComponentIndex_GeometryAllocationStructure_ECMS = ~U32(0);
+        U32 _ComponentIndex_GeometryAddress_LOD = ~U32(0);
         
     public:
         ABYTEK_FORCE_INLINE auto GetComponentIndex_Transform() const noexcept
@@ -27,9 +27,9 @@ namespace Abytek
         {
             return _ComponentIndex_GeometryAddress_ECMS;
         }
-        ABYTEK_FORCE_INLINE auto GetComponentIndex_GeometryAllocationStructure_ECMS() const noexcept
+        ABYTEK_FORCE_INLINE auto GetComponentIndex_GeometryAddress_LOD() const noexcept
         {
-            return _ComponentIndex_GeometryAllocationStructure_ECMS;
+            return _ComponentIndex_GeometryAddress_LOD;
         }
         
     public:

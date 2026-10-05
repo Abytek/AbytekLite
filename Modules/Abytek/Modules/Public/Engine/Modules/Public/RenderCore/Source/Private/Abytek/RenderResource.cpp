@@ -18,32 +18,39 @@ namespace Abytek
         ) << "Requires releasing render resource before its destruction";
     }
 
-    void A_RenderResource::Init(const TS<F_RenderRegistry>& RenderRegistry)
+    void A_RenderResource::Init(const TS<A_RenderRegistryPort>& RenderRegistryPort)
     {
         ABYTEK_ENGINE_RENDER_CORE_ASSERT(!_EnqueuedToInit) << "Render resource was already enqueued to initialize";
-        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
-            [SThis = ABYTEK_STHIS(), RenderRegistry]
+        RenderRegistryPort->EnqueueCommand(
+            [SThis = ABYTEK_STHIS(), RenderRegistryPortData = RenderRegistryPort->GetData()]
             {
-                SThis->_RenderRegistryRuntime = RenderRegistry->GetOrActiveRuntime(H_RHI::GetMainContext());
-                SThis->OnInit_RenderTask(H_RHI::GetMainSubmissionQueue());
+                SThis->_RenderRegistryRuntime = RenderRegistryPortData->GetRegistryRuntime();
+                SThis->OnInit_RenderTask(
+                    RenderRegistryPortData->GetSubmissionItemContainer()
+                );
             }
         );
 #ifdef ABYTEK_ENGINE_RENDER_CORE_ENABLE_ASSERTIONS
         _EnqueuedToInit = true;
+        _LastRenderRegistryPort = RenderRegistryPort;
 #endif
     }
-    void A_RenderResource::Release()
+    void A_RenderResource::Release(const TS<A_RenderRegistryPort>& RenderRegistryPort)
     {
+        ABYTEK_ENGINE_RENDER_CORE_ASSERT(_LastRenderRegistryPort == RenderRegistryPort) << "Render registry port mismatch";
         ABYTEK_ENGINE_RENDER_CORE_ASSERT(_EnqueuedToInit) << "Render resource was not enqueued to initialize, cannot release";
-        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
-            [SThis = ABYTEK_STHIS()]
+        RenderRegistryPort->EnqueueCommand(
+            [SThis = ABYTEK_STHIS(), RenderRegistryPortData = RenderRegistryPort->GetData()]
             {
-                SThis->OnRelease_RenderTask(H_RHI::GetMainSubmissionQueue());
+                SThis->OnRelease_RenderTask(
+                    RenderRegistryPortData->GetSubmissionItemContainer()
+                );
                 SThis->_RenderRegistryRuntime = {};
             }
         );
 #ifdef ABYTEK_ENGINE_RENDER_CORE_ENABLE_ASSERTIONS
         _EnqueuedToRelease = true;
+        _LastRenderRegistryPort = {};
 #endif
     }
 
@@ -54,12 +61,8 @@ namespace Abytek
     {
     }
 
-    const F_RenderCoreRHIConfig& A_RenderResource::GetRHIConfig() const noexcept
-    {
-        return _RenderRegistryRuntime->GetRHIConfig();
-    }
     const F_RHIFeatureSupports& A_RenderResource::GetRHIFeatureSupports() const noexcept
     {
-        return GetRHIConfig().FeatureSupports;
+        return _RenderRegistryRuntime->GetRHIFeatureSupports();
     }
 }

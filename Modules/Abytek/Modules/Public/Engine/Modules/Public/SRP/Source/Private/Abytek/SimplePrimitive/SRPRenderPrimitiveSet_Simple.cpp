@@ -46,10 +46,10 @@ namespace Abytek
             Values
         );
     }
-    void F_SRPRenderPrimitiveSet_Simple::UploadComponents_GeometryAllocationStructure_ECMS(const RenderPrimitive::F_Component_GeometryAllocationStructure_ECMS* Values)
+    void F_SRPRenderPrimitiveSet_Simple::UploadComponents_GeometryAddress_LOD(const RenderPrimitive::F_Component_GeometryAddress_LOD* Values)
     {
         GetGPUDataInstanceSet()->UploadComponents(
-            GetProcessor().FastCast<A_RenderPrimitiveProcessor_Simple>()->GetComponentIndex_GeometryAllocationStructure_ECMS(),
+            GetProcessor().FastCast<A_RenderPrimitiveProcessor_Simple>()->GetComponentIndex_GeometryAddress_LOD(),
             Values
         );
     }

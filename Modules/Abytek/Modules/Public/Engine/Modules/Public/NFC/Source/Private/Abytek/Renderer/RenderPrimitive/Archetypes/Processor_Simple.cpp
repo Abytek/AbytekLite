@@ -22,11 +22,11 @@ namespace Abytek
         _ComponentIndex_Transform = GPUData->GetComponentTypeIndex<RenderPrimitive::F_Component_Transform>();
         _ComponentIndex_InverseTransposeTransform = GPUData->GetComponentTypeIndex<RenderPrimitive::F_Component_InverseTransposeTransform>();
         _ComponentIndex_GeometryAddress_ECMS = GPUData->GetComponentTypeIndex<RenderPrimitive::F_Component_GeometryAddress_ECMS>();
-        _ComponentIndex_GeometryAllocationStructure_ECMS = GPUData->GetComponentTypeIndex<RenderPrimitive::F_Component_GeometryAllocationStructure_ECMS>();
+        _ComponentIndex_GeometryAddress_LOD = GPUData->GetComponentTypeIndex<RenderPrimitive::F_Component_GeometryAddress_LOD>();
     }
     void A_RenderPrimitiveProcessor_Simple::Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        _ComponentIndex_GeometryAllocationStructure_ECMS = ~U32(0);
+        _ComponentIndex_GeometryAddress_LOD = ~U32(0);
         _ComponentIndex_GeometryAddress_ECMS = ~U32(0);
         _ComponentIndex_InverseTransposeTransform = ~U32(0);
         _ComponentIndex_Transform = ~U32(0);

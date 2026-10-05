@@ -12,21 +12,19 @@ namespace Abytek
         return Result;
     }
 
-    F_StaticMeshGeometryUniformData_Simple F_StaticMeshGeometryUniformData_Simple::Make(const F_RenderGeometryAllocation& GeometryAllocation, const F_RenderGeometryAllocationStructure_Simple& GeometryAllocationStructure)
+    F_StaticMeshGeometryUniformData_Simple F_StaticMeshGeometryUniformData_Simple::Make(const F_RenderGeometryAllocation& GeometryAllocation)
     {
         F_StaticMeshGeometryUniformData_Simple Result;
         Result.GeometryAddress.PageIndex = GeometryAllocation.Page->GetIndex();
         Result.GeometryAddress.OffsetInBytes = static_cast<U32>(GeometryAllocation.BeginOffsetInBytes);
-        Result.GeometryAllocationStructure = GeometryAllocationStructure;
         return Result;
     }
     
-    F_StaticMeshGeometryUniformData_ECMS F_StaticMeshGeometryUniformData_ECMS::Make(const F_RenderGeometryAllocation& GeometryAllocation, const F_RenderGeometryAllocationStructure_ECMS& GeometryAllocationStructure)
+    F_StaticMeshGeometryUniformData_ECMS F_StaticMeshGeometryUniformData_ECMS::Make(const F_RenderGeometryAllocation& GeometryAllocation)
     {
         F_StaticMeshGeometryUniformData_ECMS Result;
         Result.GeometryAddress.PageIndex = GeometryAllocation.Page->GetIndex();
         Result.GeometryAddress.OffsetInBytes = static_cast<U32>(GeometryAllocation.BeginOffsetInBytes);
-        Result.GeometryAllocationStructure = GeometryAllocationStructure;
         return Result;
     }
 }

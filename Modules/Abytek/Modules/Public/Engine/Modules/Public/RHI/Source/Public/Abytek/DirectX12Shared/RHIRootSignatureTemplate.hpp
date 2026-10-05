@@ -43,9 +43,6 @@ namespace Abytek
             return F_FeedbackStatus::MakeSucceeded();
         }
     };
-    struct F_DirectX12SharedRHIRootSignatureTemplateBuildParams : F_RHITemplateBuildParamsBase, F_DirectX12SharedRHIRootSignatureTemplateConfig
-    {
-    };
 
     struct F_DirectX12SharedRHIRootSignatureTemplateCompileConfig
     {
@@ -67,7 +64,8 @@ namespace Abytek
             return !(A == B);
         }
     };
-    struct F_DirectX12SharedRHIRootSignatureTemplateCompileParams : F_DirectX12SharedRHIRootSignatureTemplateBuildParams, F_DirectX12SharedRHIRootSignatureTemplateCompileConfig
+    
+    struct F_DirectX12SharedRHIRootSignatureTemplateCompileParams : A_RHITemplateCompileParams, F_DirectX12SharedRHIRootSignatureTemplateConfig, F_DirectX12SharedRHIRootSignatureTemplateCompileConfig
     {
     };
     
@@ -111,21 +109,49 @@ namespace Abytek
         
     public:
         F_DirectX12SharedRHIRootSignatureTemplate(
-            const F_DirectX12SharedRHIRootSignatureTemplateBuildParams& BuildParams,
+            const TW_Valid<A_RHITemplateDatabase>& Database,
+            F_RHITemplateHashCode HashCode,
+            const F_DirectX12SharedRHIRootSignatureTemplateConfig& Config
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+            , const F_DirectX12SharedRHIRootSignatureTemplateCompileConfig& CompileConfig,
+#endif
             const F_DirectX12SharedRHIRootSignatureTemplateCompiledData& CompiledData
         );
-        virtual ~F_DirectX12SharedRHIRootSignatureTemplate() override;
+        ~F_DirectX12SharedRHIRootSignatureTemplate() override;
 
     protected:
-        virtual TS_Valid<A_RHITemplateRuntime> CreateAndBuildRuntime(const TW_Valid<A_RHIContext>& Context) override;
+        TS_Valid<A_RHITemplateRuntime> CreateAndBuildRuntime(const TW_Valid<A_RHIContext>& Context) override;
         
+    protected:
+        TS<A_RHITemplateExportedData> CreateExportedData() const override;
+        void PostCreateExportedData(const TS<A_RHITemplateExportedData>& ExportedData) const override;
+    };
+    
+    struct F_DirectX12SharedRHIRootSignatureTemplateExportedData : A_RHITemplateExportedData
+    {
+        F_DirectX12SharedRHIRootSignatureTemplateConfig Config;
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
-    public:
-        void SetCompileConfig(const F_DirectX12SharedRHIRootSignatureTemplateCompileConfig& X)
-        {
-            _CompileConfig = X;
-        }
+        F_DirectX12SharedRHIRootSignatureTemplateCompileConfig CompileConfig;
 #endif
+        F_DirectX12SharedRHIRootSignatureTemplateCompiledData CompiledData;
+        
+    protected:
+        TS<A_RHITemplate> CreateTemplate(const TW_Valid<A_RHITemplateDatabase>& Database) const override
+        {
+            return TS<F_DirectX12SharedRHIRootSignatureTemplate>()(
+                Database,
+                HashCode,
+                Config,
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+                CompileConfig,
+#endif
+                CompiledData
+            );
+        }
+        void PostCreateTemplate(const TS<A_RHITemplate>& Template) const override
+        {
+            A_RHITemplateExportedData::PostCreateTemplate(Template);
+        }
     };
 }
 

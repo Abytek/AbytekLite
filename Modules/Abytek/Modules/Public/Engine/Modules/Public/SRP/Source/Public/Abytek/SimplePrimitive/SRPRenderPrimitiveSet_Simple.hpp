@@ -28,6 +28,6 @@ namespace Abytek
         void UploadComponents_Transform(const RenderPrimitive::F_Component_Transform* Values) override;
         void UploadComponents_InverseTransposeTransform(const RenderPrimitive::F_Component_Transform* Values) override;
         void UploadComponents_GeometryAddress_ECMS(const RenderPrimitive::F_Component_GeometryAddress_ECMS* Values) override;
-        void UploadComponents_GeometryAllocationStructure_ECMS(const RenderPrimitive::F_Component_GeometryAllocationStructure_ECMS* Values) override;
+        void UploadComponents_GeometryAddress_LOD(const RenderPrimitive::F_Component_GeometryAddress_LOD* Values) override;
     };
 }

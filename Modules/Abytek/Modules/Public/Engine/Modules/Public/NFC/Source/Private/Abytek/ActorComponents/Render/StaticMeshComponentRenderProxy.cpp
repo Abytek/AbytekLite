@@ -76,14 +76,16 @@ namespace Abytek
     }
     void F_StaticMeshComponentRenderProxy::UpdateStaticMesh_Simple(const TS<F_StaticMeshRenderProxy>& StaticMeshRenderProxy)
     {
-        const auto& StaticMeshResource = StaticMeshRenderProxy->GetResource_ECMS();
-        if (!StaticMeshResource)
-        {
-            return;
-        }
         const auto& PrimitiveSet = GetPrimitiveSets()[0];
         auto CastedPrimitiveSet = PrimitiveSet.FastCast<A_RenderPrimitiveSet_Simple>();
-        CastedPrimitiveSet->UploadComponent_GeometryAddress_ECMS({ F_RenderGeometryAddress::From(StaticMeshResource->GeometryAllocation) });
-        CastedPrimitiveSet->UploadComponent_GeometryAllocationStructure_ECMS({ StaticMeshResource->GeometryAllocationStructure });
+        
+        F_RenderGeometryAddress GeometryAddress = INVALID_RENDER_GEOMETRY_ADDRESS;
+        
+        if (const auto& StaticMeshResource = StaticMeshRenderProxy->GetResource_ECMS())
+        {
+            GeometryAddress = F_RenderGeometryAddress::From(StaticMeshResource->GeometryAllocation);
+        }
+        
+        CastedPrimitiveSet->UploadComponent_GeometryAddress_ECMS({ GeometryAddress });
     }
 }

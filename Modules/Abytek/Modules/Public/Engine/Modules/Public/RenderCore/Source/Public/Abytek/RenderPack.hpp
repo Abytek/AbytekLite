@@ -10,6 +10,7 @@
 namespace Abytek
 {
     class F_RenderRegistry;
+    class A_RenderRegistryPortData;
     
     struct F_RenderPackBulkHeader
     {
@@ -35,14 +36,17 @@ namespace Abytek
     private:
         TF_Map<F_RHITemplateHashCode, TS<A_RHITemplate>> _Templates;
         
+        // Slow remove because this one is typically used for render packs, which have only template additions in cooked build! 
+        TF_Vector<TW<A_RHITemplate>> _SortedTemplates;
+        
     public:
         ABYTEK_FORCE_INLINE const auto& GetTemplates() const noexcept
         {
             return _Templates;
         }
-        ABYTEK_FORCE_INLINE auto& InjectTemplates() noexcept
+        ABYTEK_FORCE_INLINE auto& GetSortedTemplates() noexcept
         {
-            return _Templates;
+            return _SortedTemplates;
         }
         
     protected:
@@ -73,7 +77,46 @@ namespace Abytek
         ~F_RenderPackTemplateMap() override;
     };
     
-    class ABYTEK_ENGINE_RENDER_CORE_API F_RenderPack : public A_WorldContext, public A_Renderable, public A_RenderPackTemplateMap, public I_Cookable
+    class ABYTEK_ENGINE_RENDER_CORE_API F_RenderPackData : public A_Object, public A_RenderPackTemplateMap
+    {
+    public:
+        friend class F_RenderPack;
+        
+    private:
+        TW<F_RenderPack> _Pack;
+        TS<A_RenderRegistryPortData> _PortData;
+        TF_Map<F_RHITemplateHashCode, TS<A_RHITemplateRuntime>> _TemplateRuntimes;
+        
+    public:
+        ABYTEK_FORCE_INLINE const auto& GetPack() const noexcept
+        {
+            return _Pack;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetPortData() const noexcept
+        {
+            return _PortData;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetTemplateRuntimes() const noexcept
+        {
+            return _TemplateRuntimes;
+        }
+        
+    public:
+        F_RenderPackData(
+            const TW_Valid<F_RenderPack>& Pack,
+            const TS<A_RenderRegistryPortData>& PortData
+        );
+        ~F_RenderPackData() override;
+        
+    protected:
+        void OnAddTemplate(const TS<A_RHITemplate>& Template) override;
+        void OnRemoveTemplate(F_RHITemplateHashCode HashCode) override;
+        
+    public:
+        void EnqueueCommand(TF_Function<void()>&& Command);
+    };
+    
+    class ABYTEK_ENGINE_RENDER_CORE_API F_RenderPack : public A_WorldContext, public A_RenderPackTemplateMap, public I_Cookable
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_WorldContext)
@@ -88,6 +131,8 @@ namespace Abytek
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
         TS<F_RenderPackTemplateMap> _CookedTemplateMap;
 #endif
+        
+        TF_Vector<TS<F_RenderPackData>> _DataList;
         
     public:
         ABYTEK_FORCE_INLINE const auto& GetRegistry() const noexcept
@@ -108,6 +153,22 @@ namespace Abytek
         }
 #endif
         
+        ABYTEK_FORCE_INLINE const auto& GetDataList() const noexcept
+        {
+            return _DataList;
+        }
+        TS<F_RenderPackData> FindData(const TW_Valid<A_RenderRegistryPortData> PortData) const noexcept
+        {
+            for (const auto& Data : _DataList)
+            {
+                if (Data->GetPortData().Weak() == PortData)
+                {
+                    return Data;
+                }
+            }
+            return {};
+        }
+        
     public:
         F_RenderPack(const F_SerializableObjectInitParams& InitParams);
         ~F_RenderPack() override;
@@ -119,11 +180,6 @@ namespace Abytek
     protected:
         F_FeedbackStatus BinarySerialize(F_SerializableObjectBinarySerializeParams& Params) override;
         F_FeedbackStatus BinaryDeserialize(F_SerializableObjectBinaryDeserializeParams& Params) override;
-        
-    protected:
-        void OnCreateRenderState() override;
-        void OnDestroyRenderState() override;
-        TS<A_RenderProxy> CreateRenderProxy() override;
         
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
     public:
@@ -143,6 +199,23 @@ namespace Abytek
         void PrepareForCooking() override;
         void Cook() override;
         void CleanUpAfterCooking() override;
+#endif
+        
+    public:
+        void AddData(const TS<A_RenderRegistryPortData>& PortData);
+        void RemoveData(const TS<A_RenderRegistryPortData>& PortData);
+        
+    public:
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        // Compile new templates.
+        // Notes that this function will remove all the unused templates.
+        static void ExecuteExclusiveTemplateCompilation(
+            const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
+            const TW_Valid<A_RenderPackTemplateMap>& RenderPackTemplateMap,
+            const TF_Set<F_RHITemplateHashCode>& TemplateHashCodesToCompile,
+            const TF_Set<F_RHITemplateHashCode>& RootTemplateHashCodes,
+            TF_Function<void(TF_Vector<TS<A_RHITemplate>>& OutNewTemplates)>&& MainWork
+        );
 #endif
     };
 }

@@ -190,7 +190,6 @@ namespace Abytek
 
     F_RHICommonCompilationStatus F_DirectX12SharedRHICompiler::D3DCompileBindGroupTemplate(
         const F_RHIBindGroupTemplateCompileParams& CompileParams,
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
         TS<A_RHIBindGroupTemplate>& OutCompiledObject
     )
     {
@@ -965,15 +964,16 @@ namespace Abytek
         OutCompiledData = ABYTEK_MOVE(CompiledData);
         
         OutCompiledObject = TS<F_DirectX12SharedRHIBindGroupTemplate>()(
+            CompileParams.Database,
+            CompileParams.HashCode,
             CompileParams,
-            ABYTEK_MOVE(OutCompiledData)
+            CompileParams,
+            OutCompiledData
         );
-        OutCompiledObject->SetCompileConfig(CompileParams);
         return F_RHICommonCompilationStatus::MakeSucceeded();
     }
     F_RHICommonCompilationStatus F_DirectX12SharedRHICompiler::D3DCompilePipelineStateTemplate(
         const F_RHIPipelineStateTemplateCompileParams& CompileParams,
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
         TS<A_RHIPipelineStateTemplate>& OutCompiledObject
     ) 
     {
@@ -988,7 +988,7 @@ namespace Abytek
         for (U32 BindGroupIndex = 0; BindGroupIndex < NumBindGroups; ++BindGroupIndex)
         {
             const auto& BindGroup = BindGroups[BindGroupIndex];
-            if (!TemplateDatabase->HasTemplate(BindGroup.TemplateHashCode))
+            if (!CompileParams.Database->HasTemplate(BindGroup.TemplateHashCode))
             {
                 return F_RHICommonCompilationStatus::MakeFailed(
                     ABYTEK_TEXT("Not found bind group template with hash code ")
@@ -997,7 +997,7 @@ namespace Abytek
                     + ToText(BindGroupIndex)
                 );
             }
-            auto BindGroupTemplate = TemplateDatabase->GetTemplate(BindGroup.TemplateHashCode)
+            auto BindGroupTemplate = CompileParams.Database->GetTemplate(BindGroup.TemplateHashCode)
                 .FastCast<A_RHIBindGroupTemplate>();
             BindGroupTemplates.push_back(BindGroupTemplate.FastCast<F_DirectX12SharedRHIBindGroupTemplate>());
         }
@@ -1632,24 +1632,29 @@ namespace Abytek
         TS<F_DirectX12SharedRHIRootSignatureTemplate> RootSignatureTemplate;
         {
             F_DirectX12SharedRHIRootSignatureTemplateCompileParams RootSignatureTemplateCompileParams;
-            RootSignatureTemplateCompileParams.Database = CompileParams.Database;
+            static_cast<A_RHITemplateCompileParams&>(RootSignatureTemplateCompileParams) = static_cast<const A_RHITemplateCompileParams&>(
+                CompileParams
+            );
             RootSignatureTemplateCompileParams.RootParameters = OutCompiledData.RootParameters;
             RootSignatureTemplateCompileParams.AllowVertexInputLayout = OutCompiledData.InputElementDescs.size() > 0;
             RootSignatureTemplateCompileParams.AllowBindless = OutCompiledData.AllowBindless;
 
-            auto HashCode = RHITemplateConfigBasedHashCode<F_DirectX12SharedRHIRootSignatureTemplateConfig>(
+            auto RootSignatureHashCode = RHITemplateConfigBasedHashCode<F_DirectX12SharedRHIRootSignatureTemplateConfig>(
                 RootSignatureTemplateCompileParams,
                 CompileParams.CustomBaseDependencyHashCode
             );
-            RootSignatureTemplateCompileParams.CustomHashCode = HashCode;
+            RootSignatureTemplateCompileParams.HashCode = RootSignatureHashCode;
 
             F_RHICommonCompilationStatus Status = F_FeedbackStatus::MakeSucceeded();
             TS<A_RHITemplate> TempRootSignatureTemplate1 = CompileParams.Database->LockedCreateTemplate(
-                HashCode,
+                RootSignatureHashCode,
                 [&]
                 {
                     TS<F_DirectX12SharedRHIRootSignatureTemplate> TempRootSignatureTemplate2;
-                    Status = CompileRootSignatureTemplate(RootSignatureTemplateCompileParams, TemplateDatabase, TempRootSignatureTemplate2);
+                    Status = CompileRootSignatureTemplate(
+                        RootSignatureTemplateCompileParams,
+                        TempRootSignatureTemplate2
+                    );
                     return TempRootSignatureTemplate2;
                 }
             );
@@ -1663,10 +1668,12 @@ namespace Abytek
 #pragma endregion
         
         OutCompiledObject = TS<F_DirectX12SharedRHIPipelineStateTemplate>()(
+            CompileParams.Database,
+            CompileParams.HashCode,
             CompileParams,
-            ABYTEK_MOVE(OutCompiledData)
+            CompileParams,
+            OutCompiledData
         );
-        OutCompiledObject->SetCompileConfig(CompileParams);
         for (const auto& SlangShaderFilePath : GatheredSlangShaderFilePaths)
         {
             F_RHISlangShaderFileVersion ShaderFileVersion = F_RHISlangShaderFileVersion::Make(SlangShaderFilePath);
@@ -1679,7 +1686,6 @@ namespace Abytek
     }
     F_RHICommonCompilationStatus F_DirectX12SharedRHICompiler::D3DCompileRootSignatureTemplate(
         const F_DirectX12SharedRHIRootSignatureTemplateCompileParams& CompileParams,
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
         TS<F_DirectX12SharedRHIRootSignatureTemplate>& OutCompiledObject
     )
     {
@@ -1806,36 +1812,35 @@ namespace Abytek
         SerializedBlob->Release();
         
         OutCompiledObject = TS<F_DirectX12SharedRHIRootSignatureTemplate>()(
+            CompileParams.Database,
+            CompileParams.HashCode,
             CompileParams,
-            ABYTEK_MOVE(OutCompiledData)
+            CompileParams,
+            OutCompiledData
         );
-        OutCompiledObject->SetCompileConfig(CompileParams);
         return F_RHICommonCompilationStatus::MakeSucceeded();
     }
 
     F_RHICommonCompilationStatus F_DirectX12SharedRHICompiler::ValidateBindGroupTemplate(
-        const F_RHIBindGroupTemplateCompileParams& CompileParams,
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase
+        const F_RHIBindGroupTemplateCompileParams& CompileParams
     )
     {
         ABYTEK_FEEDBACK_STATUS_CHECK(
-            A_RHICompiler::ValidateBindGroupTemplate(CompileParams, TemplateDatabase)
+            A_RHICompiler::ValidateBindGroupTemplate(CompileParams)
         );
         return F_RHICommonCompilationStatus::MakeSucceeded();
     }
     F_RHICommonCompilationStatus F_DirectX12SharedRHICompiler::ValidatePipelineStateTemplate(
-        const F_RHIPipelineStateTemplateCompileParams& CompileParams,
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase
+        const F_RHIPipelineStateTemplateCompileParams& CompileParams
     )
     {
         ABYTEK_FEEDBACK_STATUS_CHECK(
-            A_RHICompiler::ValidatePipelineStateTemplate(CompileParams, TemplateDatabase)
+            A_RHICompiler::ValidatePipelineStateTemplate(CompileParams)
         );
         return F_RHICommonCompilationStatus::MakeSucceeded();
     }
     F_RHICommonCompilationStatus F_DirectX12SharedRHICompiler::ValidateRootSignatureTemplate(
-        const F_DirectX12SharedRHIRootSignatureTemplateCompileParams& CompileParams,
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase
+        const F_DirectX12SharedRHIRootSignatureTemplateCompileParams& CompileParams
     )
     {
         return F_RHICommonCompilationStatus::MakeSucceeded();
@@ -1843,36 +1848,48 @@ namespace Abytek
 
     F_RHICommonCompilationStatus F_DirectX12SharedRHICompiler::CompileBindGroupTemplate(
         const F_RHIBindGroupTemplateCompileParams& CompileParams,
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
         TS<A_RHIBindGroupTemplate>& OutCompiledObject
     )
     {
         ABYTEK_FEEDBACK_STATUS_CHECK(
-            A_RHICompiler::CompileBindGroupTemplate(CompileParams, TemplateDatabase, OutCompiledObject)
+            A_RHICompiler::CompileBindGroupTemplate(
+                CompileParams, 
+                OutCompiledObject
+            )
         );
-        return D3DCompileBindGroupTemplate(CompileParams, TemplateDatabase, OutCompiledObject);
+        return D3DCompileBindGroupTemplate(
+            CompileParams, 
+            OutCompiledObject
+        );
     }
     F_RHICommonCompilationStatus F_DirectX12SharedRHICompiler::CompilePipelineStateTemplate(
         const F_RHIPipelineStateTemplateCompileParams& CompileParams,
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
         TS<A_RHIPipelineStateTemplate>& OutCompiledObject
     )
     {
         ABYTEK_FEEDBACK_STATUS_CHECK(
-            A_RHICompiler::CompilePipelineStateTemplate(CompileParams, TemplateDatabase, OutCompiledObject)
+            A_RHICompiler::CompilePipelineStateTemplate(
+                CompileParams, 
+                OutCompiledObject
+            )
         );
-        return D3DCompilePipelineStateTemplate(CompileParams, TemplateDatabase, OutCompiledObject);
+        return D3DCompilePipelineStateTemplate(
+            CompileParams, 
+            OutCompiledObject
+        );
     }
     F_RHICommonCompilationStatus F_DirectX12SharedRHICompiler::CompileRootSignatureTemplate(
         const F_DirectX12SharedRHIRootSignatureTemplateCompileParams& CompileParams,
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
         TS<F_DirectX12SharedRHIRootSignatureTemplate>& OutCompiledObject
     )
     {
         ABYTEK_FEEDBACK_STATUS_CHECK(
-            ValidateRootSignatureTemplate(CompileParams, TemplateDatabase)
+            ValidateRootSignatureTemplate(CompileParams)
         );
-        return D3DCompileRootSignatureTemplate(CompileParams, TemplateDatabase, OutCompiledObject);
+        return D3DCompileRootSignatureTemplate(
+            CompileParams, 
+            OutCompiledObject
+        );
     }
 }
 #endif

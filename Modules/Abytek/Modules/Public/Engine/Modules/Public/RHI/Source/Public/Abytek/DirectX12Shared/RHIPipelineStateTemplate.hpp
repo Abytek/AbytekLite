@@ -121,19 +121,44 @@ namespace Abytek
         
     public:
         F_DirectX12SharedRHIPipelineStateTemplate(
-            const F_RHIPipelineStateTemplateBuildParams& BuildParams,
-            F_DirectX12SharedRHIPipelineStateTemplateCompiledData&& CompiledData    
+            const TW_Valid<A_RHITemplateDatabase>& Database,
+            F_RHITemplateHashCode HashCode,
+            const F_RHIPipelineStateTemplateConfig& Config
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+            , const F_RHIPipelineStateTemplateCompileConfig& CompileConfig,
+#endif
+            const F_DirectX12SharedRHIPipelineStateTemplateCompiledData& CompiledData    
         );
-        ABYTEK_FORCE_INLINE F_DirectX12SharedRHIPipelineStateTemplate(
-            const F_RHIPipelineStateTemplateBuildParams& BuildParams,
-            const F_DirectX12SharedRHIPipelineStateTemplateCompiledData& CompiledData
-        ) :
-            F_DirectX12SharedRHIPipelineStateTemplate(
-                BuildParams,
-                F_DirectX12SharedRHIPipelineStateTemplateCompiledData(CompiledData)
-            )
-        {
-        }
         ~F_DirectX12SharedRHIPipelineStateTemplate() override;
+        
+    protected:
+        TS<A_RHITemplateExportedData> CreateExportedData() const override;
+        void PostCreateExportedData(const TS<A_RHITemplateExportedData>& ExportedData) const override;
+        
+    public:
+        B8 IsRootTemplate() const override { return true; }
+    };
+    
+    struct F_DirectX12SharedRHIPipelineStateTemplateExportedData : A_RHIPipelineStateTemplateExportedData
+    {
+        F_DirectX12SharedRHIPipelineStateTemplateCompiledData CompiledData;
+        
+    protected:
+        TS<A_RHITemplate> CreateTemplate(const TW_Valid<A_RHITemplateDatabase>& Database) const override
+        {
+            return TS<F_DirectX12SharedRHIPipelineStateTemplate>()(
+                Database,
+                HashCode,
+                Config,
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+                CompileConfig,
+#endif
+                CompiledData
+            );
+        }
+        void PostCreateTemplate(const TS<A_RHITemplate>& Template) const override
+        {
+            A_RHIPipelineStateTemplateExportedData::PostCreateTemplate(Template);
+        }
     };
 }

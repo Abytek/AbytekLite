@@ -5,7 +5,7 @@
 namespace Abytek
 {
     F_TextureRenderProxy::F_TextureRenderProxy(const TW_Valid<F_Texture>& Owner) :
-        A_WorldContextRenderProxy(Owner)
+        A_WorldRenderResourceChild(Owner)
     {
     }
     F_TextureRenderProxy::~F_TextureRenderProxy()

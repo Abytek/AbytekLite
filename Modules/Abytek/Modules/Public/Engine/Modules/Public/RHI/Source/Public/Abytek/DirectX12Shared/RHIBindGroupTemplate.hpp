@@ -282,23 +282,45 @@ namespace Abytek
         
     public:
         F_DirectX12SharedRHIBindGroupTemplate(
-            const F_RHIBindGroupTemplateBuildParams& BuildParams,
-            F_DirectX12SharedRHIBindGroupTemplateCompiledData&& CompiledData    
+            const TW_Valid<A_RHITemplateDatabase>& Database,
+            F_RHITemplateHashCode HashCode,
+            const F_RHIBindGroupTemplateConfig& Config
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+            , const F_RHIBindGroupTemplateCompileConfig& CompileConfig,
+#endif
+            const F_DirectX12SharedRHIBindGroupTemplateCompiledData& CompiledData    
         );
-        ABYTEK_FORCE_INLINE F_DirectX12SharedRHIBindGroupTemplate(
-            const F_RHIBindGroupTemplateBuildParams& BuildParams,
-            const F_DirectX12SharedRHIBindGroupTemplateCompiledData& CompiledData
-        ) :
-            F_DirectX12SharedRHIBindGroupTemplate(
-                BuildParams,
-                F_DirectX12SharedRHIBindGroupTemplateCompiledData(CompiledData)
-            )
-        {
-        }
         ~F_DirectX12SharedRHIBindGroupTemplate() override;
         
     public:
-        virtual U32 GetEncodedDataSizeInBytes() override;
-        virtual U32 GetEncodedDataAlignmentInBytes() override;
+        U32 GetEncodedDataSizeInBytes() override;
+        U32 GetEncodedDataAlignmentInBytes() override;
+        
+    protected:
+        TS<A_RHITemplateExportedData> CreateExportedData() const override;
+        void PostCreateExportedData(const TS<A_RHITemplateExportedData>& ExportedData) const override;
+    };
+    
+    struct F_DirectX12SharedRHIBindGroupTemplateExportedData : A_RHIBindGroupTemplateExportedData
+    {
+        F_DirectX12SharedRHIBindGroupTemplateCompiledData CompiledData;
+        
+    protected:
+        TS<A_RHITemplate> CreateTemplate(const TW_Valid<A_RHITemplateDatabase>& Database) const override
+        {
+            return TS<F_DirectX12SharedRHIBindGroupTemplate>()(
+                Database,
+                HashCode,
+                Config,
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+                CompileConfig,
+#endif
+                CompiledData
+            );
+        }
+        void PostCreateTemplate(const TS<A_RHITemplate>& Template) const override
+        {
+            A_RHIBindGroupTemplateExportedData::PostCreateTemplate(Template);
+        }
     };
 }

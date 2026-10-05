@@ -11,7 +11,7 @@ namespace Abytek
     class A_RenderObjectFactory;
     class F_RenderRegistryRuntime;
 
-    class ABYTEK_ENGINE_NFC_API A_WorldContextRenderProxy : public A_RenderProxy
+    class ABYTEK_ENGINE_NFC_API A_WorldRenderResourceChild : public A_RenderProxy
     {
     private:
         TW<F_WorldRenderResource> _WorldRenderResource;
@@ -23,10 +23,10 @@ namespace Abytek
         }
         
     protected:
-        A_WorldContextRenderProxy(const TW_Valid<A_WorldContext>& Component);
+        A_WorldRenderResourceChild(const TW_Valid<A_WorldContext>& Component);
         
     public:
-        ~A_WorldContextRenderProxy() override;
+        ~A_WorldRenderResourceChild() override;
         
     public:
         const TS<A_RenderObjectFactory>& GetRenderObjectFactory() const noexcept;

@@ -6,10 +6,37 @@
 
 namespace Abytek
 {
+    class F_RendererManager;
     class A_RenderPath;
     class A_RenderScene;
     
-    class ABYTEK_ENGINE_NFC_API F_RendererManager : public A_WorldSubsystem, public A_Renderable
+    class ABYTEK_ENGINE_NFC_API F_WorldRenderResourceOwner : public A_WorldContext, public A_Renderable
+    {
+        ABYTEK_BEGIN_REFLECTOR(A_WorldContext)
+        ABYTEK_END_REFLECTOR(F_WorldRenderResourceOwner);
+        
+    private:
+        TW<F_RendererManager> _Manager;
+        
+    public:
+        ABYTEK_FORCE_INLINE const auto& GetManager() const noexcept
+        {
+            return _Manager;
+        }
+        
+    public:
+        F_WorldRenderResourceOwner(const F_SerializableObjectInitParams& InitParams);
+        ~F_WorldRenderResourceOwner() override;
+        
+    protected:
+        void OnLoad() override;
+        void OnUnload() override;
+        
+    protected:
+        TS<A_RenderProxy> CreateRenderProxy() override;
+    };
+    
+    class ABYTEK_ENGINE_NFC_API F_RendererManager : public A_WorldSubsystem
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_WorldSubsystem)
@@ -22,6 +49,7 @@ namespace Abytek
         TW<TF_ConsoleVariable<TF_ReflectionTypeHandle<A_RenderPath>>> _ConsoleVariable_RenderPathType;
         
         TS<A_RenderPath> _RenderPath;
+        TS<F_WorldRenderResourceOwner> _WorldRenderResourceOwner;
         
     public:
         ABYTEK_FORCE_INLINE const auto& GetConsoleVariable_RenderPathType() const noexcept
@@ -32,6 +60,10 @@ namespace Abytek
         ABYTEK_FORCE_INLINE const auto& GetRenderPath() const noexcept
         {
             return _RenderPath;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetWorldRenderResourceOwner() const noexcept
+        {
+            return _WorldRenderResourceOwner;
         }
     
     public:
@@ -46,11 +78,5 @@ namespace Abytek
         void OnStartup() override;
         void OnShutdown() override;
         void OnRelease() override;
-        
-    public:
-        B8 IsRenderable() const override;
-        
-    protected:
-        TS<A_RenderProxy> CreateRenderProxy() override;
     };
 }

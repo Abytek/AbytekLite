@@ -160,9 +160,12 @@ namespace Abytek
         _Proxy = TS<F_MathRenderer2DProxy>()(ABYTEK_WTHIS());
         
         H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
-            [Proxy = _Proxy, RenderRegistry = H_WorldContext::GetUnit<F_RenderCoreManager>(BuildParams.WorldContext)->GetMainRegistry()]()
+            [
+                Proxy = _Proxy, 
+                RenderRegistryPortData = H_WorldContext::GetUnit<F_RenderCoreManager>(BuildParams.WorldContext)->GetMainRegistry()->GetMainPort()->GetData()
+            ]()
             {
-                Proxy->Init(RenderRegistry->GetOrActiveRuntime(H_RHI::GetMainContext()));
+                Proxy->Init(RenderRegistryPortData->GetRegistryRuntime());
             }
         );
          

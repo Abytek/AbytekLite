@@ -312,9 +312,6 @@ namespace Abytek
             return !(A == B);
         }
     };
-    struct F_RHIBindGroupTemplateBuildParams : F_RHITemplateBuildParamsBase, F_RHIBindGroupTemplateConfig
-    {
-    };
 
     struct F_RHIBindGroupTemplateCompileConfig
     {
@@ -336,7 +333,8 @@ namespace Abytek
             return !(A == B);
         }
     };
-    struct F_RHIBindGroupTemplateCompileParams : F_RHIBindGroupTemplateBuildParams, F_RHIBindGroupTemplateCompileConfig
+    
+    struct F_RHIBindGroupTemplateCompileParams : A_RHITemplateCompileParams, F_RHIBindGroupTemplateConfig, F_RHIBindGroupTemplateCompileConfig
     {
     };
     
@@ -370,7 +368,14 @@ namespace Abytek
         }
         
     protected:
-        A_RHIBindGroupTemplate(const F_RHIBindGroupTemplateBuildParams& BuildParams);
+        A_RHIBindGroupTemplate(
+            const TW_Valid<A_RHITemplateDatabase>& Database,
+            F_RHITemplateHashCode HashCode,
+            const F_RHIBindGroupTemplateConfig& Config
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+            ,  const F_RHIBindGroupTemplateCompileConfig& CompileConfig
+#endif
+        );
 
     public:
         ~A_RHIBindGroupTemplate() override;
@@ -393,5 +398,25 @@ namespace Abytek
             _CompileConfig = X;
         }
 #endif
+        
+    protected:
+        void PostCreateExportedData(const TS<A_RHITemplateExportedData>& ExportedData) const override;
+        
+    public:
+        B8 IsRootTemplate() const override { return true; }
+    };
+    
+    struct A_RHIBindGroupTemplateExportedData : A_RHITemplateExportedData
+    {
+        F_RHIBindGroupTemplateConfig Config;
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        F_RHIBindGroupTemplateCompileConfig CompileConfig;
+#endif
+        
+    protected:
+        void PostCreateTemplate(const TS<A_RHITemplate>& Template) const override
+        {
+            A_RHITemplateExportedData::PostCreateTemplate(Template);
+        }
     };
 }

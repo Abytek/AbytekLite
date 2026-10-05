@@ -1,5 +1,6 @@
 #include "Abytek/RenderRegistryRuntime.hpp"
 #include "Abytek/RenderRegistry.hpp"
+#include "Abytek/RHISubsystem.hpp"
 
 
 namespace Abytek
@@ -9,31 +10,19 @@ namespace Abytek
     }
     
     F_RenderRegistryRuntime::F_RenderRegistryRuntime(const F_RenderRegistryRuntimeBuildParams& BuildParams) :
-        _Registry(BuildParams.Registry),
         _Context(BuildParams.Context),
-        _RHIConfig(BuildParams.Registry->GetRHIConfig()),
+        _RHIFeatureSupports(BuildParams.RHIFeatureSupports),
+        _Dependencies(BuildParams.Dependencies),
         _TemplateRuntimeDatabase(BuildParams.Context->GetTemplateRuntimeDatabase().Weak())
     {
-        for (const auto& DependencyRegistry : _Registry->GetDependencies())
-        {
-            _Dependencies.push_back(
-                DependencyRegistry->GetOrActiveRuntime(_Context)
-            );
-        }
-        _Registry->_TrackRuntime(ABYTEK_WTHIS());
+        _TemplateDatabase = A_RHITemplateDatabase::Create(
+            F_RHISubsystem::GetInstance()->GetActiveAPI(),
+            _RHIFeatureSupports
+        );
     }
     F_RenderRegistryRuntime::~F_RenderRegistryRuntime()
     {
-    }
-
-    void F_RenderRegistryRuntime::FinalizeActivation()
-    {
-    }
-
-    void F_RenderRegistryRuntime::FinalizeActivationAndUnlock()
-    {
-        FinalizeActivation();
-        _IsActivated.test_and_set(boost::memory_order_release);
+        _TemplateDatabase = {};
     }
 
     TS<A_RHITemplateRuntime> F_RenderRegistryRuntime::QueryTemplateRuntime(F_RHITemplateHashCode HashCode)
@@ -53,7 +42,7 @@ namespace Abytek
                 return TemplateRuntime;
             }
         }
-        if (auto Template = _Registry->QueryTemplate(HashCode))
+        if (auto Template = _TemplateDatabase->FindTemplate(HashCode))
         {
             if (auto TemplateRuntime = _TemplateRuntimeDatabase->GetOrActivateRuntime(Template))
             {

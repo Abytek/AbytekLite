@@ -6,10 +6,12 @@
 #include "Abytek/Renderable.hpp"
 #include "Abytek/Assets/SimpleMeshData.hpp"
 #include "Abytek/Assets/ECMSMeshData.hpp"
+#include "Abytek/Assets/StaticMeshLevel.hpp"
 
    
 namespace Abytek
 {
+    class F_StaticMesh;
     class F_StaticMeshRenderProxy;
     
     enum class E_StaticMeshDataType : U8
@@ -81,6 +83,8 @@ namespace Abytek
         TF_Optional<F_StaticMeshDataBulkHeader> _TempSerializationData_LastSimpleDataBulkHeader;
         TF_Optional<F_StaticMeshDataBulkHeader> _TempSerializationData_LastECMSDataBulkHeader;
         
+        TF_Vector<F_StaticMeshLevel> _Levels;
+        
         F_StaticMeshSetting _Setting;
         
     public:
@@ -103,6 +107,11 @@ namespace Abytek
         ABYTEK_FORCE_INLINE const auto& GetNewECMSData() const noexcept
         {
             return _NewECMSData;
+        }
+        
+        ABYTEK_FORCE_INLINE const auto& GetLevels() const noexcept
+        {
+            return _Levels;
         }
         
         ABYTEK_FORCE_INLINE const auto& GetSetting() const noexcept
@@ -141,6 +150,9 @@ namespace Abytek
         void Import(const F_Text& FilePath, const F_StaticMeshSourceImportConfig& Config = {}, const TF_Optional<F_StaticMeshSetting>& Setting = {});
         void Import(const F_SimpleMeshData& SimpleData, const TF_Optional<F_StaticMeshSetting>& Setting = {});
         void Import(const F_ECMSMeshData& ECMSData, const TF_Optional<F_StaticMeshSetting>& Setting = {});
+        
+    public:
+        void SetLevels(const TF_Span<const F_StaticMeshLevel>& Levels);
         
     public:
         void UpdateSetting(const F_StaticMeshSetting& Setting);

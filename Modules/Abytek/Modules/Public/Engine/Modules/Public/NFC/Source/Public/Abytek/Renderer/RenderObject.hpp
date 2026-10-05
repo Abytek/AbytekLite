@@ -37,7 +37,6 @@ namespace Abytek
         const TS<F_RenderRegistryRuntime>& GetRenderRegistryRuntime() const noexcept;
         
     public:
-        const F_RenderCoreRHIConfig& GetRHIConfig() const noexcept;
         const F_RHIFeatureSupports& GetRHIFeatureSupports() const noexcept;
         
     protected:

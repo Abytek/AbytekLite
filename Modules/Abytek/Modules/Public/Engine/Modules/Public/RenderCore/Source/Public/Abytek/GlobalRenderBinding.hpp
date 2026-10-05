@@ -244,7 +244,7 @@ namespace Abytek
                         Config.PermutationVector = F_DynamicPermutationVector::FromValueSet(PermutationValueSet); \
                         Config.PermutationHashCode = PermutationValueSet.GetHashCode(); \
                         Config.Pack = Pack; \
-                        Config.CustomHashCode = GetTemplateHashCode(Config.PermutationHashCode); \
+                        Config.HashCode = GetTemplateHashCode(Config.PermutationHashCode); \
                         Config.CustomBaseDependencyHashCode = Pack->GetBaseDependencyHashCodeForTemplates(); \
                         ABYTEK_FEEDBACK_STATUS_CHECK(Build(Config)); \
                         if (!Config.ShouldCompile) continue; \
@@ -287,11 +287,11 @@ namespace Abytek
                     for (const auto& Config : Configs) \
                     { \
                         B8 ShouldCompile = Abytek::Internal::GlobalRenderBinding::EnableInternalDebugger; \
-                        OutTemplateHashCodes.insert(*Config.CustomHashCode); \
-                        if (TemplateMap->HasTemplate(*Config.CustomHashCode)) \
+                        OutTemplateHashCodes.insert(Config.HashCode); \
+                        if (TemplateMap->HasTemplate(Config.HashCode)) \
                         { \
                             Abytek::TW<Abytek::A_RHIBindGroupTemplate> Template; \
-                            if (TemplateMap->GetTemplate(*Config.CustomHashCode).TryDynamicCast<Abytek::A_RHIBindGroupTemplate>(Template)) \
+                            if (TemplateMap->GetTemplate(Config.HashCode).TryDynamicCast<Abytek::A_RHIBindGroupTemplate>(Template)) \
                             { \
                                 if (Template->GetConfig() != static_cast<const Abytek::F_RHIBindGroupTemplateConfig&>(Config)) \
                                 { \
@@ -309,27 +309,26 @@ namespace Abytek
                         } \
                         if (ShouldCompile) \
                         { \
-                            OutTemplateHashCodesToCompile.insert(*Config.CustomHashCode); \
+                            OutTemplateHashCodesToCompile.insert(Config.HashCode); \
                         } \
                         else \
                         { \
-                            ABYTEK_LOG_INFO() << "Re-use precompiled global render binding: " << Abytek::TypeFullName<Name>() << ", permutation hash code: " << Config.PermutationHashCode << ", template hash code: " << *Config.CustomHashCode; \
+                            ABYTEK_LOG_INFO() << "Re-use precompiled global render binding: " << Abytek::TypeFullName<Name>() << ", permutation hash code: " << Config.PermutationHashCode << ", template hash code: " << Config.HashCode; \
                             continue; \
                         } \
                         OutCommands.push_back( \
                             [=](Abytek::TF_Vector<Abytek::TS<Abytek::A_RHITemplate>>& OutTemplates) \
                             { \
-                                ABYTEK_LOG_INFO() << "Compiling global render binding: " << Abytek::TypeFullName<Name>() << ", permutation hash code: " << Config.PermutationHashCode << ", template hash code: " << *Config.CustomHashCode; \
+                                ABYTEK_LOG_INFO() << "Compiling global render binding: " << Abytek::TypeFullName<Name>() << ", permutation hash code: " << Config.PermutationHashCode << ", template hash code: " << Config.HashCode; \
                                 Abytek::TS<Abytek::A_RHIBindGroupTemplate> BindGroupTemplate; \
                                 ABYTEK_FEEDBACK_STATUS_CHECK_HARD( \
                                     Compiler->CompileBindGroupTemplate( \
                                         Config, \
-                                        TemplateDatabase.Weak(), \
                                         BindGroupTemplate \
                                     ) \
                                 ); \
                                 OutTemplates.push_back(BindGroupTemplate); \
-                                ABYTEK_LOG_INFO() << "Compiled global render binding: " << Abytek::TypeFullName<Name>() << ", permutation hash code: " << Config.PermutationHashCode << ", template hash code: " << *Config.CustomHashCode; \
+                                ABYTEK_LOG_INFO() << "Compiled global render binding: " << Abytek::TypeFullName<Name>() << ", permutation hash code: " << Config.PermutationHashCode << ", template hash code: " << Config.HashCode; \
                             } \
                         ); \
                     } \

@@ -6,6 +6,7 @@
 
 namespace Abytek
 {
+    class F_World;
     class F_RenderRegistry;
     
     struct F_RenderCoreRHIConfig
@@ -15,6 +16,7 @@ namespace Abytek
     };
     struct F_RenderRegistryBuildParams
     {
+        TW<F_World> World;
         F_RenderCoreRHIConfig RHIConfig;
         TF_Vector<TS<F_RenderRegistry>> Dependencies;
         B8 DebugGeneratedShaders = false;

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Abytek/Renderer/WorldContextRenderProxy.hpp"
+#include "Abytek/Renderer/WorldRenderResourceChild.hpp"
 #include "Abytek/Assets/Texture.hpp"
 
 
 namespace Abytek
 {
-    class ABYTEK_ENGINE_NFC_API F_TextureRenderProxy : public A_WorldContextRenderProxy
+    class ABYTEK_ENGINE_NFC_API F_TextureRenderProxy : public A_WorldRenderResourceChild
     {
     public:
         friend class F_Texture;

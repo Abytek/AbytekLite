@@ -4,6 +4,8 @@
 #include "Abytek/GlobalRenderBinding.hpp"
 #include "Abytek/Assets/ECMSMeshData.hpp"
 #include "Abytek/Assets/SimpleMeshData.hpp"
+#include "Abytek/Assets/StaticMesh.hpp"
+#include "Abytek/Assets/Render/StaticMeshLevelRenderProxy.hpp"
 #include "Abytek/Renderer/RenderObject.hpp"
 #include "Abytek/Renderer/RenderGeometry/RenderGeometryCommon.hpp"
 
@@ -198,6 +200,19 @@ namespace Abytek
             F_RenderGeometryAllocationStructure_ECMS& OutGeometryAllocationStructure
         );
         void RemoveMeshData_ECMS(
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
+            const F_RenderGeometryAllocation& GeometryAllocation
+        );
+        
+    public:
+        B8 AddMeshData_LOD(
+            const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
+            const TF_Span<const F_StaticMeshLevelRenderProxy>& LevelRenderProxies,
+            E_StaticMeshDataType DataType,
+            F_RenderGeometryAllocation& OutGeometryAllocation,
+            F_RenderGeometryAllocationStructure_LOD& OutGeometryAllocationStructure
+        );
+        void RemoveMeshData_LOD(
             const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer,
             const F_RenderGeometryAllocation& GeometryAllocation
         );

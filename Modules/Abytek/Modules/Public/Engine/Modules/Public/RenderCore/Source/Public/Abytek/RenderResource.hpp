@@ -5,6 +5,7 @@
 
 namespace Abytek
 {
+    class A_RenderRegistryPort;
     class F_RenderRegistry;
     class F_RenderRegistryRuntime;
     struct F_RenderCoreRHIConfig;
@@ -16,6 +17,8 @@ namespace Abytek
 #ifdef ABYTEK_ENGINE_RENDER_CORE_ENABLE_ASSERTIONS
         B8 _EnqueuedToInit = false;
         B8 _EnqueuedToRelease = false;
+        
+        TS<A_RenderRegistryPort> _LastRenderRegistryPort;
 #endif
         
     public:
@@ -31,15 +34,14 @@ namespace Abytek
         ~A_RenderResource() override;
         
     public:
-        void Init(const TS<F_RenderRegistry>& RenderRegistry);
-        void Release();
+        void Init(const TS<A_RenderRegistryPort>& RenderRegistryPort);
+        void Release(const TS<A_RenderRegistryPort>& RenderRegistryPort);
         
     protected:
         virtual void OnInit_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
         virtual void OnRelease_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
         
     public:
-        const F_RenderCoreRHIConfig& GetRHIConfig() const noexcept;
         const F_RHIFeatureSupports& GetRHIFeatureSupports() const noexcept;
     };
 }
