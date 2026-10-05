@@ -5,11 +5,11 @@
 namespace Abytek
 {
     F_DirectX12SharedRHIPipelineStateTemplate::F_DirectX12SharedRHIPipelineStateTemplate(
-        const TW_Valid<A_RHITemplateDatabase>& Database,
+        const TS<A_RHITemplateDatabase>& Database,
         F_RHITemplateHashCode HashCode,
-        const F_RHIPipelineStateTemplateConfig& Config
+        const F_RHIPipelineStateTemplateConfig& Config,
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
-        , const F_RHIPipelineStateTemplateCompileConfig& CompileConfig,
+        const F_RHIPipelineStateTemplateCompileConfig& CompileConfig,
 #endif
         const F_DirectX12SharedRHIPipelineStateTemplateCompiledData& CompiledData
     ) :

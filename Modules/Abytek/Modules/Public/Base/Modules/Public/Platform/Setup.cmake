@@ -44,6 +44,7 @@ if(ABYTEK_MODULE_PHASE_TARGET_CREATED)
                 shlwapi.lib
                 advapi32.lib
                 ole32.lib
+                Pathcch.lib
         )
     endif()
 endif()

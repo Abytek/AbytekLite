@@ -2,6 +2,7 @@
 #include "Abytek/FSUtilities.hpp"
 #include "Abytek/Windows/FSFile_Standard.hpp"
 #include "Abytek/Path.hpp"
+#include <pathcch.h>
 
 
 #ifdef ABYTEK_PLATFORM_WINDOWS
@@ -72,7 +73,7 @@ namespace Abytek
             CreationDisposition = OPEN_ALWAYS;
         }
         
-        HANDLE Handle = CreateFile(
+        HANDLE Handle = CreateFileW(
             OpenParams.Path.c_str(),
             DesiredAccess,
             ShareMode,
@@ -99,7 +100,7 @@ namespace Abytek
         DWORD ShareMode = 0;
         DWORD CreationDisposition = CREATE_NEW;
         
-        HANDLE Handle = CreateFile(
+        HANDLE Handle = CreateFileW(
             Path.c_str(),
             DesiredAccess,
             ShareMode,
@@ -122,7 +123,7 @@ namespace Abytek
     }
     F_FeedbackStatus F_WindowsFSAdapter_Standard::DeleteFile_(const F_Text& Path) const
     {
-        if (!DeleteFile(Path.c_str()))
+        if (!DeleteFileW(Path.c_str()))
         {
             return F_FeedbackStatus::MakeFailed(
                 ABYTEK_TEXT("Cannot delete file \"")
@@ -148,7 +149,7 @@ namespace Abytek
     }
     F_FeedbackStatus F_WindowsFSAdapter_Standard::CopyFile_(const F_Text& DstPath, const F_Text& SrcPath) const
     {
-        if (!CopyFile(SrcPath.c_str(), DstPath.c_str(), false))
+        if (!CopyFileW(SrcPath.c_str(), DstPath.c_str(), false))
         {
             return F_FeedbackStatus::MakeFailed(
                 ABYTEK_TEXT("Cannot copy file from \"")
@@ -202,12 +203,25 @@ namespace Abytek
             
             if(ShouldCreateDirectory)
             {
-                if(!CreateDirectory(DirectoryPath.c_str(), 0))
+                if(!CreateDirectoryW(DirectoryPath.c_str(), 0))
                 {
+                    const DWORD error = GetLastError();
+                    wchar_t buffer[512]{};
+                    FormatMessageW(
+                        FORMAT_MESSAGE_FROM_SYSTEM |
+                        FORMAT_MESSAGE_IGNORE_INSERTS,
+                        nullptr,
+                        error,
+                        0,
+                        buffer,
+                        ARRAYSIZE(buffer),
+                        nullptr
+                    );
                     return F_FeedbackStatus::MakeFailed(
                         ABYTEK_TEXT("Cannot create directory \"")
                         + DirectoryPath 
-                        + ABYTEK_TEXT("\"")
+                        + ABYTEK_TEXT("\": ")
+                        + ToText(error)
                     );
                 }
             }
@@ -264,6 +278,7 @@ namespace Abytek
                 );
             }
         }
+        
         if (!RemoveDirectoryW(Path.c_str()))
         {
             DWORD err = GetLastError();

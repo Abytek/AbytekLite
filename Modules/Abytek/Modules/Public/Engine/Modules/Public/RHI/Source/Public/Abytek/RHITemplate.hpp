@@ -18,7 +18,7 @@ namespace Abytek
     
     struct A_RHITemplateCompileParams : F_RHITemplateCommonSettings
     {        
-        TW<A_RHITemplateDatabase> Database;
+        TS<A_RHITemplateDatabase> Database;
         TF_Optional<F_RHITemplateHashCode> CustomBaseDependencyHashCode;
     };
     
@@ -29,7 +29,7 @@ namespace Abytek
         friend class A_RHITemplateRuntimeDatabase;
         
     private:
-        TW<A_RHITemplateDatabase> _Database;
+        TS<A_RHITemplateDatabase> _Database;
         TF_Vector<F_RHITemplateHashCode> _DependencyHashCodes;
         F_RHITemplateHashCode _HashCode;
 
@@ -49,7 +49,7 @@ namespace Abytek
         
     protected:
         A_RHITemplate(
-            const TW_Valid<A_RHITemplateDatabase>& Database,
+            const TS<A_RHITemplateDatabase>& Database,
             F_RHITemplateHashCode HashCode
         );
 
@@ -99,11 +99,11 @@ namespace Abytek
         F_RHITemplateHashCode HashCode = 0;
         
     protected:
-        virtual TS<A_RHITemplate> CreateTemplate(const TW_Valid<A_RHITemplateDatabase>& Database) const = 0;
+        virtual TS<A_RHITemplate> CreateTemplate(const TS<A_RHITemplateDatabase>& Database) const = 0;
         virtual void PostCreateTemplate(const TS<A_RHITemplate>& Template) const {}
         
     public:
-        TS<A_RHITemplate> Import(const TW_Valid<A_RHITemplateDatabase>& Database) const
+        TS<A_RHITemplate> Import(const TS<A_RHITemplateDatabase>& Database) const
         {
             auto Template = CreateTemplate(Database);
             PostCreateTemplate(Template);

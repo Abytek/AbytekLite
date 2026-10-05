@@ -67,19 +67,17 @@ namespace Abytek
         ABYTEK_ENGINE_RHI_ASSERT(Queues.Compile.DeallocateDescriptors.GetSize() == 0);
         A_RHIProcess::Release();
     }
-
+    
+    void F_DirectX12RHIProcess::PrepareCompile()
+    {
+        ABYTEK_PROFILER_EVENT();
+        
+        // Call base RHI process prepare compile, typically for high level objects to be ready
+        A_RHIProcess::PrepareCompile();
+    }
     void F_DirectX12RHIProcess::Compile(E_RHIProcessFlushFlag Flags)
     {
         ABYTEK_PROFILER_EVENT();
-        A_RHIProcess::Compile(Flags);
-        
-        // Clean data from the last process
-        {
-            _DeallocateDescriptors();
-            H_TaskUtilities::Switch();
-            _DeallocateResourcePlacements();
-            H_TaskUtilities::Switch();
-        }
         
         // Early analyze (for the required data of Postprocessing phase)
         {
@@ -123,6 +121,23 @@ namespace Abytek
                     H_TaskUtilities::Switch();
                 }
             }
+        }
+        
+        // After having done the post process phase, we need to early transfer some important data to execution stage before high level objects being cleaned by the base RHI process compilation  
+        {
+            _EarlyTransferCompileDataToExecutionData();  
+            H_TaskUtilities::Switch();
+        }
+        
+        //
+        A_RHIProcess::Compile(Flags);
+        
+        // Clean data from the last process
+        {
+            _DeallocateDescriptors();
+            H_TaskUtilities::Switch();
+            _DeallocateResourcePlacements();
+            H_TaskUtilities::Switch();
         }
         
         // sectioned compile
@@ -250,9 +265,9 @@ namespace Abytek
             // Final compile 
             if (FlagHas(Flags, E_RHIProcessFlushFlag::EXECUTE))
             {
-                _TransferCompileDataToExecutionData();
+                _LateTransferCompileDataToExecutionData();
                 H_TaskUtilities::Switch();
-                _TransferCompileDataToLateExecutionData();
+                _LateTransferCompileDataToLateExecutionData();
                 H_TaskUtilities::Switch();
                 _UpdateViewports();
                 H_TaskUtilities::Switch();
@@ -267,12 +282,17 @@ namespace Abytek
         CompileData = {};
         A_RHIProcess::CleanCompile(); 
     }
-
-    void F_DirectX12RHIProcess::Execute()
+    void F_DirectX12RHIProcess::PrepareExecute()
     {
         ABYTEK_PROFILER_EVENT();
         
-        A_RHIProcess::Execute();
+        A_RHIProcess::PrepareExecute();
+    }
+    void F_DirectX12RHIProcess::DoExecute()
+    {
+        ABYTEK_PROFILER_EVENT();
+        
+        A_RHIProcess::DoExecute();
         
         _InitCommandQueues();
         H_TaskUtilities::Switch();
@@ -2766,14 +2786,13 @@ namespace Abytek
     }
 #endif
     
-    void F_DirectX12RHIProcess::_TransferCompileDataToExecutionData()
+    void F_DirectX12RHIProcess::_EarlyTransferCompileDataToExecutionData()
     {
         ABYTEK_PROFILER_EVENT();
-        ExecutionData.PassBatches = CompileData.PassBatches;
-        _TransferCompileDataToTransientUploadBuffers();
-        _TransferCompileDataToTransientReadbackBuffers();
+        _EarlyTransferCompileDataToTransientUploadBuffers();
+        _EarlyTransferCompileDataToTransientReadbackBuffers();
     }
-    void F_DirectX12RHIProcess::_TransferCompileDataToTransientUploadBuffers()
+    void F_DirectX12RHIProcess::_EarlyTransferCompileDataToTransientUploadBuffers()
     {
         ABYTEK_PROFILER_EVENT();
         for (const auto& Context : GetContexts())
@@ -2794,7 +2813,7 @@ namespace Abytek
             }
         }
     }
-    void F_DirectX12RHIProcess::_TransferCompileDataToTransientReadbackBuffers()
+    void F_DirectX12RHIProcess::_EarlyTransferCompileDataToTransientReadbackBuffers()
     {
         ABYTEK_PROFILER_EVENT();
         for (const auto& Context : GetContexts())
@@ -2815,7 +2834,13 @@ namespace Abytek
             }
         }
     }
-    void F_DirectX12RHIProcess::_TransferCompileDataToLateExecutionData()
+    
+    void F_DirectX12RHIProcess::_LateTransferCompileDataToExecutionData()
+    {
+        ABYTEK_PROFILER_EVENT();
+        ExecutionData.PassBatches = CompileData.PassBatches;
+    }
+    void F_DirectX12RHIProcess::_LateTransferCompileDataToLateExecutionData()
     {
         ABYTEK_PROFILER_EVENT();
         for (const auto& Viewport : CompileSectionData.Viewports)

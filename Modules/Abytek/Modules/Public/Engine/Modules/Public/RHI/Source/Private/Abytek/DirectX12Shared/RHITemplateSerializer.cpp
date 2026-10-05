@@ -38,7 +38,7 @@ namespace Abytek
 
     F_FeedbackStatus F_DirectX12SharedRHITemplateSerializer::TryReadTemplate(
         F_ArchiveReadOnlyView& View,
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
+        const TS<A_RHITemplateDatabase>& TemplateDatabase,
         TS<A_RHITemplate>& OutTemplate
     )
     {
@@ -85,7 +85,7 @@ namespace Abytek
                 }
                 
                 OutTemplate = TS<F_DirectX12SharedRHIBindGroupTemplate>()(
-                    TemplateDatabase.Weak(),
+                    TemplateDatabase,
                     TemplateHashCode,
                     Config,
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
@@ -118,7 +118,7 @@ namespace Abytek
                 }
                 
                 OutTemplate = TS<F_DirectX12SharedRHIPipelineStateTemplate>()(
-                    TemplateDatabase.Weak(),
+                    TemplateDatabase,
                     TemplateHashCode,
                     Config,
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
@@ -158,7 +158,7 @@ namespace Abytek
                 }
                 
                 OutTemplate = TS<F_DirectX12SharedRHIRootSignatureTemplate>()(
-                    TemplateDatabase.Weak(),
+                    TemplateDatabase,
                     TemplateHashCode,
                     Config,
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
@@ -176,7 +176,7 @@ namespace Abytek
     }
     F_FeedbackStatus F_DirectX12SharedRHITemplateSerializer::TryWriteTemplate(
         F_ArchiveReadWriteView& View, 
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
+        const TS<A_RHITemplateDatabase>& TemplateDatabase,
         const TS_Valid<A_RHITemplate>& Template
     )
     {

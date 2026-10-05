@@ -121,11 +121,11 @@ namespace Abytek
         
     public:
         F_DirectX12SharedRHIPipelineStateTemplate(
-            const TW_Valid<A_RHITemplateDatabase>& Database,
+            const TS<A_RHITemplateDatabase>& Database,
             F_RHITemplateHashCode HashCode,
-            const F_RHIPipelineStateTemplateConfig& Config
+            const F_RHIPipelineStateTemplateConfig& Config,
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
-            , const F_RHIPipelineStateTemplateCompileConfig& CompileConfig,
+            const F_RHIPipelineStateTemplateCompileConfig& CompileConfig,
 #endif
             const F_DirectX12SharedRHIPipelineStateTemplateCompiledData& CompiledData    
         );
@@ -144,7 +144,7 @@ namespace Abytek
         F_DirectX12SharedRHIPipelineStateTemplateCompiledData CompiledData;
         
     protected:
-        TS<A_RHITemplate> CreateTemplate(const TW_Valid<A_RHITemplateDatabase>& Database) const override
+        TS<A_RHITemplate> CreateTemplate(const TS<A_RHITemplateDatabase>& Database) const override
         {
             return TS<F_DirectX12SharedRHIPipelineStateTemplate>()(
                 Database,

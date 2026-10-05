@@ -31,35 +31,33 @@ namespace Abytek
     }
     void A_RHIContext::Release()
     {        
-        // Last submit to finalize + synchronize
-        {
-            F_RHIProcessBuildParams ProcessBuildParams;
-            ProcessBuildParams.Contexts = { ABYTEK_WTHIS() };
-            auto Process = RACreateAndBuildShared<A_RHIProcess>(ProcessBuildParams);
-            
-            HighLevelDeinitialize();
-            
-            ABYTEK_AWAIT Process->Flush();
-        }
-            
-        FinalizeRelease();
+        _RunLastProcess();
             
         _Device = {};
-        _IsFirstCompile = true;
+        _IsLastCompile = false;
+        _IsFirstCompile = false;
             
         A_RAObject::Release();
     }
 
     void A_RHIContext::_RunFirstProcess()
     {
+        _IsFirstCompile = true;
         F_RHIProcessBuildParams ProcessBuildParams;
         ProcessBuildParams.Contexts = { ABYTEK_WTHIS() };
         auto Process = RACreateAndBuildShared<A_RHIProcess>(ProcessBuildParams);
-            
+        ABYTEK_AWAIT Process->Flush();
+    }
+    void A_RHIContext::_RunLastProcess()
+    {
+        _IsLastCompile = true;
+        F_RHIProcessBuildParams ProcessBuildParams;
+        ProcessBuildParams.Contexts = { ABYTEK_WTHIS() };
+        auto Process = RACreateAndBuildShared<A_RHIProcess>(ProcessBuildParams);
         ABYTEK_AWAIT Process->Flush();
     }
 
-    void A_RHIContext::FirstCompile()
+    void A_RHIContext::BeginFirstCompile()
     {
         F_RHIContextProxyBuildParams ProxyBuildParams;
         ProxyBuildParams.Context = ABYTEK_WTHIS();
@@ -69,9 +67,10 @@ namespace Abytek
         TemplateRuntimeDatabaseBuildParams.Context = ABYTEK_WTHIS();
         _TemplateRuntimeDatabase = RACreateAndBuildShared<A_RHITemplateRuntimeDatabase>(TemplateRuntimeDatabaseBuildParams);
     }
-    void A_RHIContext::FinalizeRelease()
+    void A_RHIContext::EndLastCompile()
     {
         _TemplateRuntimeDatabase = {};
+            
         _Proxy = {};
     }
 
@@ -104,15 +103,10 @@ namespace Abytek
     {
         _CompileLock.Lock();
         _CurrentProcess = Process;
-            
-        if (IsFirstCompile())
-        {
-            FirstCompile();
-            HighLevelInitialize();
-        }
     }
     void A_RHIContext::EndCompile()
     {
+        _IsLastCompile = false;
         _IsFirstCompile = false;
         _CurrentProcess = {};
         _CompileLock.Unlock();

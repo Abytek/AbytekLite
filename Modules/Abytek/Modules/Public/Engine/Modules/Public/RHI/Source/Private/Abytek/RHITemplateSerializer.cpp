@@ -29,7 +29,7 @@ namespace Abytek
 
     F_FeedbackStatus A_RHITemplateSerializer::TryReadTemplatePack(
         F_ArchiveReadOnlyView& View,
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
+        const TS<A_RHITemplateDatabase>& TemplateDatabase,
         TF_Vector<TS<A_RHITemplate>>& OutTemplates
     )
     {
@@ -48,13 +48,13 @@ namespace Abytek
     }
     F_FeedbackStatus A_RHITemplateSerializer::TryWriteTemplatePack(
         F_ArchiveReadWriteView& View, 
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase, 
+        const TS<A_RHITemplateDatabase>& TemplateDatabase, 
         const TF_Vector<TS<A_RHITemplate>>& Templates
     )
     {
         TF_Vector<TS<A_RHITemplate>> TemplatesToWrite;
         A_RHITemplate::GatherSortedListWithDependencies(
-            TemplateDatabase,
+            TemplateDatabase.Weak(),
             Templates,
             TemplatesToWrite
         );
@@ -71,7 +71,7 @@ namespace Abytek
     }
     F_FeedbackStatus A_RHITemplateSerializer::TryWriteTemplatePack(
         F_ArchiveReadWriteView& View,
-        const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase
+        const TS<A_RHITemplateDatabase>& TemplateDatabase
     )
     {
         return TryWriteTemplatePack(

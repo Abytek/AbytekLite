@@ -4,11 +4,11 @@
 namespace Abytek
 {
     F_DirectX12SharedRHIBindGroupTemplate::F_DirectX12SharedRHIBindGroupTemplate(
-        const TW_Valid<A_RHITemplateDatabase>& Database,
+        const TS<A_RHITemplateDatabase>& Database,
         F_RHITemplateHashCode HashCode,
-        const F_RHIBindGroupTemplateConfig& Config
+        const F_RHIBindGroupTemplateConfig& Config,
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
-        , const F_RHIBindGroupTemplateCompileConfig& CompileConfig,
+        const F_RHIBindGroupTemplateCompileConfig& CompileConfig,
 #endif
         const F_DirectX12SharedRHIBindGroupTemplateCompiledData& CompiledData
     ) :

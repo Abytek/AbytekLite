@@ -28,7 +28,7 @@ namespace Abytek
         virtual ~F_DirectX12SharedRHITemplateSerializer();
         
     public:
-        virtual F_FeedbackStatus TryReadTemplate(F_ArchiveReadOnlyView& View, const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase, TS<A_RHITemplate>& OutTemplate) override;
-        virtual F_FeedbackStatus TryWriteTemplate(F_ArchiveReadWriteView& View, const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase, const TS_Valid<A_RHITemplate>& Template) override;
+        virtual F_FeedbackStatus TryReadTemplate(F_ArchiveReadOnlyView& View, const TS<A_RHITemplateDatabase>& TemplateDatabase, TS<A_RHITemplate>& OutTemplate) override;
+        virtual F_FeedbackStatus TryWriteTemplate(F_ArchiveReadWriteView& View, const TS<A_RHITemplateDatabase>& TemplateDatabase, const TS_Valid<A_RHITemplate>& Template) override;
     };
 }

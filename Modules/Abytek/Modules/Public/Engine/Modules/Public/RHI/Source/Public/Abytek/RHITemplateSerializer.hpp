@@ -34,23 +34,23 @@ namespace Abytek
         static TU<A_RHITemplateSerializer> Create(E_RHIAPI API, const F_RHIFeatureSupports& FeatureSupports);
         
     public:
-        virtual F_FeedbackStatus TryReadTemplate(F_ArchiveReadOnlyView& View, const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase, TS<A_RHITemplate>& OutTemplate) = 0;
-        virtual F_FeedbackStatus TryWriteTemplate(F_ArchiveReadWriteView& View, const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase, const TS_Valid<A_RHITemplate>& Template) = 0;
+        virtual F_FeedbackStatus TryReadTemplate(F_ArchiveReadOnlyView& View, const TS<A_RHITemplateDatabase>& TemplateDatabase, TS<A_RHITemplate>& OutTemplate) = 0;
+        virtual F_FeedbackStatus TryWriteTemplate(F_ArchiveReadWriteView& View, const TS<A_RHITemplateDatabase>& TemplateDatabase, const TS_Valid<A_RHITemplate>& Template) = 0;
         
     public:
         F_FeedbackStatus TryReadTemplatePack(
             F_ArchiveReadOnlyView& View, 
-            const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase,
+            const TS<A_RHITemplateDatabase>& TemplateDatabase,
             TF_Vector<TS<A_RHITemplate>>& OutTemplates
         );
         F_FeedbackStatus TryWriteTemplatePack(
             F_ArchiveReadWriteView& View, 
-            const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase, 
+            const TS<A_RHITemplateDatabase>& TemplateDatabase, 
             const TF_Vector<TS<A_RHITemplate>>& Templates
         );
         F_FeedbackStatus TryWriteTemplatePack(
             F_ArchiveReadWriteView& View, 
-            const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase
+            const TS<A_RHITemplateDatabase>& TemplateDatabase
         );
     };
 }

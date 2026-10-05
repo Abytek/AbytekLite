@@ -62,7 +62,9 @@ namespace Abytek
         if (EnableWrite)
         {
             F_Text DirectoryPath = H_Path::GetBaseName(AbsolutePath);
-            H_FSUtilities::EnsureDirectory(DirectoryPath);
+            ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
+                H_FSUtilities::EnsureDirectory(DirectoryPath)
+            );
         }
         
         F_FSFileOpenParams Desc;

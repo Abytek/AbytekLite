@@ -5,7 +5,7 @@
 namespace Abytek
 {
     A_RHITemplate::A_RHITemplate(
-        const TW_Valid<A_RHITemplateDatabase>& Database,
+        const TS<A_RHITemplateDatabase>& Database,
         F_RHITemplateHashCode HashCode
     ) :
         _Database(Database),

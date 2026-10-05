@@ -283,16 +283,18 @@ namespace Abytek
         
     public:
         ABYTEK_RA_DECLARE_OBJECT(F_DirectX12RHIProcess);
-        virtual void Build(const F_RHIProcessBuildParams& BuildParams) override;
-        virtual void Release() override;
+        void Build(const F_RHIProcessBuildParams& BuildParams) override;
+        void Release() override;
         
     protected:
-        virtual void Compile(E_RHIProcessFlushFlag Flags) override;
-        virtual void CleanCompile() override;
-        virtual void Execute() override;
-        virtual void CleanExecute() override;
-        virtual void BeginLateExecute() override;
-        virtual void EndLateExecute() override;
+        void PrepareCompile() override;
+        void Compile(E_RHIProcessFlushFlag Flags) override;
+        void CleanCompile() override;
+        void PrepareExecute() override;
+        void DoExecute() override;
+        void CleanExecute() override;
+        void BeginLateExecute() override;
+        void EndLateExecute() override;
         
     private:
         void _DeallocateDescriptors();
@@ -370,10 +372,13 @@ namespace Abytek
         void _CreateCaptureDataForPassBatches();
 #endif
         
-        void _TransferCompileDataToExecutionData();
-        void _TransferCompileDataToTransientUploadBuffers();
-        void _TransferCompileDataToTransientReadbackBuffers();
-        void _TransferCompileDataToLateExecutionData();
+        void _EarlyTransferCompileDataToExecutionData();
+        void _EarlyTransferCompileDataToTransientUploadBuffers();
+        void _EarlyTransferCompileDataToTransientReadbackBuffers();
+        
+        void _LateTransferCompileDataToExecutionData();
+        
+        void _LateTransferCompileDataToLateExecutionData();
         void _UpdateViewports();
         
         void _TransferDataToContextQueues();

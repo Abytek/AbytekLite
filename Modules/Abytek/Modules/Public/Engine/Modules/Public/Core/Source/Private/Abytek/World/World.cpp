@@ -237,6 +237,18 @@ namespace Abytek
                     {
                         auto SerializableEnvironment = World->GetEnvironment();
                         
+                        // Cook
+                        if (FlagHas(World->_Flags, E_WorldFlag::COOK_MODE))
+                        {
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+                            ABYTEK_ENGINE_CORE_ASSERT(FlagHas(World->_Flags, E_WorldFlag::MAIN)) << "Cook mode is only allowed on main world";
+                            World->_CookProfile = {};
+                            F_CookProfile::SetMain({});
+#else
+                            ABYTEK_LOG_FATAL() << "Cook mode is not allowed on non-development build";
+#endif
+                        }
+                        
                         World->_LevelsToTravel = {};
                         World->_TravelMode = E_TravelMode::STOP;
                         World->_ImmediateTravel();
@@ -290,7 +302,7 @@ namespace Abytek
             auto UpdateFunction = H_ApplicationUpdateFunction::Register(
                 []
                 {
-                    for (const auto& World : F_WorldManager::GetInstance()->_WorldsToShutdown.PopAll())
+                    for (const auto& World : F_WorldManager::GetInstance()->_WorldsToRelease.PopAll())
                     {
                         auto SerializableEnvironment = World->GetEnvironment();
                         
@@ -325,6 +337,13 @@ namespace Abytek
                         if (IsMain)
                         {
                             A_ApplicationCore::GetInstance()->SignalShutdown();
+                        }
+                        
+                        // Callbacks
+                        TF_Function<void()> Command;
+                        while (World->_StopCallbacks.TryPop(Command))
+                        {
+                            Command();
                         }
                     }
                 },
@@ -437,11 +456,6 @@ namespace Abytek
             [this]
             {
                 _PrepareStop();
-                TF_Function<void()> Command;
-                while (_StopCallbacks.TryPop(Command))
-                {
-                    Command();
-                }
             }
         );
     }

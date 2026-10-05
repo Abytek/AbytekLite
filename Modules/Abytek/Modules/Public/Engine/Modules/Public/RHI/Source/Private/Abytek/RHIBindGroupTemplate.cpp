@@ -5,7 +5,7 @@
 namespace Abytek
 {
     A_RHIBindGroupTemplate::A_RHIBindGroupTemplate(
-        const TW_Valid<A_RHITemplateDatabase>& Database,
+        const TS<A_RHITemplateDatabase>& Database,
         F_RHITemplateHashCode HashCode,
         const F_RHIBindGroupTemplateConfig& Config
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD

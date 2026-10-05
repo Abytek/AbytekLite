@@ -44,16 +44,22 @@ namespace Abytek
 #endif
         
         _Stage.store(E_RHIProcessStage::COMPILE, boost::memory_order_release);
-#ifdef ABYTEK_DEBUG_INFO
-        _ZoneName = ABYTEK_TEXT("BeginCompile::Before");
-#endif
+        
         for (const auto& Context : _Contexts)
         {
             Context->BeginCompile(ABYTEK_WTHIS());
         }
-#ifdef ABYTEK_DEBUG_INFO
-        _ZoneName = ABYTEK_TEXT("BeginCompile::After");
-#endif
+        H_TaskUtilities::Switch();
+        
+        for (const auto& Context : _Contexts)
+        {
+            if (!Context->IsFirstCompile()) continue;
+            Context->BeginFirstCompile();
+        }
+        H_TaskUtilities::Switch();
+        
+        PrepareCompile();
+        H_TaskUtilities::Switch();
     }
     void A_RHIProcess::Release()
     {        
@@ -63,9 +69,6 @@ namespace Abytek
         _CaptureEventState = {};
 #endif
         
-#ifdef ABYTEK_DEBUG_INFO
-        _ZoneName = ABYTEK_TEXT("None");
-#endif
         _Stage.store(E_RHIProcessStage::NONE, boost::memory_order_release);
         
         _CurrentSection_EndRootSubmissionItemIndex = 0;
@@ -88,35 +91,50 @@ namespace Abytek
         A_RAObject::Release();
     }
 
-    void A_RHIProcess::PreCompile(E_RHIProcessFlushFlag Flags)
+    void A_RHIProcess::PrepareCompile()
     {
+        for (const auto& Context : _Contexts)
+        {
+            if (!Context->IsFirstCompile()) continue;
+            Context->HighLevelInitialize();
+        }
     }
     void A_RHIProcess::Compile(E_RHIProcessFlushFlag Flags)
     {
+        for (const auto& Context : _Contexts)
+        {
+            if (!Context->IsLastCompile()) continue;
+            Context->HighLevelDeinitialize();
+        }
     }
-    void A_RHIProcess::PostCompile(E_RHIProcessFlushFlag Flags)
+    void A_RHIProcess::_PostCompile(E_RHIProcessFlushFlag Flags)
     {
         _CurrentSection_EndRootSubmissionItemIndex = _CurrentSection_BeginRootSubmissionItemIndex;
     }
-
     void A_RHIProcess::CleanCompile()
     { 
-#ifdef ABYTEK_DEBUG_INFO
-        _ZoneName = ABYTEK_TEXT("FlushPostCompileCommands");
-#endif
         _FlushPostCompileCommands();
-#ifdef ABYTEK_DEBUG_INFO
-        _ZoneName = ABYTEK_TEXT("FlushCompileData");
-#endif
         _FlushCompileData();  
-#ifdef ABYTEK_DEBUG_INFO
-        _ZoneName = ABYTEK_TEXT("Release_RootSubmissionItems::Before");
-#endif
         _RootSubmissionItems = {};
-#ifdef ABYTEK_DEBUG_INFO
-        _ZoneName = ABYTEK_TEXT("Release_RootSubmissionItems::After");
-#endif
     }
+    void A_RHIProcess::PrepareExecute()
+    {
+    }
+    void A_RHIProcess::DoExecute()
+    {
+    }
+    void A_RHIProcess::CleanExecute()
+    {
+        _FlushPostExecuteCommands();
+        _FlushExecuteData();
+    }
+    void A_RHIProcess::BeginLateExecute()
+    {
+    }
+    void A_RHIProcess::EndLateExecute()
+    {
+    }
+    
     void A_RHIProcess::_FlushPostCompileCommands()
     {
         F_RHIProcessPostCompileCommand Command;
@@ -157,11 +175,6 @@ namespace Abytek
             Command();
         }
     }
-    void A_RHIProcess::CleanExecute()
-    {
-        _FlushPostExecuteCommands();
-        _FlushExecuteData();
-    }
     void A_RHIProcess::_FlushProcessData()
     {
         F_RHIProcessFlushProcessDataCommand Command;
@@ -169,15 +182,6 @@ namespace Abytek
         {
             Command();
         }
-    }
-    void A_RHIProcess::Execute()
-    {
-    }
-    void A_RHIProcess::BeginLateExecute()
-    {
-    }
-    void A_RHIProcess::EndLateExecute()
-    {
     }
 
     TS_Unmanaged<F_TaskPromise> A_RHIProcess::Flush(E_RHIProcessFlushFlag Flags)
@@ -191,38 +195,16 @@ namespace Abytek
             {
                 ABYTEK_PROFILER_EVENT_NAMED("A_RHIProcessV2::Flush");
                 
-#ifdef ABYTEK_DEBUG_INFO
-                _ZoneName = ABYTEK_TEXT("LockProcess::Before");
-#endif
-                 
                 _SectionLock.Lock(E_TaskPriority::MEDIUM);
                 H_TaskUtilities::ChangePriority(E_TaskPriority::EXTREME);
                 
-#ifdef ABYTEK_DEBUG_INFO
-                _ZoneName = ABYTEK_TEXT("LockProcess::After");
-#endif
-                
-#ifdef ABYTEK_DEBUG_INFO
-                _ZoneName = ABYTEK_TEXT("PreCompile");
-#endif
-                PreCompile(Flags);
-                H_TaskUtilities::Switch();
-#ifdef ABYTEK_DEBUG_INFO
-                _ZoneName = ABYTEK_TEXT("Compile");
-#endif
                 Compile(Flags);
                 H_TaskUtilities::Switch();
-#ifdef ABYTEK_DEBUG_INFO
-                _ZoneName = ABYTEK_TEXT("PostCompile");
-#endif
-                PostCompile(Flags);
+                _PostCompile(Flags);
                 H_TaskUtilities::Switch();
                 
                 if (FlagHas(Flags, E_RHIProcessFlushFlag::EXECUTE))
                 {
-#ifdef ABYTEK_DEBUG_INFO
-                    _ZoneName = ABYTEK_TEXT("BeginExecution::Before");
-#endif
                     for (const auto& Context : _Contexts)
                     {
                         _ContextProxies.push_back(Context->GetProxy());
@@ -232,67 +214,48 @@ namespace Abytek
                         ContextProxy->BeginExecution(ABYTEK_WTHIS());
                     }  
                     H_TaskUtilities::Switch();
-#ifdef ABYTEK_DEBUG_INFO
-                    _ZoneName = ABYTEK_TEXT("BeginExecution::After");
-#endif
                     
-#ifdef ABYTEK_DEBUG_INFO
-                    _ZoneName = ABYTEK_TEXT("CleanCompile::Before");
-#endif
                     CleanCompile();
                     H_TaskUtilities::Switch();
                     _Stage.store(E_RHIProcessStage::EXECUTE, boost::memory_order_release);
                     
-#ifdef ABYTEK_DEBUG_INFO
-                    _ZoneName = ABYTEK_TEXT("CleanCompile::After");
-#endif
-                    _CompilePromise->DecreaseCounter();
+                    for (const auto& Context : _Contexts)
+                    {
+                        if (!Context->IsLastCompile()) continue;
+                        Context->EndLastCompile();
+                    }
                     
-#ifdef ABYTEK_DEBUG_INFO
-                    _ZoneName = ABYTEK_TEXT("EndCompile::Before");
-#endif
                     for (const auto& Context : _Contexts)
                     {
                         Context->EndCompile();
                     }
                     H_TaskUtilities::Switch();
-                    _Contexts = {};
-#ifdef ABYTEK_DEBUG_INFO
-                    _ZoneName = ABYTEK_TEXT("EndCompile::After");
-#endif
                     
-#ifdef ABYTEK_DEBUG_INFO
-                    _ZoneName = ABYTEK_TEXT("FlushPreExecuteCommands");
-#endif
+                    _CompilePromise->DecreaseCounter();
+                    
+                    _Contexts = {};
+
                     _FlushPreExecuteCommands();
                     H_TaskUtilities::Switch();
-#ifdef ABYTEK_DEBUG_INFO
-                    _ZoneName = ABYTEK_TEXT("Execute");
-#endif
-                    Execute();
+
+                    PrepareExecute();
                     H_TaskUtilities::Switch();
-#ifdef ABYTEK_DEBUG_INFO
-                    _ZoneName = ABYTEK_TEXT("BeginLateExecute");
-#endif
+                    
+                    DoExecute();
+                    H_TaskUtilities::Switch();
+
                     BeginLateExecute();
                     H_TaskUtilities::Switch();
-#ifdef ABYTEK_DEBUG_INFO
-                    _ZoneName = ABYTEK_TEXT("CleanExecute");
-#endif
+
                     CleanExecute();
                     H_TaskUtilities::Switch();
-#ifdef ABYTEK_DEBUG_INFO
-                    _ZoneName = ABYTEK_TEXT("FlushProcessData");
-#endif
+
                     _FlushProcessData();
                     H_TaskUtilities::Switch();
                     
                     _Arena->Reset();
                     H_TaskUtilities::Switch();
-                    
-#ifdef ABYTEK_DEBUG_INFO
-                    _ZoneName = ABYTEK_TEXT("EndExecution::Before");
-#endif
+
                     for (const auto& ContextProxy : _ContextProxies)
                     {
                         ContextProxy->EndExecution();
@@ -301,15 +264,9 @@ namespace Abytek
                     _ContextProxies = {};
                     H_TaskUtilities::Switch();
                     _Stage.store(E_RHIProcessStage::END, boost::memory_order_release);
-#ifdef ABYTEK_DEBUG_INFO
-                    _ZoneName = ABYTEK_TEXT("EndExecution::After");
-#endif
                     
                     _MainPromise->DecreaseCounter();
                      
-#ifdef ABYTEK_DEBUG_INFO
-                    _ZoneName = ABYTEK_TEXT("EndLateExecute");
-#endif
                     EndLateExecute();
                     H_TaskUtilities::Switch();
                 }
@@ -317,9 +274,6 @@ namespace Abytek
                 _IsFirstFlush = false;
                 
                 _SectionLock.Unlock();
-#ifdef ABYTEK_DEBUG_INFO
-                _ZoneName = ABYTEK_TEXT("None");
-#endif
             },
             E_TaskPriority::EXTREME,
             ABYTEK_NAME("A_RHIProcess::Flush"),

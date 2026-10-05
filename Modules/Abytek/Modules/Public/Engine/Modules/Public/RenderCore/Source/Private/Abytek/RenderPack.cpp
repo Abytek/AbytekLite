@@ -284,7 +284,7 @@ namespace Abytek
             ABYTEK_FEEDBACK_STATUS_CHECK(
                 TemplateSerializer->TryWriteTemplatePack(
                     Params.MainView,
-                    TemplateDatabase.Weak(),
+                    TemplateDatabase,
                     Templates
                 )
             );
@@ -305,7 +305,7 @@ namespace Abytek
             ABYTEK_FEEDBACK_STATUS_CHECK(
                 TemplateSerializer->TryReadTemplatePack(
                     Params.MainView,
-                    TemplateDatabase.Weak(),
+                    TemplateDatabase,
                     Templates
                 )
             );
@@ -348,7 +348,7 @@ namespace Abytek
                     {
                         auto TemplateDatabase = CachedData->GetPortData()->GetRegistryRuntime()->GetTemplateDatabase();
                         CachedData->AddTemplate(
-                            CachedExportedData->Import(TemplateDatabase.Weak())
+                            CachedExportedData->Import(TemplateDatabase)
                         );
                     }
                 );
@@ -426,7 +426,7 @@ namespace Abytek
                 for (const auto& ExportedData : CachedExportedDataList)
                 {
                     CachedData->EnsureTemplate(
-                        ExportedData->Import(TemplateDatabase.Weak())
+                        ExportedData->Import(TemplateDatabase)
                     );
                 }
             }
@@ -439,6 +439,13 @@ namespace Abytek
             const auto& Data = *It;
             if (Data->GetPortData() == PortData)
             {
+                Data->EnqueueCommand(
+                    [
+                        CachedData = Data
+                    ]
+                    {
+                    }
+                );
                 _DataList.erase(It);
                 break;
             }

@@ -256,8 +256,8 @@ namespace Abytek
         ABYTEK_RA_DECLARE_OBJECT(F_DirectX12RHIContext);
 
     public:
-        virtual void FirstCompile() override;
-        virtual void FinalizeRelease() override;
+        virtual void BeginFirstCompile() override;
+        virtual void EndLastCompile() override;
         
     public:
         virtual void HighLevelInitialize() override;

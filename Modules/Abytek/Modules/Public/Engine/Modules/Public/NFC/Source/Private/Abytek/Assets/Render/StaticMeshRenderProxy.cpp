@@ -102,7 +102,7 @@ namespace Abytek
         
         if (_Resource_LOD)
         {
-            GeometryStorage->RemoveMeshData_LOD(SubmissionItemContainer, _Resource_Simple->GeometryAllocation);
+            GeometryStorage->RemoveMeshData_LOD(SubmissionItemContainer, _Resource_LOD->GeometryAllocation);
             _Resource_LOD = {};
         }
         

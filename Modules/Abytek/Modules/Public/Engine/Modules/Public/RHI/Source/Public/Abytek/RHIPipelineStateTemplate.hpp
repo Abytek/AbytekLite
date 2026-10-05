@@ -719,7 +719,7 @@ namespace Abytek
 
     protected:
         A_RHIPipelineStateTemplate(
-            const TW_Valid<A_RHITemplateDatabase>& Database,
+            const TS<A_RHITemplateDatabase>& Database,
             F_RHITemplateHashCode HashCode,
             const F_RHIPipelineStateTemplateConfig& Config
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
@@ -757,10 +757,12 @@ namespace Abytek
         void PostCreateTemplate(const TS<A_RHITemplate>& Template) const override
         {
             A_RHITemplateExportedData::PostCreateTemplate(Template);
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
             for (const auto& [_, SlangShaderFileVersion] : SlangShaderFileVersions)
             {
                 Template.FastCast<A_RHIPipelineStateTemplate>()->AddSlangShaderFileVersion(SlangShaderFileVersion);
             }
+#endif
         }
     };
 }

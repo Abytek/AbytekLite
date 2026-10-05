@@ -3,6 +3,7 @@ include(Abytek/Utilities/ApplyDependencies)
 include(Abytek/Utilities/SetGlobal)
 include(Abytek/Utilities/ApplyGlobal)
 include(Abytek/Utilities/TempDependenciesDir)
+include(Abytek/Utilities/SetupExecutable)
 
 
 Abytek_SetGlobal(ABYTEK_GLOBAL_IMPORT_JS_FILE "${ABYTEK_PROJECT_BUILD_DIR}/AbytekEBT/Import.js")
@@ -142,7 +143,6 @@ function(Abytek_SetupThirdParty Stage)
         set(${Stage} OFF)
     endif()
 endfunction()
-
 
 
 function(Abytek_SetupModules)
@@ -1119,6 +1119,8 @@ function(Abytek_SetupModules)
                 )
                 set(TargetFileExactor "$<TARGET_FILE:${ModuleFullName}>")
                 set(TargetFileDirectoryExactor "$<TARGET_FILE_DIR:${ModuleFullName}>")
+
+                Abytek_SetupExecutable(${ModuleFullName})
             elseif("${${ModuleFullName}.Type}" STREQUAL STATIC)
                 add_library(
                     ${ModuleFullName} STATIC

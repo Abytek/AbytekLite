@@ -8,9 +8,9 @@
 #ifdef ABYTEK_ENGINE_RHI_ENABLE_DIRECTX12
 namespace Abytek
 {
-    void F_DirectX12RHIContext::FirstCompile()
+    void F_DirectX12RHIContext::BeginFirstCompile()
     {
-        A_RHIContext::FirstCompile();
+        A_RHIContext::BeginFirstCompile();
         
         {
             F_DirectX12RHIDescriptorManagerBuildParams DescriptorManagerBuildParams;
@@ -163,7 +163,7 @@ namespace Abytek
         
         GetProxy().FastCast<F_DirectX12RHIContextProxy>()->LateBuildContext_DirectX12();
     }
-    void F_DirectX12RHIContext::FinalizeRelease()
+    void F_DirectX12RHIContext::EndLastCompile()
     {
         ABYTEK_ENGINE_RHI_ASSERT(Queues.ResourcePlacementsToDeallocate.GetSize() == 0) << "ResourcePlacementsToDeallocate was not flushed";
         ABYTEK_ENGINE_RHI_ASSERT(Queues.DeallocateDescriptors.GetSize() == 0) << "DeallocateDescriptors was not flushed";
@@ -190,7 +190,7 @@ namespace Abytek
         _CommandQueue_COPY = {};
         _CommandQueue_COMPUTE = {};
         _CommandQueue_DIRECT = {};
-        A_RHIContext::FinalizeRelease();
+        A_RHIContext::EndLastCompile();
     }
 
     void F_DirectX12RHIContext::HighLevelInitialize()

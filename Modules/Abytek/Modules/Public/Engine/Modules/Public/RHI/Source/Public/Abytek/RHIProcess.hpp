@@ -67,10 +67,6 @@ namespace Abytek
         
         boost::atomic<E_RHIProcessStage> _Stage;
         
-#ifdef ABYTEK_DEBUG_INFO
-        F_Text _ZoneName;
-#endif
-        
 #ifdef ABYTEK_ENGINE_RHI_ENABLE_CAPTURE
         F_RHICaptureEventState _CaptureEventState;
 #endif
@@ -181,14 +177,17 @@ namespace Abytek
         }
         
     protected:
-        virtual void PreCompile(E_RHIProcessFlushFlag Flags);
+        virtual void PrepareCompile();
         virtual void Compile(E_RHIProcessFlushFlag Flags);
-        virtual void PostCompile(E_RHIProcessFlushFlag Flags);
         virtual void CleanCompile();
-        virtual void Execute();
+        virtual void PrepareExecute();
+        virtual void DoExecute();
         virtual void CleanExecute();
         virtual void BeginLateExecute();
         virtual void EndLateExecute();
+        
+    private:
+        void _PostCompile(E_RHIProcessFlushFlag Flags);
         
     private:
         void _FlushPostCompileCommands();

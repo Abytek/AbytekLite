@@ -443,6 +443,8 @@ namespace Abytek
             Stop();
             H_TaskUtilities::RemoveTag(GetApplicationLowLevelTaskTag());
             break;
+        case E_ApplicationState::CLOSED:
+            break;
         default:
             ABYTEK_LOG_FATAL() << "Unknown application state: " << static_cast<U32>(_NextState);
         }
@@ -489,6 +491,8 @@ namespace Abytek
         case E_ApplicationState::RELEASING:
             ABYTEK_LOG_INFO() << "A_ApplicationCore::UpdateState() -> CLOSED";
             _NextState = E_ApplicationState::CLOSED;
+            break;
+        case E_ApplicationState::CLOSED:
             break;
         default:
             ABYTEK_LOG_FATAL() << "Unknown application state: " << static_cast<U32>(_NextState);

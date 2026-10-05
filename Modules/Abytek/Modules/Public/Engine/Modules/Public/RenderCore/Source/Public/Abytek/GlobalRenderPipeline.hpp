@@ -222,7 +222,7 @@ namespace Abytek
                     for (const auto& PermutationValueSet : PermutationValueSets) \
                     { \
                         F_Config Config; \
-                        Config.Database = TemplateDatabase.Weak(); \
+                        Config.Database = TemplateDatabase; \
                         Config.PermutationVector = F_DynamicPermutationVector::FromValueSet(PermutationValueSet); \
                         Config.PermutationHashCode = PermutationValueSet.GetHashCode(); \
                         Config.Pack = Pack; \

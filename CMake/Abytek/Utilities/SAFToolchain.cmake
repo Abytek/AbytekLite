@@ -1,6 +1,7 @@
 
 include(Abytek/Utilities/SetGlobal)
 include(Abytek/Utilities/CookUtils)
+include(Abytek/Utilities/SetupExecutable)
 
 function(Abytek_SAF_SetupApplication)     
     cmake_parse_arguments(
@@ -149,8 +150,11 @@ function(Abytek_SAF_SetupApplication)
         endif()
     else()
         add_executable(${CookedExecutable.TargetName} "${CookedExecutable.CPPFilePath}")
+        Abytek_SetupExecutable(${CookedExecutable.TargetName})
+        
         if(ABYTEK_ENABLE_DEVELOPMENT_BUILD)
             add_executable(${DevelopmentExecutable.TargetName} "${DevelopmentExecutable.CPPFilePath}")
+            Abytek_SetupExecutable(${DevelopmentExecutable.TargetName})
         endif()
     endif()
 

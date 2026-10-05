@@ -7,7 +7,7 @@
 namespace Abytek
 {
     A_RHIPipelineStateTemplate::A_RHIPipelineStateTemplate(
-        const TW_Valid<A_RHITemplateDatabase>& Database,
+        const TS<A_RHITemplateDatabase>& Database,
         F_RHITemplateHashCode HashCode,
         const F_RHIPipelineStateTemplateConfig& Config
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD

@@ -28,7 +28,8 @@ namespace Abytek
         TS<A_RHIContextProxy> _Proxy;
         TS<A_RHITemplateRuntimeDatabase> _TemplateRuntimeDatabase;
         
-        B8 _IsFirstCompile = true; 
+        B8 _IsFirstCompile = false; 
+        B8 _IsLastCompile = false; 
         
         TS<F_RHITransientUploadBufferManager> _TransientUploadBufferManager;
         TS<F_RHITransientReadbackBufferManager> _TransientReadbackBufferManager;
@@ -62,6 +63,10 @@ namespace Abytek
         {
             return _IsFirstCompile;
         }
+        ABYTEK_FORCE_INLINE auto IsLastCompile() const noexcept
+        {
+            return _IsLastCompile;
+        }
         
         ABYTEK_FORCE_INLINE const auto& GetTransientUploadBufferManager() const noexcept
         {
@@ -83,10 +88,11 @@ namespace Abytek
         
     private:
         void _RunFirstProcess();
+        void _RunLastProcess();
         
     public:
-        virtual void FirstCompile();
-        virtual void FinalizeRelease();
+        virtual void BeginFirstCompile();
+        virtual void EndLastCompile();
         
     public:
         virtual void HighLevelInitialize();
