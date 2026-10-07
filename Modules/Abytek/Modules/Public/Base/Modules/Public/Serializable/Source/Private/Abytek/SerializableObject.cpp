@@ -47,6 +47,13 @@ namespace Abytek
         }
     }
 
+    void A_SerializableObject::OnPostConstruct()
+    {
+    }
+    void A_SerializableObject::OnPreDestruct()
+    {
+    }
+
     void A_SerializableObject::CleanUp()
     {
     }
@@ -272,13 +279,13 @@ namespace Abytek
         {
             ActualSubobjectName = *_Name + ABYTEK_TEXT(".") + *SubobjectName;
         }
-        else
+        else if (SubobjectName)
         {
             ActualSubobjectName = _Environment->GenerateAnonymousObjectName();
         }
         return _Environment->CreateObjectDelayLoading(
             ActualSubobjectName,
-            _PackageName,
+            ActualSubobjectName ? _PackageName : F_Name {},
             Type
         );
     }
@@ -293,13 +300,55 @@ namespace Abytek
         {
             ActualSubobjectName = *_Name + ABYTEK_TEXT(".") + *SubobjectName;
         }
-        else
+        else if (SubobjectName)
         {
             ActualSubobjectName = _Environment->GenerateAnonymousObjectName();
         }
         return _Environment->CreateObject(
             ActualSubobjectName,
-            _PackageName,
+            ActualSubobjectName ? _PackageName : F_Name {},
+            Type
+        );
+    }
+
+    TS<A_SerializableObject> A_SerializableObject::FindOrCreateSerializableSubobjectDelayLoading(
+        const F_Name& SubobjectName,
+        const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+    ) const
+    {
+        F_Name ActualSubobjectName;
+        if (_Name && SubobjectName)
+        {
+            ActualSubobjectName = *_Name + ABYTEK_TEXT(".") + *SubobjectName;
+        }
+        else if (SubobjectName)
+        {
+            ActualSubobjectName = _Environment->GenerateAnonymousObjectName();
+        }
+        return _Environment->FindOrCreateObjectDelayLoading(
+            ActualSubobjectName,
+            ActualSubobjectName ? _PackageName : F_Name {},
+            Type
+        );
+    }
+
+    TS<A_SerializableObject> A_SerializableObject::FindOrCreateSerializableSubobject(
+        const F_Name& SubobjectName,
+        const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+    ) const
+    {
+        F_Name ActualSubobjectName;
+        if (_Name && SubobjectName)
+        {
+            ActualSubobjectName = *_Name + ABYTEK_TEXT(".") + *SubobjectName;
+        }
+        else if (SubobjectName)
+        {
+            ActualSubobjectName = _Environment->GenerateAnonymousObjectName();
+        }
+        return _Environment->FindOrCreateObject(
+            ActualSubobjectName,
+            ActualSubobjectName ? _PackageName : F_Name {},
             Type
         );
     }

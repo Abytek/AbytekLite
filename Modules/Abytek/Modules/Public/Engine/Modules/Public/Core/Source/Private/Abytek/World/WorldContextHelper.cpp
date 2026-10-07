@@ -84,6 +84,64 @@ namespace Abytek
             Type
         );
     }
+    
+    TS<A_SerializableObject> H_WorldContext::FindOrCreateObject(
+        const TW_Valid<A_WorldContext>& WorldContext,
+        const F_Name& Name,
+        const F_Name& PackageName,
+        const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+    )
+    {
+        return WorldContext->GetEnvironment()->FindOrCreateObject(
+            Name,
+            PackageName,
+            Type
+        );
+    }
+    B8 H_WorldContext::FindOrPopulateObject(
+        const TW_Valid<A_WorldContext>& WorldContext,
+        TS<A_SerializableObject>& OutObject,
+        const F_Name& Name,
+        const F_Name& PackageName,
+        const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+    )
+    {
+        return WorldContext->GetEnvironment()->FindOrPopulateObject(
+            OutObject,
+            Name,
+            PackageName,
+            Type
+        );
+    }
+
+    TS<A_SerializableObject> H_WorldContext::FindOrCreateObjectDelayLoading(
+        const TW_Valid<A_WorldContext>& WorldContext,
+        const F_Name& Name, 
+        const F_Name& PackageName, 
+        const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+    )
+    {
+        return WorldContext->GetEnvironment()->FindOrCreateObjectDelayLoading(
+            Name,
+            PackageName,
+            Type
+        );
+    }
+    B8 H_WorldContext::FindOrPopulateObjectDelayLoading(
+        const TW_Valid<A_WorldContext>& WorldContext,
+        TS<A_SerializableObject>& OutObject, 
+        const F_Name& Name, 
+        const F_Name& PackageName,
+        const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+    )
+    {
+        return WorldContext->GetEnvironment()->FindOrPopulateObjectDelayLoading(
+            OutObject,
+            Name,
+            PackageName,
+            Type
+        );
+    }
 
     B8 H_WorldContext::HasFlags(const TW_Valid<const A_WorldContext>& WorldContext, E_WorldFlag Flags)
     {

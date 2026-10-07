@@ -36,21 +36,21 @@ namespace Abytek
     {
     }
     
-    ABYTEK_REFLECT(F_MaterialRenderPack)
+    ABYTEK_REFLECT(A_MaterialRenderPack)
     {
         ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::F_MaterialRenderPack"));
     }
 
-    F_MaterialRenderPack::F_MaterialRenderPack(const F_SerializableObjectInitParams& InitParams) :
+    A_MaterialRenderPack::A_MaterialRenderPack(const F_SerializableObjectInitParams& InitParams) :
         F_RenderPack(InitParams)
     {
     }
-    F_MaterialRenderPack::~F_MaterialRenderPack()
+    A_MaterialRenderPack::~A_MaterialRenderPack()
     {
     }
 
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
-    void F_MaterialRenderPack::PrepareTemplates(
+    void A_MaterialRenderPack::PrepareTemplates(
         const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
         const TW_Valid<A_RenderPackTemplateMap>& RenderPackTemplateMap
     )
@@ -58,35 +58,48 @@ namespace Abytek
     }
 #endif
     
-    ABYTEK_REFLECT(F_Material)
+    ABYTEK_REFLECT(A_Material)
     {
         ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::F_Material"));    
+        
+        ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(RenderPackType);
     }
     
-    F_Material::F_Material(const F_SerializableObjectInitParams& InitParam) :
+    A_Material::A_Material(const F_SerializableObjectInitParams& InitParam) :
         A_MaterialInterface(InitParam)
     {
-        _RenderPack = CreateSerializableSubobjectDelayLoading<F_MaterialRenderPack>(
-            ABYTEK_NAME("RenderPack")
+    }
+    A_Material::~A_Material()
+    {
+    }
+
+    void A_Material::OnPostConstruct()
+    {
+        A_MaterialInterface::OnPostConstruct();
+        
+        _RenderPack = CreateSerializableSubobjectDelayLoading<A_MaterialRenderPack>(
+            ABYTEK_NAME("RenderPack"),
+            RenderPackType
         );
         _RenderPack->_Material = ABYTEK_WTHIS();
     }
-    F_Material::~F_Material()
+    void A_Material::OnPreDestruct()
+    {
+        A_MaterialInterface::OnPreDestruct();
+    }
+
+    void A_Material::OnLoad()
+    {
+    }
+    void A_Material::OnUnload()
     {
     }
 
-    void F_Material::OnLoad()
-    {
-    }
-    void F_Material::OnUnload()
-    {
-    }
-
-    TS<F_Material> F_Material::GetMaterial() const
+    TS<A_Material> A_Material::GetMaterial() const
     {
         return ABYTEK_STHIS_MUTABLE();
     }
-    TS<F_MaterialInstance> F_Material::GetMaterialInstance() const
+    TS<F_MaterialInstance> A_Material::GetMaterialInstance() const
     {
         return _MainInstance;
     }

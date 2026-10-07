@@ -134,6 +134,10 @@ namespace Abytek
         
         TF_Vector<TS<F_RenderPackData>> _DataList;
         
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        F_Name _DevelopmentId;
+#endif
+        
     public:
         ABYTEK_FORCE_INLINE const auto& GetRegistry() const noexcept
         {
@@ -168,6 +172,13 @@ namespace Abytek
             }
             return {};
         }
+        
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        ABYTEK_FORCE_INLINE const auto& GetDevelopmentId() const noexcept
+        {
+            return _DevelopmentId;
+        }
+#endif
         
     public:
         F_RenderPack(const F_SerializableObjectInitParams& InitParams);

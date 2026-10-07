@@ -13,7 +13,7 @@ namespace Abytek
         ABYTEK_END_REFLECTOR(F_MaterialInstance);
         
     private:
-        TS<F_Material> _Material;
+        TS<A_Material> _Material;
         
     public:
         
@@ -26,7 +26,7 @@ namespace Abytek
         void OnUnload() override;
         
     public:
-        TS<F_Material> GetMaterial() const override;
+        TS<A_Material> GetMaterial() const override;
         TS<F_MaterialInstance> GetMaterialInstance() const override;
     };
 }

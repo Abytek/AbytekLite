@@ -359,6 +359,10 @@ namespace Abytek
         ~A_SerializableObject() override;
         
     protected:
+        virtual void OnPostConstruct();
+        virtual void OnPreDestruct();
+        
+    protected:
         virtual void CleanUp();
         
     protected:
@@ -427,6 +431,40 @@ namespace Abytek
                 Type.template Cast<A_SerializableObject>()
             ).FastCast<__F_Object>();
         }
+        
+    public:
+        TS<A_SerializableObject> FindOrCreateSerializableSubobjectDelayLoading(
+            const F_Name& SubobjectName, 
+            const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+        ) const;
+        template<typename __F_Object>
+        TS<__F_Object> FindOrCreateSerializableSubobjectDelayLoading(
+            const F_Name& SubobjectName, 
+            const TF_ReflectionTypeHandle<__F_Object>& Type = TF_ReflectionTypeHandle<__F_Object>(F_ReflectionContext::GetGlobal())
+        ) const
+        {
+            return FindOrCreateSerializableSubobjectDelayLoading(
+                SubobjectName,
+                Type.template Cast<A_SerializableObject>()
+            ).FastCast<__F_Object>();
+        }
+        
+    public:
+        TS<A_SerializableObject> FindOrCreateSerializableSubobject(
+            const F_Name& SubobjectName, 
+            const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+        ) const;
+        template<typename __F_Object>
+        TS<__F_Object> FindOrCreateSerializableSubobject(
+            const F_Name& SubobjectName, 
+            const TF_ReflectionTypeHandle<__F_Object>& Type = TF_ReflectionTypeHandle<__F_Object>(F_ReflectionContext::GetGlobal())
+        ) const
+        {
+            return FindOrCreateSerializableSubobject(
+                SubobjectName,
+                Type.template Cast<A_SerializableObject>()
+            ).FastCast<__F_Object>();
+        }
     };
     
     namespace Internal::SerializableObject
@@ -440,6 +478,7 @@ namespace Abytek
             );
             ((A_SerializableObject*)CastedObjectRawP)->CleanUp();
             CastedObjectRawP->CallUnload();
+            ((A_SerializableObject*)CastedObjectRawP)->OnPreDestruct();
             CastedObjectRawP->GetDefaultObjectReleaser()(ObjectRawP);
         }
     }

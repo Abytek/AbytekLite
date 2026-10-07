@@ -184,6 +184,10 @@ namespace Abytek
     ABYTEK_REFLECT(F_RenderPack)
     {
         ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::RenderPack"));
+        
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        ABYTEK_REFLECT_PROPERTY_SERIALIZABLE_DEV(_DevelopmentId);
+#endif
     }
 
     F_RenderPack::F_RenderPack(const F_SerializableObjectInitParams& InitParams) :
@@ -210,6 +214,13 @@ namespace Abytek
     
     void F_RenderPack::OnLoad()
     {
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        if (!_DevelopmentId)
+        {
+            _DevelopmentId = H_UUID::Generate();
+        }
+#endif
+        
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
         if (!HasSerializableFlags(E_SerializableObjectFlag::CDO))
         {

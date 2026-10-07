@@ -37,7 +37,7 @@ namespace Abytek
         BufferBuildParams.Context = GetContext();
         BufferBuildParams.AccessCapabilities = F_RHIResourceAccess::MakeUploadCapabilities();
         BufferBuildParams.BufferAspect.SizeInBytes = _SizeInBytes;
-        BufferBuildParams.AdditionalFlags = E_RHIResourceAdditionalFlag::TRANSIENT;
+        BufferBuildParams.AdditionalFlags = E_RHIResourceAdditionalFlag::AUTO_PLACED;
         _Buffer = RACreateAndBuildShared<A_RHIResource>(BufferBuildParams);
     }
     void F_RHITransientUploadBufferPage::Release()

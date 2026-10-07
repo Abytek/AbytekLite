@@ -759,7 +759,7 @@ namespace Abytek
     void F_DirectX12RHIResource::D3D12ReleaseAfterSubmit()
     {
         GetContext()->GetCurrentProcess().FastCast<F_DirectX12RHIProcess>()
-        ->Queues.Compile.AutoPlacedResourcesToAllocate.Push(ABYTEK_STHIS());
+        ->Queues.Compile.AutoPlacedResourcesToDeallocate.Push(ABYTEK_STHIS());
     }
     void F_DirectX12RHIResource::D3D12EnableStaticAfterSubmit()
     {

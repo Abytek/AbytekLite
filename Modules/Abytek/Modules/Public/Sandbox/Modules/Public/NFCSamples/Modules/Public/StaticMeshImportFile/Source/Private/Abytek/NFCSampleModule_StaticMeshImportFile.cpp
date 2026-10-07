@@ -30,7 +30,7 @@ namespace Abytek
         {
             TS<F_StaticMesh> StaticMesh;
             if (
-                H_Serializable::PopulateObject<F_StaticMesh>(
+                H_Serializable::FindOrPopulateObject<F_StaticMesh>(
                     StaticMesh,
                     ABYTEK_NAME("Cube"),
                     ABYTEK_NAME("@Abytek.Sandbox.NFCSamples.StaticMeshImportFile::Assets:/.IgnoreSVC/Cube")

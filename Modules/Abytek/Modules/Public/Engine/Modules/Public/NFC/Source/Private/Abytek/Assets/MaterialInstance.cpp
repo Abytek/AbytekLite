@@ -25,7 +25,7 @@ namespace Abytek
     {
     }
 
-    TS<F_Material> F_MaterialInstance::GetMaterial() const
+    TS<A_Material> F_MaterialInstance::GetMaterial() const
     {
         return _Material;
     }

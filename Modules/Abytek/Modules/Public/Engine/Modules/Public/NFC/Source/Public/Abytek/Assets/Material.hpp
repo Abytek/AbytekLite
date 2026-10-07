@@ -108,17 +108,17 @@ namespace Abytek
         ~F_MaterialPropertyTexture() override;
     };
     
-    class ABYTEK_ENGINE_NFC_API F_MaterialRenderPack final : public F_RenderPack
+    class ABYTEK_ENGINE_NFC_API A_MaterialRenderPack final : public F_RenderPack
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(F_RenderPack)
-        ABYTEK_END_REFLECTOR(F_MaterialRenderPack);
+        ABYTEK_END_REFLECTOR(A_MaterialRenderPack);
         
     public:
-        friend class F_Material;
+        friend class A_Material;
      
     private:
-        TW<F_Material> _Material;
+        TW<A_Material> _Material;
         
     public:
         ABYTEK_FORCE_INLINE const auto& GetMaterial() const noexcept
@@ -126,9 +126,11 @@ namespace Abytek
             return _Material;
         }
         
+    protected:
+        A_MaterialRenderPack(const F_SerializableObjectInitParams& InitParams);
+        
     public:
-        F_MaterialRenderPack(const F_SerializableObjectInitParams& InitParams);
-        ~F_MaterialRenderPack() override;
+        ~A_MaterialRenderPack() override;
         
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
     public:
@@ -139,17 +141,20 @@ namespace Abytek
 #endif
     };
     
-    class ABYTEK_ENGINE_NFC_API F_Material : public A_MaterialInterface
+    class ABYTEK_ENGINE_NFC_API A_Material : public A_MaterialInterface
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(A_MaterialInterface)
-        ABYTEK_END_REFLECTOR(F_Material);
+        ABYTEK_END_REFLECTOR(A_Material);
         
     private:
         TS<F_MaterialInstance> _MainInstance;
-        TS<F_MaterialRenderPack> _RenderPack;
+        TS<A_MaterialRenderPack> _RenderPack;
         
         TF_Vector<TW<F_MaterialInstance>> _Instances;
+        
+    protected:
+        TF_ReflectionTypeHandle<A_MaterialRenderPack> RenderPackType;
         
     public:
         ABYTEK_FORCE_INLINE const auto& GetMainInstance() const noexcept
@@ -166,16 +171,27 @@ namespace Abytek
             return _Instances;
         }
         
+        ABYTEK_FORCE_INLINE const auto& GetRenderPackType() const noexcept
+        {
+            return RenderPackType;
+        }
+        
+    protected:
+        A_Material(const F_SerializableObjectInitParams& InitParam);
+        
     public:
-        F_Material(const F_SerializableObjectInitParams& InitParam);
-        ~F_Material() override;
+        ~A_Material() override;
+        
+    protected:
+        void OnPostConstruct() override;
+        void OnPreDestruct() override;
         
     protected:
         void OnLoad() override;
         void OnUnload() override;
         
     public:
-        TS<F_Material> GetMaterial() const override;
+        TS<A_Material> GetMaterial() const override;
         TS<F_MaterialInstance> GetMaterialInstance() const override;
     };
 }

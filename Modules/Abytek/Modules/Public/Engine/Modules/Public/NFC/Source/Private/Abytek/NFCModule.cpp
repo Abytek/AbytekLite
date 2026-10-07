@@ -105,8 +105,8 @@ namespace Abytek
         RegisterStaticType<F_StaticMesh>();
         RegisterStaticType<F_StaticMeshSetting>();
         RegisterStaticType<A_MaterialInterface>();
-        RegisterStaticType<F_MaterialRenderPack>();
-        RegisterStaticType<F_Material>();
+        RegisterStaticType<A_MaterialRenderPack>();
+        RegisterStaticType<A_Material>();
         RegisterStaticType<F_MaterialInstance>();
     }
 

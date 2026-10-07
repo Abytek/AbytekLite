@@ -29,7 +29,7 @@ namespace Abytek
     {
         TS<F_Texture> Texture;
         if (
-            H_Serializable::PopulateObject<F_Texture>(
+            H_Serializable::FindOrPopulateObject<F_Texture>(
                 Texture,
                 ABYTEK_NAME("DemoTexture"),
                 ABYTEK_NAME("@Abytek.Sandbox.NFCSamples.Texture::Assets:/.IgnoreSVC/DemoTexture")

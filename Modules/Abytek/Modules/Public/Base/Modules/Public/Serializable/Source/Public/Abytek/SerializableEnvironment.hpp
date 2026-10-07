@@ -374,6 +374,84 @@ namespace Abytek
             OutObject = Object.FastCast<__F_Object>();
             return Result;
         }
+        TS<A_SerializableObject> FindOrCreateObjectDelayLoading(
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<A_SerializableObject>& Type = {}
+        );
+        template<typename __F_Object>
+        TS<__F_Object> FindOrCreateObjectDelayLoading(
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<__F_Object>& Type = TF_ReflectionTypeHandle<__F_Object>(F_ReflectionContext::GetGlobal())
+        )
+        {
+            auto Object = FindOrCreateObjectDelayLoading(Name, PackageName, Type.template Cast<A_SerializableObject>());
+            return Object.template FastCast<__F_Object>();
+        }
+        TS<A_SerializableObject> FindOrCreateObject(
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<A_SerializableObject>& Type = {}
+        );
+        template<typename __F_Object>
+        TS<__F_Object> FindOrCreateObject(
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<__F_Object>& Type = TF_ReflectionTypeHandle<__F_Object>(F_ReflectionContext::GetGlobal())
+        )
+        {
+            auto Object = FindOrCreateObject(Name, PackageName, Type.template Cast<A_SerializableObject>());
+            return Object.template FastCast<__F_Object>();
+        }
+        B8 FindOrPopulateObjectDelayLoading(
+            TS<A_SerializableObject>& OutObject,
+            const F_Name& Name,
+            const F_Name& PackageName,
+            const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+        );
+        template<typename __F_Object>
+        B8 FindOrPopulateObjectDelayLoading(
+            TS<__F_Object>& OutObject,
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<__F_Object>& Type = TF_ReflectionTypeHandle<__F_Object>(F_ReflectionContext::GetGlobal())
+        )
+        {
+            TS<A_SerializableObject> Object;
+            B8 Result = FindOrPopulateDelayLoading(
+                Object,
+                Name,
+                PackageName,
+                Type
+            );
+            OutObject = Object.FastCast<__F_Object>();
+            return Result;
+        }
+        B8 FindOrPopulateObject(
+            TS<A_SerializableObject>& OutObject,
+            const F_Name& Name,
+            const F_Name& PackageName,
+            const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+        );
+        template<typename __F_Object>
+        B8 FindOrPopulateObject(
+            TS<__F_Object>& OutObject,
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<__F_Object>& Type = TF_ReflectionTypeHandle<__F_Object>(F_ReflectionContext::GetGlobal())
+        )
+        {
+            TS<A_SerializableObject> Object;
+            B8 Result = FindOrPopulateObject(
+                Object,
+                Name,
+                PackageName,
+                Type
+            );
+            OutObject = Object.FastCast<__F_Object>();
+            return Result;
+        }
         
     public:
         TS<A_SerializableObject> CreateCDO(

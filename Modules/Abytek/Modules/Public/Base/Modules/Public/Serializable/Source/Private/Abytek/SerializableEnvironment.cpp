@@ -361,6 +361,7 @@ namespace Abytek
         const auto& MetadataElement = TypeMetadata.Get(A_SerializableObject::GetMetadataElementName_Creator());
         const auto& Creator = AnyCast<A_SerializableObject::F_Creator>(MetadataElement);
         auto Object = Creator(InitParams);
+        Object->OnPostConstruct();
         _ObjectsToLoad.Push(Object);
         return Object;
     }
@@ -383,11 +384,7 @@ namespace Abytek
         const TF_ReflectionTypeHandle<A_SerializableObject>& Type
     )
     {
-        // Fast access mode
-        if (auto Object = FindObject(Name))
-        {
-            return ShareObject(Object);
-        }
+        ABYTEK_BASE_SERIALIZABLE_ASSERT(!HasObject(Name)) << "Object already created, name: " << Name;
         
         // Fast creation mode
         if (
@@ -469,6 +466,84 @@ namespace Abytek
         );
         OutObject = Object;
         return !Object->IsLoadedFromPackage();
+    }
+    TS<A_SerializableObject> F_SerializableEnvironment::FindOrCreateObjectDelayLoading(
+        const F_Name& Name,
+        const F_Name& PackageName, 
+        const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+    )
+    {
+        // Fast access mode
+        if (auto Object = FindObject(Name))
+        {
+            return ShareObject(Object);
+        }
+        
+        return CreateObjectDelayLoading(
+            Name, 
+            PackageName, 
+            Type
+        );
+    }
+    TS<A_SerializableObject> F_SerializableEnvironment::FindOrCreateObject(
+        const F_Name& Name, 
+        const F_Name& PackageName,
+        const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+    )
+    {
+        // Fast access mode
+        if (auto Object = FindObject(Name))
+        {
+            return ShareObject(Object);
+        }
+        
+        return CreateObject(
+            Name, 
+            PackageName, 
+            Type
+        );
+    }
+    B8 F_SerializableEnvironment::FindOrPopulateObjectDelayLoading(
+        TS<A_SerializableObject>& OutObject, 
+        const F_Name& Name,
+        const F_Name& PackageName, 
+        const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+    )
+    {
+        // Fast access mode
+        if (auto Object = FindObject(Name))
+        {
+            OutObject = ShareObject(Object);
+            return !Object->IsLoadedFromPackage();
+        }
+        
+        return PopulateObjectDelayLoading(
+            OutObject,
+            Name, 
+            PackageName, 
+            Type
+        );
+    }
+    B8 F_SerializableEnvironment::FindOrPopulateObject(
+        TS<A_SerializableObject>& OutObject, 
+        const F_Name& Name,
+        const F_Name& PackageName, 
+        const TF_ReflectionTypeHandle<A_SerializableObject>& Type
+    )
+    {
+        // Fast access mode
+        if (auto Object = FindObject(Name))
+        {
+            OutObject = ShareObject(Object);
+            return !Object->IsLoadedFromPackage();
+        }
+        
+        return PopulateObject(
+            OutObject,
+            Name, 
+            PackageName, 
+            Type
+        );
     }
 
     TS<A_SerializableObject> F_SerializableEnvironment::CreateCDO(const TF_ReflectionTypeHandle<A_SerializableObject>& Type)

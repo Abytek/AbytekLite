@@ -21,7 +21,7 @@ namespace Abytek
     {
         TS<F_Actor> Actor;
         if (
-            H_Serializable::PopulateObject<F_Actor>(
+            H_Serializable::FindOrPopulateObject<F_Actor>(
                 Actor,
                 ABYTEK_NAME("DemoActor"),
                 GetPackageName()

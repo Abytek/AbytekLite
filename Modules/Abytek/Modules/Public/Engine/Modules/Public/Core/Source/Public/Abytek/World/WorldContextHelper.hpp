@@ -121,6 +121,94 @@ namespace Abytek
             );
         }
         
+        static TS<A_SerializableObject> FindOrCreateObject(
+            const TW_Valid<A_WorldContext>& WorldContext,
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<A_SerializableObject>& Type = {}
+        );
+        template<typename __F_Object>
+        static TS<__F_Object> FindOrCreateObject(
+            const TW_Valid<A_WorldContext>& WorldContext,
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<__F_Object>& Type = TF_ReflectionTypeHandle<__F_Object>(F_ReflectionContext::GetGlobal())
+            )
+        {
+            return WorldContext->GetEnvironment()->FindOrCreateObject<__F_Object>(
+                Name,
+                PackageName,
+                Type
+            );
+        }
+        static B8 FindOrPopulateObject(
+            const TW_Valid<A_WorldContext>& WorldContext,
+            TS<A_SerializableObject>& OutObject,
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<A_SerializableObject>& Type = {}
+        );
+        template<typename __F_Object>
+        static B8 FindOrPopulateObject(
+            const TW_Valid<A_WorldContext>& WorldContext,
+            TS<__F_Object>& OutObject,
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<__F_Object>& Type = TF_ReflectionTypeHandle<__F_Object>(F_ReflectionContext::GetGlobal())
+        )
+        {
+            return WorldContext->GetEnvironment()->FindOrPopulateObject<__F_Object>(
+                OutObject,
+                Name,
+                PackageName,
+                Type
+            );
+        }
+        
+        static TS<A_SerializableObject> FindOrCreateObjectDelayLoading(
+            const TW_Valid<A_WorldContext>& WorldContext,
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<A_SerializableObject>& Type = {}
+        );
+        template<typename __F_Object>
+        static TS<__F_Object> FindOrCreateObjectDelayLoading(
+            const TW_Valid<A_WorldContext>& WorldContext,
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<__F_Object>& Type = TF_ReflectionTypeHandle<__F_Object>(F_ReflectionContext::GetGlobal())
+            )
+        {
+            return WorldContext->GetEnvironment()->FindOrCreateObjectDelayLoading<__F_Object>(
+                Name,
+                PackageName,
+                Type
+            );
+        }
+        static B8 FindOrPopulateObjectDelayLoading(
+            const TW_Valid<A_WorldContext>& WorldContext,
+            TS<A_SerializableObject>& OutObject,
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<A_SerializableObject>& Type = {}
+        );
+        template<typename __F_Object>
+        static B8 FindOrPopulateObjectDelayLoading(
+            const TW_Valid<A_WorldContext>& WorldContext,
+            TS<__F_Object>& OutObject,
+            const F_Name& Name = {},
+            const F_Name& PackageName = {},
+            const TF_ReflectionTypeHandle<__F_Object>& Type = TF_ReflectionTypeHandle<__F_Object>(F_ReflectionContext::GetGlobal())
+        )
+        {
+            return WorldContext->GetEnvironment()->FindOrPopulateObjectDelayLoading<__F_Object>(
+                OutObject,
+                Name,
+                PackageName,
+                Type
+            );
+        }
+        
         template<typename __F_Unit = F_ProgramUnit>
         static B8 HasUnit(const TW_Valid<const A_WorldContext>& WorldContext, const F_Name& Name = __F_Unit::GetStaticName()) noexcept
         {

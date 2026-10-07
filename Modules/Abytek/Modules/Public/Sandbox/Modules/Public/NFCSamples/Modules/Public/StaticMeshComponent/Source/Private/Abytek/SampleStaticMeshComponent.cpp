@@ -18,7 +18,7 @@ namespace Abytek
             ABYTEK_NAME("StaticMeshComponent")
         );
         _StaticMeshComponent->SetStaticMesh(
-            H_WorldContext::CreateObjectDelayLoading<F_StaticMesh>(
+            H_WorldContext::FindOrCreateObjectDelayLoading<F_StaticMesh>(
                 ABYTEK_WTHIS(),
                 ABYTEK_NAME("DemoStaticMesh"),
                 ABYTEK_NAME("@Abytek.Sandbox.NFCSamples.StaticMeshComponent::Assets:/.IgnoreSVC/DemoStaticMesh")

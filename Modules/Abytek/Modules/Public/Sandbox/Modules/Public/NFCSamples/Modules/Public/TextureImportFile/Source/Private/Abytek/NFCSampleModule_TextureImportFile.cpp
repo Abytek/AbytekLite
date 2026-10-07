@@ -30,7 +30,7 @@ namespace Abytek
         {
             TS<F_Texture> Texture;
             if (
-                H_Serializable::PopulateObject<F_Texture>(
+                H_Serializable::FindOrPopulateObject<F_Texture>(
                     Texture,
                     ABYTEK_NAME("AbytekIcon"),
                     ABYTEK_NAME("@Abytek.Sandbox.NFCSamples.TextureImportFile::Assets:/.IgnoreSVC/AbytekIcon")
@@ -44,7 +44,7 @@ namespace Abytek
         {
             TS<F_Texture> Texture;
             if (
-                H_Serializable::PopulateObject<F_Texture>(
+                H_Serializable::FindOrPopulateObject<F_Texture>(
                     Texture,
                     ABYTEK_NAME("cobblestone_parish_road_4k"),
                     ABYTEK_NAME("@Abytek.Sandbox.NFCSamples.TextureImportFile::Assets:/.IgnoreSVC/cobblestone_parish_road_4k")

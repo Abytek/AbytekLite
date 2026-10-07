@@ -35,7 +35,7 @@ namespace Abytek
     {
         TS<F_StaticMesh> StaticMesh;
         if (
-            H_WorldContext::PopulateObject<F_StaticMesh>(
+            H_WorldContext::FindOrPopulateObject<F_StaticMesh>(
                 ABYTEK_WTHIS(),
                 StaticMesh,
                 ABYTEK_NAME("DemoStaticMesh"),
@@ -49,7 +49,7 @@ namespace Abytek
         
         TS<F_Actor> SpectatorActor;
         if (
-            H_WorldContext::PopulateObject<F_Actor>(
+            H_WorldContext::FindOrPopulateObject<F_Actor>(
                 ABYTEK_WTHIS(),
                 SpectatorActor,
                 ABYTEK_NAME("SampleSpectatorActor"),
@@ -59,7 +59,7 @@ namespace Abytek
         {
             TS<F_SampleSpectatorComponent> SampleSpectatorComponent;
             if (
-                H_WorldContext::PopulateObject<F_SampleSpectatorComponent>(
+                H_WorldContext::FindOrPopulateObject<F_SampleSpectatorComponent>(
                     ABYTEK_WTHIS(),
                     SampleSpectatorComponent,
                     ABYTEK_NAME("SampleSpectatorComponent"),
@@ -77,7 +77,7 @@ namespace Abytek
         
         TS<F_Actor> StaticMeshActor;
         if (
-            H_WorldContext::PopulateObject<F_Actor>(
+            H_WorldContext::FindOrPopulateObject<F_Actor>(
                 ABYTEK_WTHIS(),
                 StaticMeshActor,
                 ABYTEK_NAME("SampleStaticMeshActor"),
@@ -87,7 +87,7 @@ namespace Abytek
         {
             TS<F_SampleStaticMeshComponent> SampleStaticMeshComponent;
             if (
-                H_WorldContext::PopulateObject<F_SampleStaticMeshComponent>(
+                H_WorldContext::FindOrPopulateObject<F_SampleStaticMeshComponent>(
                     ABYTEK_WTHIS(),
                     SampleStaticMeshComponent,
                     ABYTEK_NAME("SampleStaticMeshComponent"),

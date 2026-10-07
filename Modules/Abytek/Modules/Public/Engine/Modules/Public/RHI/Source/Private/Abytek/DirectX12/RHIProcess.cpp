@@ -1501,7 +1501,7 @@ namespace Abytek
             {
                 auto CompileData_Resource = Resource.FastCast<F_DirectX12RHIResource>()->GetCompileData();
                 auto& AutoPlacedData = CompileData_Resource->AutoPlacedData;
-                AutoPlacedData.NeedAllocate = false;
+                AutoPlacedData.NeedDeallocate = true;
                 
                 AutoPlacedResourcesToDeallocate.push_back(Resource);
                 if (AutoPlacedData.IndexInSection == ~U32(0))
@@ -1563,7 +1563,7 @@ namespace Abytek
                 
             )
             {
-                continue;
+                // continue;
             }
             
             // Just want to allocate, no uses
@@ -1698,8 +1698,8 @@ namespace Abytek
                     {
                         auto& PassTracking_Deallocated = PassTrackings_Deallocated.back();
                         static_cast<F_DirectX12RHIResourceUseReference&>(AliasingDependency) = PassTracking_Deallocated;
+                        break;
                     }
-                    break;
                 }
             }
             

@@ -6,7 +6,7 @@
 
 namespace Abytek
 {
-    class F_Material;
+    class A_Material;
     class F_MaterialInstance;
     
     class ABYTEK_ENGINE_NFC_API A_MaterialInterface : public A_WorldContext
@@ -30,7 +30,7 @@ namespace Abytek
         void OnUnload() override;
         
     public:
-        virtual TS<F_Material> GetMaterial() const = 0;
+        virtual TS<A_Material> GetMaterial() const = 0;
         virtual TS<F_MaterialInstance> GetMaterialInstance() const = 0;
     };
 }

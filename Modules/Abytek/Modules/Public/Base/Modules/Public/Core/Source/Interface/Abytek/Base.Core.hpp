@@ -57,6 +57,7 @@
 #include "Abytek/DataTraverse.hpp"
 #include "Abytek/BoostContainerDataTraverse.hpp"
 #include "Abytek/CoreContainerDataTraverse.hpp"
+#include "Abytek/UUID.hpp"
 
 #include "Abytek/CoreMathFunctions/Abs.hpp"
 #include "Abytek/CoreMathFunctions/ACos.hpp"

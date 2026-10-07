@@ -22,7 +22,7 @@ namespace Abytek
     {
         TS<F_Actor> Actor;
         if (
-            H_Serializable::PopulateObject<F_Actor>(
+            H_Serializable::FindOrPopulateObject<F_Actor>(
                 Actor,
                 ABYTEK_NAME("SampleSpectatorActor"),
                 GetPackageName()
@@ -31,7 +31,7 @@ namespace Abytek
         {
             TS<F_SampleSpectatorComponent> SampleSpectatorComponent;
             if (
-                H_Serializable::PopulateObject<F_SampleSpectatorComponent>(
+                H_Serializable::FindOrPopulateObject<F_SampleSpectatorComponent>(
                     SampleSpectatorComponent,
                     ABYTEK_NAME("SampleSpectatorComponent"),
                     GetPackageName()
