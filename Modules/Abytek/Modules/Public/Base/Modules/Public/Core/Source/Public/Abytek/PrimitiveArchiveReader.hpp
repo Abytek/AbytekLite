@@ -5,7 +5,7 @@
 
 namespace Abytek
 {
-    template<typename __F, std::enable_if_t<std::is_enum_v<__F>, bool> = true>
+    /*template<typename __F, std::enable_if_t<std::is_enum_v<__F>, bool> = true>
     F_FeedbackStatus operator >> (F_ArchiveReadOnlyView& View, __F& Value) noexcept
     {
         if (View.CheckSize<__F>())
@@ -137,5 +137,5 @@ namespace Abytek
             return F_FeedbackStatus::MakeSucceeded();
         }
         return F_FeedbackStatus::MakeFailed();
-    }
+    }*/
 }

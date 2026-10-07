@@ -13,7 +13,7 @@ namespace Abytek
         return (
             IsReflectionBaseOf<I_BinarySerializable, std::remove_const_t<__F_Value>>()
             && !std::is_same_v<I_BinarySerializable, std::remove_const_t<__F_Value>>
-            && !std::is_enum_v<std::remove_const_t<__F_Value>>
+            && !IsShallowReadWriteType<__F_Value>()
         );
     }
     

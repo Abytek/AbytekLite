@@ -57,15 +57,15 @@ namespace Abytek
             
             // Force load
             _GlobalRenderPack->CallLoad();
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+            _GlobalRenderPack->GetPackage()->SaveIfDirty();
+#endif
         }
     }
     void F_RenderCoreManager::OnStartup()
     {
         if (F_RHISubsystem::GetInstance()->IsEnabled())
         {
-#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
-            _GlobalRenderPack->GetPackage()->SaveIfDirty();
-#endif
         }
     }
     void F_RenderCoreManager::OnShutdown()

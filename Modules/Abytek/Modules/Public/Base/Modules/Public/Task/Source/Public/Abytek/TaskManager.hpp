@@ -2,12 +2,16 @@
 
 #include "Abytek/Base.Task.prerequisites.pch.hpp"
 #include "Abytek/Task.hpp"
+#include "Abytek/TaskScheduler.hpp"
 #include "Abytek/Console.hpp"
 
 
 namespace Abytek
 {
     class F_TaskWorker;
+    class F_TaskScheduler_HighFrequencyWorkers;
+    class F_TaskScheduler_MediumFrequencyWorkers;
+    class F_TaskScheduler_LowFrequencyWorkers;
     
     enum class E_TaskManagerProfile
     {
@@ -26,6 +30,7 @@ namespace Abytek
         U32 GroupSize = 0;
         U32 NumGroups = 0;
         U32 NumHighFrequencyWorkers = 0;
+        U32 NumMediumFrequencyWorkers = 0;
         U32 NumLowFrequencyWorkers = 0;
     };
     
@@ -47,10 +52,15 @@ namespace Abytek
         
         TW<TF_ConsoleVariable<E_TaskManagerProfile>> _ConsoleVariable_Profile;
         TW<TF_ConsoleVariable<I32>> _ConsoleVariable_NumWorkers;
+        TW<TF_ConsoleVariable<F32>> _ConsoleVariable_MediumFrequencyWorkerRatio;
         TW<TF_ConsoleVariable<F32>> _ConsoleVariable_LowFrequencyWorkerRatio;
         TW<TF_ConsoleVariable<I32>> _ConsoleVariable_GroupSize;
         
         AU64 _NextTaskId = 0;
+        
+        TU<F_TaskScheduler_HighFrequencyWorkers> _Scheduler_HighFrequencyWorkers;
+        TU<F_TaskScheduler_MediumFrequencyWorkers> _Scheduler_MediumFrequencyWorkers;
+        TU<F_TaskScheduler_LowFrequencyWorkers> _Scheduler_LowFrequencyWorkers;
 
     public:
         ABYTEK_FORCE_INLINE const auto& GetConfig() const noexcept
@@ -73,6 +83,10 @@ namespace Abytek
         ABYTEK_FORCE_INLINE const auto& GetConsoleVariable_NumWorkers() const noexcept
         {
             return _ConsoleVariable_NumWorkers;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetConsoleVariable_MediumFrequencyWorkerRatio() const noexcept
+        {
+            return _ConsoleVariable_MediumFrequencyWorkerRatio;
         }
         ABYTEK_FORCE_INLINE const auto& GetConsoleVariable_LowFrequencyWorkerRatio() const noexcept
         {

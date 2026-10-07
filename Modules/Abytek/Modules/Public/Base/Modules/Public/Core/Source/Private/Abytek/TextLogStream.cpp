@@ -14,68 +14,100 @@ namespace Abytek
 
     void A_TextLogStream::AddNewLine() 
     {
+        _Lock.Lock();
         _TextStream << std::endl;
+        _Lock.Unlock();
     }
     void A_TextLogStream::AddU8(U8 Value) 
     {
+        _Lock.Lock();
         _TextStream << Value;
+        _Lock.Unlock();
     }
     void A_TextLogStream::AddU16(U16 Value) 
     {
+        _Lock.Lock();
         _TextStream << Value;
+        _Lock.Unlock();
     }
     void A_TextLogStream::AddU32(U32 Value) 
     {
+        _Lock.Lock();
         _TextStream << Value;
+        _Lock.Unlock();
     }
     void A_TextLogStream::AddU64(U64 Value) 
     {
+        _Lock.Lock();
         _TextStream << Value;
+        _Lock.Unlock();
     }
     void A_TextLogStream::AddI8(I8 Value) 
     {
+        _Lock.Lock();
         _TextStream << Value;
+        _Lock.Unlock();
     }
     void A_TextLogStream::AddI16(I16 Value) 
     {
+        _Lock.Lock();
         _TextStream << Value;
+        _Lock.Unlock();
     }
     void A_TextLogStream::AddI32(I32 Value) 
     {
+        _Lock.Lock();
         _TextStream << Value;
+        _Lock.Unlock();
     }
     void A_TextLogStream::AddI64(I64 Value) 
     {
+        _Lock.Lock();
         _TextStream << Value;
+        _Lock.Unlock();
     }
     void A_TextLogStream::AddVoidP(const void* Value) 
     {
+        _Lock.Lock();
         _TextStream << Value;
+        _Lock.Unlock();
     }
     void A_TextLogStream::AddSz(Sz Value) 
     {
+        _Lock.Lock();
         _TextStream << Value;
+        _Lock.Unlock();
     }
     void A_TextLogStream::AddPDiff(PDiff Value) 
     {
+        _Lock.Lock();
         _TextStream << Value;
+        _Lock.Unlock();
     }
     void A_TextLogStream::AddF32(F32 Value) 
     {
+        _Lock.Lock();
         _TextStream << Value;
+        _Lock.Unlock();
     }
     void A_TextLogStream::AddF64(F64 Value) 
     {
+        _Lock.Lock();
         _TextStream << Value;
+        _Lock.Unlock();
     }
     void A_TextLogStream::AddChar(F_Char Value) 
     {
+        _Lock.Lock();
         _TextStream << F_TextChar(Value);
+        _Lock.Unlock();
     }
 #ifdef ABYTEK_ENABLE_WIDE_CHAR_TEXT
     void A_TextLogStream::AddTextChar(F_TextChar Value) 
     {
+        _Lock.Lock();
         _TextStream << Value;
+        _Lock.Unlock();
     }
 #endif
     void A_TextLogStream::AddCStr(const F_Char* Value) 
@@ -99,7 +131,9 @@ namespace Abytek
             return;
         }
 
+        _Lock.Lock();
         _TextStream << Value;
+        _Lock.Unlock();
     }
 #endif
     void A_TextLogStream::AddLogHeader(const F_LogHeader& Value) 
@@ -135,8 +169,10 @@ namespace Abytek
     }
     void A_TextLogStream::UpdateLogColor(const F_UpdateLogColor& Value)
     {
+        _Lock.Lock();
         if (!EnableColor)
         {
+            _Lock.Unlock();
             return;
         }
         
@@ -335,26 +371,37 @@ namespace Abytek
             }
             break;
         }
+        _Lock.Unlock();
     }
     void A_TextLogStream::ResetLogColor()
     {
-        if (!EnableColor)
+        _Lock.Lock();
+        if (EnableColor)
         {
-            return;
+            _TextStream << ABYTEK_TEXT_LOG_STREAM_RESET_CONSOLE_COLOR;
         }
-        _TextStream << ABYTEK_TEXT_LOG_STREAM_RESET_CONSOLE_COLOR;
+        _Lock.Unlock();
     }
 
     void A_TextLogStream::SetLogType(E_LogType LogType)
     {
+        _Lock.Lock();
         _LogType = LogType;
+        _Lock.Unlock();
     }
 
     void A_TextLogStream::Flush()
     {
-        Push(_TextStream.str().data());
+        _Lock.Lock();
+        auto Text = _TextStream.str();
+        _Lock.Unlock();
+        
+        Push(Text.data());
+        
+        _Lock.Lock();
         _LogType = E_LogType::NONE;
         _TextStream = {};
+        _Lock.Unlock();
     }
 
     void A_TextLogStream::Push(const F_TextChar* TextChars)

@@ -1,6 +1,7 @@
 ﻿#include "Abytek/RenderPack.hpp"
 #include "Abytek/RenderCoreHelper.hpp"
 #include "Abytek/RenderRegistry.hpp"
+#include "Abytek/TaskScheduler_MediumFrequencyWorkers.hpp"
 #include "Abytek/Development/Cook/CookProfile.hpp"
 #include "Abytek/Development/Cook/CookSettingContainer.hpp"
 #include "Abytek/Development/RenderCore/RenderCoreCookSetting.hpp"
@@ -490,16 +491,55 @@ namespace Abytek
         TF_Vector<TS<A_RHITemplate>> NewTemplates;
         MainWork(NewTemplates);
         
-        TF_Vector<TS<A_RHITemplate>> AllNewTemplates; // with non-root templates
+        TF_Vector<TS<A_RHITemplate>> AllNewTemplates; // with non-root templates, notes there could be some templates that were already added
         A_RHITemplate::GatherSortedListWithDependencies(
             TemplateDatabase.Weak(),
             NewTemplates,
-            AllNewTemplates
+            AllNewTemplates,
+            true // skip unlisted roots because we just need to add necessary non-root templates
         );
         
         for (const auto& Template : AllNewTemplates)
         {
+            if (RenderPackTemplateMap->HasTemplate(Template->GetHashCode()))
+            {
+                continue;
+            }
             RenderPackTemplateMap->AddTemplate(Template);
+        }
+    }
+
+    void F_RenderPack::ExecuteParallelCompileCommands(
+        const TF_Vector<TF_Function<void(TF_Vector<TS<A_RHITemplate>>& OutTemplates)>>& Commands,
+        TF_Vector<TS<A_RHITemplate>>& OutNewTemplates
+    )
+    {
+        U32 NumCommands = static_cast<U32>(Commands.size());
+                    
+        TF_Vector<TS_Unmanaged<F_TaskPromise>> TaskPromises;
+        TF_Vector<TF_Vector<TS<A_RHITemplate>>> GroupedOutputTemplates(NumCommands);
+                    
+        for (U32 Idx = 0; Idx < NumCommands; ++Idx)
+        {
+            TaskPromises.push_back(
+                H_TaskUtilities::Schedule(
+                    F_TaskScheduler_MediumFrequencyWorkers::GetInstance(),
+                    [&Commands, &GroupedOutputTemplates, Idx]
+                    {
+                        const auto& Command = Commands[Idx];
+                        Command(GroupedOutputTemplates[Idx]);
+                    }
+                )
+            );
+        }
+        ABYTEK_AWAIT TaskPromises;
+                    
+        for (const auto& GroupedOutputTemplateList : GroupedOutputTemplates)
+        {
+            for (const auto& Template : GroupedOutputTemplateList)
+            {
+                OutNewTemplates.push_back(Template);
+            }
         }
     }
 #endif

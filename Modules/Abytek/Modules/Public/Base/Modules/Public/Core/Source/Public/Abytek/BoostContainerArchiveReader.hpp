@@ -33,7 +33,7 @@ namespace Abytek
     template<typename __F_Item, Sz __Size>
     F_FeedbackStatus operator >> (F_ArchiveReadOnlyView& View, boost::array<__F_Item, __Size>& Value) noexcept
     {
-        if constexpr (IsShallowReadWriteType<__F_Item>())
+        if constexpr (IsArrayShallowReadWriteType<__F_Item>())
         {
             if (!View.CheckSize<__F_Item>(__Size))
             {
@@ -78,7 +78,7 @@ namespace Abytek
         
         Value.resize(Size);
         
-        if constexpr (IsShallowReadWriteType<__F_Item>())
+        if constexpr (IsArrayShallowReadWriteType<__F_Item>())
         {
             if (!View.CheckSize<__F_Item>(Size))
             {
@@ -121,7 +121,7 @@ namespace Abytek
         
         Value.resize(Size);
         
-        if constexpr (IsShallowReadWriteType<__F_Item>())
+        if constexpr (IsArrayShallowReadWriteType<__F_Item>())
         {
             if (!View.CheckSize<__F_Item>(Size))
             {
@@ -150,7 +150,7 @@ namespace Abytek
         
         Value.resize(Size);
         
-        if constexpr (IsShallowReadWriteType<__F_Item>())
+        if constexpr (IsArrayShallowReadWriteType<__F_Item>())
         {
             if (!View.CheckSize<__F_Item>(Size))
             {
@@ -179,7 +179,7 @@ namespace Abytek
         
         Value.resize(Size);
         
-        if constexpr (IsShallowReadWriteType<__F_Item>())
+        if constexpr (IsArrayShallowReadWriteType<__F_Item>())
         {
             if (!View.CheckSize<__F_Item>(Size))
             {

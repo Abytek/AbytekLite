@@ -1,5 +1,8 @@
 ﻿#include "Abytek/TaskManager.hpp"
 #include "Abytek/TaskWorker.hpp"
+#include "Abytek/TaskScheduler_HighFrequencyWorkers.hpp"
+#include "Abytek/TaskScheduler_MediumFrequencyWorkers.hpp"
+#include "Abytek/TaskScheduler_LowFrequencyWorkers.hpp"
 
 
 namespace Abytek
@@ -25,6 +28,11 @@ namespace Abytek
             ABYTEK_NAME("Abytek.TaskManager.NumWorkers"),
             ABYTEK_TEXT(""),
             0
+        );
+        _ConsoleVariable_MediumFrequencyWorkerRatio = Console->RegisterVariable<F32>(
+            ABYTEK_NAME("Abytek.TaskManager.MediumFrequencyWorkerRatio"),
+            ABYTEK_TEXT(""),
+            0.5f
         );
         _ConsoleVariable_LowFrequencyWorkerRatio = Console->RegisterVariable<F32>(
             ABYTEK_NAME("Abytek.TaskManager.LowFrequencyWorkerRatio"),
@@ -81,12 +89,23 @@ namespace Abytek
         _Config.GroupSize = _ConsoleVariable_GroupSize->GetValue();
         _Config.NumGroups = (_Config.NumWorkers + _Config.GroupSize - 1) / _Config.GroupSize;
         
+        F32 MediumFrequencyWorkerRatio = Min<F32>(
+            1.0f,
+            Max<F32>(
+                _ConsoleVariable_MediumFrequencyWorkerRatio->GetValue(),
+                0.0f
+            )
+        );
         F32 LowFrequencyWorkerRatio = Min<F32>(
             1.0f,
             Max<F32>(
                 _ConsoleVariable_LowFrequencyWorkerRatio->GetValue(),
                 0.0f
             )
+        );
+        _Config.NumMediumFrequencyWorkers = Max<U32>(
+            1,
+            (U32)(MediumFrequencyWorkerRatio * static_cast<F32>(_Config.NumWorkers))
         );
         _Config.NumLowFrequencyWorkers = Max<U32>(
             1,
@@ -101,6 +120,9 @@ namespace Abytek
     {
         ApplyConsoleVariables();
         _CreateWorkers();
+        _Scheduler_HighFrequencyWorkers = TU<F_TaskScheduler_HighFrequencyWorkers>()();
+        _Scheduler_MediumFrequencyWorkers = TU<F_TaskScheduler_MediumFrequencyWorkers>()();
+        _Scheduler_LowFrequencyWorkers = TU<F_TaskScheduler_LowFrequencyWorkers>()();
         _MainPromise = _Workers[0]->Schedule(ABYTEK_MOVE(MainInstanceSet));
         _StartWorkers();
     }
@@ -114,14 +136,21 @@ namespace Abytek
         for (U32 Idx = 0; Idx < _Config.NumWorkers; ++Idx)
         {
             E_TaskWorkerFlag WorkerFlags = E_TaskWorkerFlag::NONE;
+            
             if (Idx >= (_Config.NumWorkers - _Config.NumLowFrequencyWorkers))
             {
                 WorkerFlags |= E_TaskWorkerFlag::LOW_FREQUENCY;
             }
-            else
+            if (Idx >= (_Config.NumWorkers - _Config.NumMediumFrequencyWorkers))
+            {
+                WorkerFlags |= E_TaskWorkerFlag::MEDIUM_FREQUENCY;
+            }
+            
+            if (Idx <= (_Config.NumHighFrequencyWorkers))
             {
                 WorkerFlags |= E_TaskWorkerFlag::HIGH_FREQUENCY;
             }
+            
             if (Idx == 0)
             {
                 WorkerFlags |= E_TaskWorkerFlag::MAIN_THREAD;

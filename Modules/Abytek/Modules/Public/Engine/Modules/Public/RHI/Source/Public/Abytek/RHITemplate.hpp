@@ -90,7 +90,8 @@ namespace Abytek
         static void GatherSortedListWithDependencies(
             const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase, 
             const TF_Vector<TS<A_RHITemplate>>& Templates,
-            TF_Vector<TS<A_RHITemplate>>& OutList
+            TF_Vector<TS<A_RHITemplate>>& OutList,
+            B8 SkipUnlistedRoot = false
         );
     };
     

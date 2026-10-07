@@ -39,9 +39,8 @@ namespace Abytek
     };
     
     static constexpr U32 ECMS_MAX_VERTICES_PER_MESHLET = 64;
-    static constexpr U32 ECMS_MAX_INDICES_PER_MESHLET = 126;
-    static_assert(ECMS_MAX_INDICES_PER_MESHLET % 3 == 0);
-    static constexpr U32 ECMS_MAX_PRIMITIVES_PER_MESHLET = ECMS_MAX_INDICES_PER_MESHLET / 3;
+    static constexpr U32 ECMS_MAX_PRIMITIVES_PER_MESHLET = 126;
+    static constexpr U32 ECMS_MAX_INDICES_PER_MESHLET = ECMS_MAX_PRIMITIVES_PER_MESHLET * 3;
     
     struct ABYTEK_ALIGN(16) F_ECMSMeshlet
     {
@@ -143,7 +142,7 @@ namespace Abytek
             TF_ECMSMeshData Result;
             
             const Sz MaxNumVerticesPerMeshlet  = ECMS_MAX_VERTICES_PER_MESHLET;
-            const Sz MaxNumTrianglesPerMeshlet = ECMS_MAX_INDICES_PER_MESHLET;
+            const Sz MaxNumTrianglesPerMeshlet = ECMS_MAX_PRIMITIVES_PER_MESHLET;
             const float ConeWeight    = 0.0f;
 
             Sz MaxNumMeshlets = meshopt_buildMeshletsBound(

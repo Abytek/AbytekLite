@@ -5,6 +5,36 @@
 
 namespace Abytek
 {
+    inline constexpr U32 CalculateDataNumElementsWithPadding(U32 Elements)
+    {
+        assert(Elements <= 4);
+        
+        U32 AlignmentInElements = 0;
+        if (Elements <= 1)
+        {
+            AlignmentInElements = 1;
+        }
+        else if (Elements <= 2)
+        {
+            AlignmentInElements = 2;
+        }
+        else if (Elements <= 4)
+        {
+            AlignmentInElements = 4;
+        }
+        
+        return (
+            Elements
+            + (
+                (
+                    AlignmentInElements 
+                    - (Elements % AlignmentInElements)
+                ) 
+                % AlignmentInElements
+            )
+        );
+    }
+    
     template<U32 __RowCount, U32 __ColumnCount, typename __F_Element, class __F_Config>
     struct TA_DefaultData
     {

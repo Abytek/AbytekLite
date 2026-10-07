@@ -23,7 +23,7 @@ namespace Abytek
     struct TF_Data<2, 2, U64, __F_Config> : __F_Config::template TA_DefaultData<2, 2, U64, __F_Config>
     {
         using F_This = TF_Data;
-        ABYTEK_BEGIN_REFLECTOR(I_Serializable)
+        ABYTEK_BEGIN_REFLECTOR(I_JSONSerializable)
         ABYTEK_END_REFLECTOR(F_This);
         
         static constexpr U64 RowCount = 2;
@@ -33,6 +33,8 @@ namespace Abytek
         using F_Config = __F_Config;
 
         using F_PassedArgument = const TF_Data&;
+        
+        ABYTEK_DEFINE_SHALLOW_READ_WRITE_SIZE(CalculateDataNumElementsWithPadding(RowCount) * CalculateDataNumElementsWithPadding(ColumnCount) * sizeof(F_Element));
 
         using F_Column = TF_Data<RowCount, 1, F_Element, F_Config>;
         using PA_Column = typename F_Column::F_PassedArgument;

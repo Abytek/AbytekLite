@@ -132,25 +132,13 @@ void MainMS(
             GeometryAllocationStructure,
             VertexIndex
         );
-        float3 VertexNormal = Abytek::H_ECMSMesh::LoadVertexNormal(
-            GeometryAddress,
-            GeometryAllocationStructure,
-            VertexIndex
-        );
-        float2 VertexUV = Abytek::H_ECMSMesh::LoadVertexUV(
-            GeometryAddress,
-            GeometryAllocationStructure,
-            VertexIndex
-        );
 
         float3 LocalPosition = VertexPosition;
-        float3 LocalNormal = VertexNormal;
 
         Abytek::SRP::SimplePrimitive::F_MaterialDataVS MaterialDataVS;
         MaterialVS(MaterialDataVS);
 
         float3 WorldPosition = mul(TransformMatrix, float4(LocalPosition, 1.0f)).xyz;
-        float3 WorldNormal = mul((float3x3)InverseTransposeTransformMatrix, LocalNormal);
 
         float3 ViewSpacePosition = mul(ViewUniformData.ViewMatrix, float4(WorldPosition, 1.0f)).xyz;
         float4 ClipPosition = mul(ViewUniformData.ProjectionMatrix, float4(ViewSpacePosition, 1.0f));
@@ -159,9 +147,6 @@ void MainMS(
         Abytek::F_SRPSimplePrimitiveVSOutput VSOutput;
         VSOutput.ClipOrPixelPosition = ClipPosition;
         VSOutput.NDCPosition = (ClipPosition / ClipPosition.w).xyz;
-        VSOutput.WorldPosition = WorldPosition;
-        VSOutput.WorldNormal = WorldNormal;
-        VSOutput.UV = VertexUV;
         OutVertices[GroupThreadID.x] = VSOutput;
     }
 

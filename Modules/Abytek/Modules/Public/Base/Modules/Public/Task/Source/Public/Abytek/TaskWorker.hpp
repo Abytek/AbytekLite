@@ -1,24 +1,14 @@
 ﻿#pragma once
 
 #include "Abytek/Base.Task.prerequisites.pch.hpp"
+#include "Abytek/TaskWorkerFlag.hpp"
+#include "Abytek/TaskScheduler.hpp"
 #include "Abytek/TaskQueue.hpp"
 
 
 namespace Abytek
 {
     class F_TaskContextPool;
-    
-    enum class E_TaskWorkerFlag : U8
-    {
-        NONE = 0x0,
-        LOW_FREQUENCY = 0x1,
-        HIGH_FREQUENCY = 0x2,
-        MAIN_THREAD = 0x4,
-        DEDICATED_THREAD = 0x8,
-        
-        DEFAULT = NONE
-    };
-    ABYTEK_DEFINE_FLAG_OPERATORS(E_TaskWorkerFlag);
     
     class ABYTEK_BASE_TASK_API F_TaskWorker final :
         public A_Object, 

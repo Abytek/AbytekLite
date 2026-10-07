@@ -56,7 +56,8 @@ namespace Abytek
         A_RHITemplate::GatherSortedListWithDependencies(
             TemplateDatabase.Weak(),
             Templates,
-            TemplatesToWrite
+            TemplatesToWrite,
+            true // dont serialize unlisted root templatess
         );
         
         ABYTEK_FEEDBACK_STATUS_CHECK(View << TemplatesToWrite.size());

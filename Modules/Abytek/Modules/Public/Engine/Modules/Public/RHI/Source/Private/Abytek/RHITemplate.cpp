@@ -59,7 +59,8 @@ namespace Abytek
     void A_RHITemplate::GatherSortedListWithDependencies(
         const TW_Valid<A_RHITemplateDatabase>& TemplateDatabase, 
         const TF_Vector<TS<A_RHITemplate>>& Templates,
-        TF_Vector<TS<A_RHITemplate>>& OutList
+        TF_Vector<TS<A_RHITemplate>>& OutList,
+        B8 SkipUnlistedRoot
     )
     {
         TF_Set<TS<A_RHITemplate>> InitialTemplateSet;
@@ -82,7 +83,8 @@ namespace Abytek
                 for (const auto& Template : CachedTemplateToGather)
                 {
                     if (
-                        Template->IsRootTemplate()
+                        SkipUnlistedRoot
+                        && Template->IsRootTemplate()
                         && !InitialTemplateSet.contains(Template)
                     )
                     {
@@ -135,7 +137,12 @@ namespace Abytek
                     auto& DependencyLevel = TemplateDependencyLevels[TemplateIndex];
                     for (auto DependenyHashCode : Template->GetDependencyHashCodes())
                     {
-                        auto DependencyIndex = TemplateHashCodeToIndex.find(DependenyHashCode)->second;
+                        auto TemplateHashCodeToIndexIt = TemplateHashCodeToIndex.find(DependenyHashCode);
+                        if (TemplateHashCodeToIndexIt == TemplateHashCodeToIndex.end())
+                        {
+                            continue;
+                        }
+                        auto DependencyIndex = TemplateHashCodeToIndexIt->second;
                         auto& DependencyLevelOfDependency = TemplateDependencyLevels[DependencyIndex];
                         DependencyLevelOfDependency = Max(DependencyLevelOfDependency, DependencyLevel + 1);
                         TemplateIndicesToUpdateDependencyLevels.push_back(DependencyIndex);

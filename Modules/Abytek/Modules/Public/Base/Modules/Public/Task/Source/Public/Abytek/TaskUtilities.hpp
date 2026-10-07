@@ -7,6 +7,7 @@
 #include "Abytek/TaskContext.hpp"
 #include "Abytek/TaskWorker.hpp"
 #include "Abytek/TaskManager.hpp"
+#include "Abytek/TaskScheduler_HighFrequencyWorkers.hpp"
 
 
 namespace Abytek
@@ -17,6 +18,11 @@ namespace Abytek
     
     struct ABYTEK_BASE_TASK_API H_TaskUtilities
     {
+        static ABYTEK_FORCE_INLINE TW_Valid<I_TaskScheduler> GetMainScheduler()
+        {
+            return F_TaskScheduler_HighFrequencyWorkers::GetInstance();
+        }
+        
         static ABYTEK_FORCE_INLINE TS_Unmanaged<F_TaskPromise> Schedule(const TW_Valid<I_TaskScheduler>& Scheduler, F_TaskInstanceSet&& InstanceSet)
         {
             return Scheduler->Schedule(ABYTEK_MOVE(InstanceSet));
@@ -110,11 +116,11 @@ namespace Abytek
         
         static ABYTEK_FORCE_INLINE TS_Unmanaged<F_TaskPromise> Schedule(F_TaskInstanceSet&& InstanceSet)
         {
-            return Schedule(F_TaskManager::GetInstance(), ABYTEK_FORWARD(InstanceSet));
+            return Schedule(GetMainScheduler(), ABYTEK_FORWARD(InstanceSet));
         }
         static ABYTEK_FORCE_INLINE TS_Unmanaged<F_TaskPromise> Schedule(const F_TaskInstanceSet& InstanceSet)
         {
-            return Schedule(F_TaskManager::GetInstance(), ABYTEK_FORWARD(InstanceSet));
+            return Schedule(GetMainScheduler(), ABYTEK_FORWARD(InstanceSet));
         }
         
         static ABYTEK_FORCE_INLINE TS_Unmanaged<F_TaskPromise> Schedule(F_TaskFunctor&& Functor, U32 Count = 1, U32 BatchSize = 32, U32 Offset = 0)
@@ -125,7 +131,7 @@ namespace Abytek
             InstanceSet.BatchSize = BatchSize;
             InstanceSet.Offset = Offset;
             return Schedule(
-                F_TaskManager::GetInstance(),
+                GetMainScheduler(),
                 ABYTEK_MOVE(InstanceSet)
             );
         }
@@ -138,7 +144,7 @@ namespace Abytek
             InstanceSet.BatchSize = BatchSize;
             InstanceSet.Offset = Offset;
             return Schedule(
-                F_TaskManager::GetInstance(),
+                GetMainScheduler(),
                 ABYTEK_MOVE(InstanceSet)
             );
         }
@@ -152,7 +158,7 @@ namespace Abytek
             InstanceSet.BatchSize = BatchSize;
             InstanceSet.Offset = Offset;
             return Schedule(
-                F_TaskManager::GetInstance(),
+                GetMainScheduler(),
                 ABYTEK_MOVE(InstanceSet)
             );
         }
@@ -165,7 +171,7 @@ namespace Abytek
             InstanceSet.BatchSize = BatchSize;
             InstanceSet.Offset = Offset;
             return Schedule(
-                F_TaskManager::GetInstance(),
+                GetMainScheduler(),
                 ABYTEK_MOVE(InstanceSet)
             );
         }
@@ -179,7 +185,7 @@ namespace Abytek
             InstanceSet.BatchSize = BatchSize;
             InstanceSet.Offset = Offset;
             return Schedule(
-                F_TaskManager::GetInstance(),
+                GetMainScheduler(),
                 ABYTEK_MOVE(InstanceSet)
             );
         }
@@ -194,7 +200,7 @@ namespace Abytek
             InstanceSet.BatchSize = BatchSize;
             InstanceSet.Offset = Offset;
             return Schedule(
-                F_TaskManager::GetInstance(),
+                GetMainScheduler(),
                 ABYTEK_MOVE(InstanceSet)
             );
         }

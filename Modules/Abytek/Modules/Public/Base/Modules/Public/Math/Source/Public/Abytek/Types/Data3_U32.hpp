@@ -23,7 +23,7 @@ namespace Abytek
     struct TF_Data<3, 1, U32, __F_Config> : __F_Config::template TA_DefaultData<3, 1, U32, __F_Config>
     {
         using F_This = TF_Data;
-        ABYTEK_BEGIN_REFLECTOR(I_Serializable)
+        ABYTEK_BEGIN_REFLECTOR(I_JSONSerializable)
         ABYTEK_END_REFLECTOR(F_This);
         
         static constexpr U32 RowCount = 3;
@@ -37,6 +37,8 @@ namespace Abytek
 #else
         using F_PassedArgument = const TF_Data&;
 #endif
+        
+        ABYTEK_DEFINE_SHALLOW_READ_WRITE_SIZE(CalculateDataNumElementsWithPadding(RowCount) * CalculateDataNumElementsWithPadding(ColumnCount) * sizeof(F_Element));
         
         template<U32 __RowCount>
         using TF_RebindRowCount = TF_Data<__RowCount, ColumnCount, F_Element, F_Config>;

@@ -216,6 +216,11 @@ namespace Abytek
             const TF_Set<F_RHITemplateHashCode>& RootTemplateHashCodes,
             TF_Function<void(TF_Vector<TS<A_RHITemplate>>& OutNewTemplates)>&& MainWork
         );
+        // Execute compile commands in parallel
+        static void ExecuteParallelCompileCommands(
+            const TF_Vector<TF_Function<void(TF_Vector<TS<A_RHITemplate>>& OutTemplates)>>& Commands,
+            TF_Vector<TS<A_RHITemplate>>& OutNewTemplates
+        );
 #endif
     };
 }

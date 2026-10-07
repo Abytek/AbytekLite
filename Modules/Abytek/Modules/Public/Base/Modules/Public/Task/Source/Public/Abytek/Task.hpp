@@ -7,6 +7,7 @@
 namespace Abytek
 {
     class F_TaskContext;
+    class F_TaskWorker;
     
     using F_TaskId = U64;
     static constexpr F_TaskId INVALID_TASK_ID = ~F_TaskId(0);
@@ -87,27 +88,5 @@ namespace Abytek
         U32 Count = 1;
         U32 BatchSize = 32;
         U32 Offset = 0;
-    };
-
-    struct I_TaskScheduler
-    {
-    protected:
-        virtual void OnSchedule(F_TaskInstanceSet&& InstanceSet) = 0;
-
-    public:
-        TS_Unmanaged<F_TaskPromise> Schedule(F_TaskInstanceSet&& InstanceSet)
-        {
-            if (!InstanceSet.Promise)
-            {
-                InstanceSet.Promise = TS_Unmanaged<F_TaskPromise>()(InstanceSet.Count);
-            }
-            TS_Unmanaged<F_TaskPromise> CachedPromise = InstanceSet.Promise;
-            OnSchedule(ABYTEK_MOVE(InstanceSet));
-            return CachedPromise;
-        }
-        ABYTEK_FORCE_INLINE TS_Unmanaged<F_TaskPromise> Schedule(const F_TaskInstanceSet& InstanceSet)
-        {
-            return Schedule(F_TaskInstanceSet(InstanceSet));
-        }
     };
 }

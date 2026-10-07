@@ -15,7 +15,7 @@ namespace Abytek
     template<typename __F_Element>
     struct TF_Transform
     {
-        ABYTEK_BEGIN_REFLECTOR(I_Serializable)
+        ABYTEK_BEGIN_REFLECTOR(I_JSONSerializable)
         ABYTEK_END_REFLECTOR(TF_Transform);
         
         using F_Element = __F_Element;
@@ -23,6 +23,12 @@ namespace Abytek
         using F_Quaternion = TF_Quaternion<F_Element>;
         using F_Matrix4x4 = TF_Matrix4x4<F_Element>;
         using F_Rotator = TF_Rotator<F_Element>;
+        
+        ABYTEK_DEFINE_SHALLOW_READ_WRITE_SIZE(
+            sizeof(F_Vector3)  
+            + sizeof(F_Rotator)  
+            + sizeof(F_Vector3)  
+        );
 
         F_Vector3 Position;
         F_Rotator Rotation;

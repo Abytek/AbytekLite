@@ -3,6 +3,8 @@
 #include "Abytek/GlobalRenderPipeline.hpp"
 #include "Abytek/RenderCoreHelper.hpp"
 #include "Abytek/ApplicationModuleContainer.hpp"
+#include "Abytek/TaskScheduler_LowFrequencyWorkers.hpp"
+#include "Abytek/TaskScheduler_MediumFrequencyWorkers.hpp"
 #include "Abytek/Development/Cook/CookUtilities.hpp"
 #include "Abytek/Development/CoreCookGraph/HighLevelCookRange.hpp"
 
@@ -37,10 +39,10 @@ namespace Abytek
         const TW_Valid<A_RenderPackTemplateMap>& RenderPackTemplateMap
     )
     {
-        TF_Vector<TF_Function<void(TF_Vector<TS<A_RHITemplate>>& OutTemplates)>> Commands;
         TF_Set<F_RHITemplateHashCode> TemplateHashCodesToCompile;
         TF_Set<F_RHITemplateHashCode> TemplateHashCodes;
         
+        // Gather global render binding types
         TF_Vector<TF_ReflectionTypeHandle<F_GlobalRenderBinding>> GlobalRenderBindingTypes;
         {
             auto BaseSubsystemType = TF_ReflectionTypeHandle<F_GlobalRenderBinding>(F_ReflectionContext::GetGlobal());
@@ -62,27 +64,8 @@ namespace Abytek
                 }
             );
         }
-        for (const auto& Type : GlobalRenderBindingTypes)
-        {
-            const auto& Metadata = Type->GetMetadata();
-            auto MetadataElementName = F_GlobalRenderBinding::GetMetadataElementName_BuildCommandsAndCompilationSet();
-            ABYTEK_ENGINE_RENDER_CORE_ASSERT(Metadata.HasElement(MetadataElementName))
-                << ABYTEK_TEXT("Not found BuildCommandsAndCompilationSet metadata element in global render binding type: ")
-                << *Type->GetFullName();
-            const auto& MetadataElement = Metadata.Get(MetadataElementName);
-            const auto& CastedMetadataElement = AnyCast<F_GlobalRenderBinding::F_Metadata_BuildCommandsAndCompilationSet>(MetadataElement);
-            ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
-                CastedMetadataElement(
-                    ABYTEK_STHIS(), 
-                    SerializableEnvironment, 
-                    RenderPackTemplateMap, 
-                    Commands, 
-                    TemplateHashCodesToCompile,
-                    TemplateHashCodes
-                )
-            );
-        }
-            
+        
+        // Gather global render pipeline types
         TF_Vector<TF_ReflectionTypeHandle<F_GlobalRenderPipeline>> GlobalRenderPipelineTypes;
         {
             auto BaseSubsystemType = TF_ReflectionTypeHandle<F_GlobalRenderPipeline>(F_ReflectionContext::GetGlobal());
@@ -104,6 +87,32 @@ namespace Abytek
                 }
             );
         }
+        
+        // Gather necessary items to compile global bindings
+        TF_Vector<TF_Function<void(TF_Vector<TS<A_RHITemplate>>& OutTemplates)>> Commands_CompileBinding;
+        for (const auto& Type : GlobalRenderBindingTypes)
+        {
+            const auto& Metadata = Type->GetMetadata();
+            auto MetadataElementName = F_GlobalRenderBinding::GetMetadataElementName_BuildCommandsAndCompilationSet();
+            ABYTEK_ENGINE_RENDER_CORE_ASSERT(Metadata.HasElement(MetadataElementName))
+                << ABYTEK_TEXT("Not found BuildCommandsAndCompilationSet metadata element in global render binding type: ")
+                << *Type->GetFullName();
+            const auto& MetadataElement = Metadata.Get(MetadataElementName);
+            const auto& CastedMetadataElement = AnyCast<F_GlobalRenderBinding::F_Metadata_BuildCommandsAndCompilationSet>(MetadataElement);
+            ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
+                CastedMetadataElement(
+                    ABYTEK_STHIS(), 
+                    SerializableEnvironment, 
+                    RenderPackTemplateMap, 
+                    Commands_CompileBinding, 
+                    TemplateHashCodesToCompile,
+                    TemplateHashCodes
+                )
+            );
+        }
+        
+        // Gather necessary items to compile global pipelines
+        TF_Vector<TF_Function<void(TF_Vector<TS<A_RHITemplate>>& OutTemplates)>> Commands_CompilePipeline;
         for (const auto& Type : GlobalRenderPipelineTypes)
         {
             const auto& Metadata = Type->GetMetadata();
@@ -118,13 +127,14 @@ namespace Abytek
                     ABYTEK_STHIS(), 
                     SerializableEnvironment, 
                     RenderPackTemplateMap, 
-                    Commands, 
+                    Commands_CompilePipeline, 
                     TemplateHashCodesToCompile,
                     TemplateHashCodes
                 )
             );
         }
         
+        // Compile
         ExecuteExclusiveTemplateCompilation(
             SerializableEnvironment,
             RenderPackTemplateMap,
@@ -132,10 +142,8 @@ namespace Abytek
             TemplateHashCodes,
             [&](TF_Vector<TS<A_RHITemplate>>& OutNewTemplates)
             {
-                for (const auto& Command : Commands)
-                {
-                    Command(OutNewTemplates);
-                }
+                ExecuteParallelCompileCommands(Commands_CompileBinding, OutNewTemplates);
+                ExecuteParallelCompileCommands(Commands_CompilePipeline, OutNewTemplates);
             }
         );
     }

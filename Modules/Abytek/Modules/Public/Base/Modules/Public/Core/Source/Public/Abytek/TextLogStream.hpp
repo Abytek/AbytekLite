@@ -149,6 +149,19 @@ namespace Abytek
     {
     private:
         std::basic_stringstream<F_TextChar> _TextStream;
+        struct F_Lock
+        {
+            boost::atomic_flag Flag;
+            void Lock()
+            {
+                 while (Flag.test_and_set(boost::memory_order_release));
+            }
+            void Unlock()
+            {
+                 Flag.clear(boost::memory_order_release);
+            }
+        };
+        mutable F_Lock _Lock;
         E_LogType _LogType = E_LogType::NONE;
 
     public:

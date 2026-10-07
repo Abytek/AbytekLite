@@ -12,6 +12,135 @@ namespace Abytek
     struct F_ArchiveReadOnlyView;
     struct F_ArchiveReadWriteView;
     
+    namespace Internal::Archive
+    {
+        template<typename __F, typename = void>
+        struct TH_GetShallowReadWriteAlignment
+        {
+            static constexpr Sz Get()
+            {
+                return ABYTEK_ALIGNOF(__F);
+            }
+        };
+        template<typename __F>
+        struct TH_GetShallowReadWriteAlignment<__F, std::void_t<decltype(__F::StaticShallowReadWriteAlignment)>>
+        {
+            static constexpr Sz Get()
+            {
+                return __F::StaticShallowReadWriteAlignment;
+            }
+        };
+        
+        template<typename __F, typename = void>
+        struct TH_GetShallowReadWriteOffset
+        {
+            static constexpr Sz Get()
+            {
+                return 0;
+            }
+        };
+        template<typename __F>
+        struct TH_GetShallowReadWriteOffset<__F, std::void_t<decltype(__F::StaticShallowReadWriteOffset)>>
+        {
+            static constexpr Sz Get()
+            {
+                return __F::StaticShallowReadWriteOffset;
+            }
+        };
+        
+        template<typename __F, typename = void>
+        struct TH_GetShallowReadWriteSize
+        {
+            static constexpr Sz Get()
+            {
+                if constexpr (std::is_same_v<__F, B8>)
+                {
+                    return sizeof(B8);
+                }
+                if constexpr (std::is_same_v<__F, U8>)
+                {
+                    return sizeof(U8);
+                }
+                if constexpr (std::is_same_v<__F, U16>)
+                {
+                    return sizeof(U16);
+                }
+                if constexpr (std::is_same_v<__F, U32>)
+                {
+                    return sizeof(U32);
+                }
+                if constexpr (std::is_same_v<__F, U64>)
+                {
+                    return sizeof(U64);
+                }
+                if constexpr (std::is_same_v<__F, I8>)
+                {
+                    return sizeof(I8);
+                }
+                if constexpr (std::is_same_v<__F, I16>)
+                {
+                    return sizeof(I16);
+                }
+                if constexpr (std::is_same_v<__F, I32>)
+                {
+                    return sizeof(I32);
+                }
+                if constexpr (std::is_same_v<__F, I64>)
+                {
+                    return sizeof(I64);
+                }
+                if constexpr (std::is_enum_v<std::remove_const_t<__F>>)
+                {
+                    return sizeof(__F);
+                }
+                return 0;
+            }
+        };
+        template<typename __F>
+        struct TH_GetShallowReadWriteSize<__F, std::void_t<decltype(__F::StaticShallowReadWriteSize)>>
+        {
+            static constexpr Sz Get()
+            {
+                return __F::StaticShallowReadWriteSize;
+            }
+        };
+    }
+    template<typename __F>
+    constexpr Sz GetShallowReadWriteAlignment()
+    {
+        return Internal::Archive::TH_GetShallowReadWriteAlignment<__F>::Get();
+    }
+    template<typename __F>
+    constexpr Sz GetShallowReadWriteOffset()
+    {
+        return Internal::Archive::TH_GetShallowReadWriteOffset<__F>::Get();
+    }
+    template<typename __F>
+    constexpr Sz GetShallowReadWriteSize()
+    {
+        return Internal::Archive::TH_GetShallowReadWriteSize<__F>::Get();
+    }
+    template<typename __F>
+    constexpr B8 IsShallowReadWriteType()
+    {
+        return GetShallowReadWriteSize<__F>() > 0;
+    }
+    
+    template<typename __F>
+    constexpr B8 IsArrayShallowReadWriteType()
+    {
+        return (
+            (
+                (GetShallowReadWriteOffset<__F>() + GetShallowReadWriteSize<__F>()) 
+                == sizeof(__F)
+            )
+            && (
+                GetShallowReadWriteAlignment<__F>()
+                == ABYTEK_ALIGNOF(__F)
+            )
+        );
+    }
+    
     struct ABYTEK_ALIGN(64) F_ArchiveDataAlignedElement
     {
     };
@@ -265,7 +394,7 @@ namespace Abytek
             return DataPtr->GetSpan().crend();
         }
         
-        template<typename __F>
+        template<typename __F = U8>
         ABYTEK_FORCE_INLINE auto Shift(Sz Num = 1, Sz Alignment = ABYTEK_ALIGNOF(__F)) noexcept
         {
             ABYTEK_BASE_CORE_ASSERT(Alignment <= ABYTEK_ALIGNOF(F_ArchiveDataAlignedElement)) 
@@ -323,6 +452,16 @@ namespace Abytek
         F_ArchiveReadWriteView GetReadWrite() const noexcept;
         
         template<typename __F = U8>
+        ABYTEK_FORCE_INLINE const std::remove_const_t<__F>* GetPointer() const noexcept
+        {
+            return (const std::remove_const_t<__F>*)(DataPtr->GetSpan().data());
+        }
+        template<typename __F = U8>
+        ABYTEK_FORCE_INLINE const std::remove_const_t<__F>* GetCurrentPointer() const noexcept
+        {
+            return (const std::remove_const_t<__F>*)(DataPtr->GetSpan().data() + Offset);
+        }
+        template<typename __F = U8>
         ABYTEK_FORCE_INLINE auto GetSpan() const noexcept
         {
             auto U8Span = DataPtr->GetSpan();
@@ -330,6 +469,15 @@ namespace Abytek
                 (const std::remove_const_t<__F>*)U8Span.data(),
                 U8Span.size() / sizeof(__F)
             );
+        }
+        template<typename __F = U8>
+        ABYTEK_FORCE_INLINE auto AccessArray(Sz Num, Sz Alignment = ABYTEK_ALIGNOF(__F)) noexcept
+        {
+            ABYTEK_BASE_CORE_ASSERT(Alignment <= ABYTEK_ALIGNOF(F_ArchiveDataAlignedElement)) 
+                << "Alignment must be smaller than or equal to ABYTEK_ALIGNOF(F_ArchiveDataAlignedElement) = " 
+                << ABYTEK_ALIGNOF(F_ArchiveDataAlignedElement);
+            auto ResultOffset = ShiftNoResize<__F>(Num, Alignment);
+            return (const std::remove_const_t<__F>*)(DataPtr->GetSpan().data() + ResultOffset);
         }
         template<typename __F = U8>
         ABYTEK_FORCE_INLINE auto AccessSpan(Sz Num, Sz Alignment = ABYTEK_ALIGNOF(__F)) noexcept
@@ -352,6 +500,33 @@ namespace Abytek
             auto ResultOffset = ShiftNoResize<__F>(1, Alignment);
             return *(const std::remove_const_t<__F>*)(DataPtr->GetSpan().data() + ResultOffset);
         }
+        
+        template<typename __F ABYTEK_REQUIRES(IsShallowReadWriteType<__F>())>
+        friend F_FeedbackStatus operator >> (F_ArchiveReadOnlyView& View, __F& Value)
+        {
+            static constexpr Sz ShallowReadWriteAlignment = GetShallowReadWriteAlignment<__F>();
+            static constexpr Sz ShallowReadWriteOffset = GetShallowReadWriteOffset<__F>();
+            static constexpr Sz ShallowReadWriteSize = GetShallowReadWriteSize<__F>();
+            
+            if (!View.CheckSize(ShallowReadWriteSize, ShallowReadWriteAlignment))
+            {
+                return F_FeedbackStatus::MakeFailed(
+                    ToText("Archive out of bounds")
+                    + ABYTEK_TEXT(", current offset in bytes: ")
+                    + ToText(View.Offset)
+                    + ABYTEK_TEXT(", requested additional size in bytes: ")
+                    + ToText(ShallowReadWriteSize)
+                    + ABYTEK_TEXT(", size in bytes: ")
+                    + ToText(View.GetSize())
+                );
+            }
+            memcpy(
+                ((U8*)&Value) + ShallowReadWriteOffset,
+                View.AccessArray(ShallowReadWriteSize, ShallowReadWriteAlignment),
+                ShallowReadWriteSize
+            );
+            return F_FeedbackStatus::MakeSucceeded();
+        }
     };
     struct F_ArchiveReadWriteView : F_ArchiveViewBase
     {
@@ -372,6 +547,16 @@ namespace Abytek
         F_ArchiveReadOnlyView GetReadOnly() const noexcept;
         
         template<typename __F = U8>
+        ABYTEK_FORCE_INLINE std::remove_const_t<__F>* GetPointer() const noexcept
+        {
+            return (std::remove_const_t<__F>*)(DataPtr->GetSpan().data());
+        }
+        template<typename __F = U8>
+        ABYTEK_FORCE_INLINE std::remove_const_t<__F>* GetCurrentPointer() const noexcept
+        {
+            return (std::remove_const_t<__F>*)(DataPtr->GetSpan().data() + Offset);
+        }
+        template<typename __F = U8>
         ABYTEK_FORCE_INLINE auto GetSpan() const noexcept
         {
             auto U8Span = DataPtr->GetSpan();
@@ -379,6 +564,15 @@ namespace Abytek
                 (std::remove_const_t<__F>*)U8Span.data(),
                 U8Span.size() / sizeof(__F)
             );
+        }
+        template<typename __F = U8>
+        ABYTEK_FORCE_INLINE auto AccessArray(Sz Num, Sz Alignment = ABYTEK_ALIGNOF(__F)) noexcept
+        {
+            ABYTEK_BASE_CORE_ASSERT(Alignment <= ABYTEK_ALIGNOF(F_ArchiveDataAlignedElement)) 
+                << "Alignment must be smaller than or equal to ABYTEK_ALIGNOF(F_ArchiveDataAlignedElement) = " 
+                << ABYTEK_ALIGNOF(F_ArchiveDataAlignedElement);
+            auto ResultOffset = Shift<__F>(Num, Alignment);
+            return (std::remove_const_t<__F>*)(DataPtr->GetSpan().data() + ResultOffset);
         }
         template<typename __F = U8>
         ABYTEK_FORCE_INLINE auto AccessSpan(Sz Num, Sz Alignment = ABYTEK_ALIGNOF(__F)) noexcept
@@ -402,6 +596,15 @@ namespace Abytek
             return *(std::remove_const_t<__F>*)(DataPtr->GetSpan().data() + ResultOffset);
         }
         template<typename __F = U8>
+        ABYTEK_FORCE_INLINE auto AccessArrayNoResize(Sz Num, Sz Alignment = ABYTEK_ALIGNOF(__F)) noexcept
+        {
+            ABYTEK_BASE_CORE_ASSERT(Alignment <= ABYTEK_ALIGNOF(F_ArchiveDataAlignedElement)) 
+                << "Alignment must be smaller than or equal to ABYTEK_ALIGNOF(F_ArchiveDataAlignedElement) = " 
+                << ABYTEK_ALIGNOF(F_ArchiveDataAlignedElement);
+            auto ResultOffset = ShiftNoResize<__F>(Num, Alignment);
+            return (std::remove_const_t<__F>*)(DataPtr->GetSpan().data() + ResultOffset);
+        }
+        template<typename __F = U8>
         ABYTEK_FORCE_INLINE auto AccessSpanNoResize(Sz Num, Sz Alignment = ABYTEK_ALIGNOF(__F)) noexcept
         {
             ABYTEK_BASE_CORE_ASSERT(Alignment <= ABYTEK_ALIGNOF(F_ArchiveDataAlignedElement)) 
@@ -422,6 +625,21 @@ namespace Abytek
             auto ResultOffset = ShiftNoResize<__F>(1, Alignment);
             return *(std::remove_const_t<__F>*)(DataPtr->GetSpan().data() + ResultOffset);
         }
+        
+        template<typename __F ABYTEK_REQUIRES(IsShallowReadWriteType<__F>())>
+        friend F_FeedbackStatus operator << (F_ArchiveReadWriteView& View, const __F& Value)
+        {
+            static constexpr Sz ShallowReadWriteAlignment = GetShallowReadWriteAlignment<__F>();
+            static constexpr Sz ShallowReadWriteOffset = GetShallowReadWriteOffset<__F>();
+            static constexpr Sz ShallowReadWriteSize = GetShallowReadWriteSize<__F>();
+        
+            memcpy(
+                View.AccessArray(ShallowReadWriteSize, ShallowReadWriteAlignment),
+                ((U8*)&Value) + ShallowReadWriteOffset,
+                ShallowReadWriteSize
+            );
+            return F_FeedbackStatus::MakeSucceeded();
+        }
     };
     
     ABYTEK_FORCE_INLINE F_ArchiveReadWriteView F_ArchiveReadOnlyView::GetReadWrite() const noexcept
@@ -433,70 +651,10 @@ namespace Abytek
         return { GetBase() };
     }
     
-    struct I_ArchiveReader
-    {
-        virtual F_FeedbackStatus ReadArchive(F_ArchiveReadOnlyView& View) = 0;
-        
-        friend F_FeedbackStatus operator >> (F_ArchiveReadOnlyView& View, I_ArchiveReader& ArchiveReader)
-        {
-            return ArchiveReader.ReadArchive(View);
-        }
-    };
-    struct I_ArchiveWriter
-    {
-        virtual F_FeedbackStatus WriteArchive(F_ArchiveReadWriteView& View) = 0;
-        
-        friend F_FeedbackStatus operator << (F_ArchiveReadWriteView& View, I_ArchiveWriter& ArchiveReader)
-        {
-            return ArchiveReader.WriteArchive(View);
-        }
-    };
     template<typename __F>
     ABYTEK_FORCE_INLINE F_FeedbackStatus operator >> (F_ArchiveReadWriteView& View, __F& Value)
     {
         return (View.GetReadOnly() >> Value);
-    }
-    
-    template<typename __F>
-    constexpr B8 IsShallowReadWriteType()
-    {
-        if constexpr (std::is_same_v<__F, B8>)
-        {
-            return true;
-        }
-        if constexpr (std::is_same_v<__F, U8>)
-        {
-            return true;
-        }
-        if constexpr (std::is_same_v<__F, U16>)
-        {
-            return true;
-        }
-        if constexpr (std::is_same_v<__F, U32>)
-        {
-            return true;
-        }
-        if constexpr (std::is_same_v<__F, U64>)
-        {
-            return true;
-        }
-        if constexpr (std::is_same_v<__F, I8>)
-        {
-            return true;
-        }
-        if constexpr (std::is_same_v<__F, I16>)
-        {
-            return true;
-        }
-        if constexpr (std::is_same_v<__F, I32>)
-        {
-            return true;
-        }
-        if constexpr (std::is_same_v<__F, I64>)
-        {
-            return true;
-        }
-        return false;
     }
     
     namespace Internal::Archive
@@ -541,3 +699,15 @@ namespace Abytek
         return Internal::Archive::TH_HasDeserialize<TValue>::value;
     }
 }
+
+#define ABYTEK_DEFINE_SHALLOW_READ_WRITE_ALIGNMENT(...) \
+            ABYTEK_PUBLIC_KEYWORD \
+                static constexpr Abytek::Sz StaticShallowReadWriteAlignment = __VA_ARGS__;
+
+#define ABYTEK_DEFINE_SHALLOW_READ_WRITE_OFFSET(...) \
+            ABYTEK_PUBLIC_KEYWORD \
+                static constexpr Abytek::Sz StaticShallowReadWriteOffset = __VA_ARGS__;
+
+#define ABYTEK_DEFINE_SHALLOW_READ_WRITE_SIZE(...) \
+            ABYTEK_PUBLIC_KEYWORD \
+                static constexpr Abytek::Sz StaticShallowReadWriteSize = __VA_ARGS__;

@@ -29,6 +29,7 @@ namespace Abytek
         _Name = F_Text(ABYTEK_TEXT("Abytek.TaskWorker("))
             + ABYTEK_TEXT("Index = ") + ToText(Index)
             + (FlagHas(Flags, E_TaskWorkerFlag::LOW_FREQUENCY) ? ABYTEK_TEXT(", Low Frequency") : ABYTEK_TEXT(""))
+            + (FlagHas(Flags, E_TaskWorkerFlag::MEDIUM_FREQUENCY) ? ABYTEK_TEXT(", Medium Frequency") : ABYTEK_TEXT(""))
             + (FlagHas(Flags, E_TaskWorkerFlag::HIGH_FREQUENCY) ? ABYTEK_TEXT(", High Frequency") : ABYTEK_TEXT(""))
             + (FlagHas(Flags, E_TaskWorkerFlag::MAIN_THREAD) ? ABYTEK_TEXT(", Main") : ABYTEK_TEXT(""))
             + ABYTEK_TEXT(")");
@@ -190,7 +191,8 @@ namespace Abytek
         U32 NextSearchedIndex = 0;
         auto TaskManager = F_TaskManager::GetInstance();
         const auto& TaskWorkers = TaskManager->GetWorkers();
-        for (U32 Idx = 0; Idx < TaskWorkers.size(); ++Idx)
+        U32 NumTaskWorkers = static_cast<U32>(TaskWorkers.size());
+        for (U32 Idx = 0; Idx < NumTaskWorkers; ++Idx)
         {
             const auto& TaskWorker = TaskWorkers[Idx];
             if (FlagHas(TaskWorker->GetFlags(), Flags))
