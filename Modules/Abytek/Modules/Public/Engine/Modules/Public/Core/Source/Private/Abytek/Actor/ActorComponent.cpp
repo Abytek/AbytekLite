@@ -16,6 +16,7 @@ namespace Abytek
     {
         ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::A_ActorComponent"));
         ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(_Tags);
+        ABYTEK_REFLECT_PROPERTY(_ChildInstanceComponents);
     }
 
     F_Name A_ActorComponent::GetTickUpdateFunctionName()

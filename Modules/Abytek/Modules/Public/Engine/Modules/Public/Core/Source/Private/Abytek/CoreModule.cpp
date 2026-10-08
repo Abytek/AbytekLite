@@ -10,6 +10,7 @@
 #include "Abytek/Development/Cook/CookGraph.hpp"
 #include "Abytek/Development/CoreCookGraph/AssetAnalyzeCookRange.hpp"
 #include "Abytek/Development/CoreCookGraph/HighLevelCookRange.hpp"
+#include "Abytek/Development/WorldContextDevelopmentData.hpp"
 #include "Abytek/Cookable.hpp"
 #include "Abytek/Level/Level.hpp"
 #include "Abytek/World/World.hpp"
@@ -65,6 +66,7 @@ namespace Abytek
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_DATA
         RegisterStaticType<F_DevelopmentData>();
         RegisterStaticType<F_DevelopmentDataInstance>();
+        RegisterStaticType<F_WorldContextDevelopmentData>();
 #endif
         RegisterStaticType<F_GlobalTime>();
     }

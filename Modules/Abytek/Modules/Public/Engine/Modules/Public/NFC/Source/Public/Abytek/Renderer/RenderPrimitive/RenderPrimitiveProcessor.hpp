@@ -82,5 +82,9 @@ namespace Abytek
         
     protected:
         virtual void InitGPUData(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, const TS<F_GPUData>& GPUData) = 0;
+        
+    protected:
+        virtual void OnActivatePrimitiveSet(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, const TS<A_RenderPrimitiveSet>& PrimitiveSet);
+        virtual void OnDeactivatePrimitiveSet(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, const TS<A_RenderPrimitiveSet>& PrimitiveSet);
     };
 }

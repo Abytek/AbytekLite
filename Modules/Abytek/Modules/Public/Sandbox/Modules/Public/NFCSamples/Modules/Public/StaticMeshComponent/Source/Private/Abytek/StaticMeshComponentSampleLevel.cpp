@@ -69,7 +69,16 @@ namespace Abytek
             {
                 SpectatorActor->AddOwnedComponent(SampleSpectatorComponent);
             }
-            SampleSpectatorComponent->GetCameraComponent()->GetSceneComponent()->AddLocalPositionOffset(F_Vector3::Forward() * -10.0f);
+            SampleSpectatorComponent->GetCameraComponent()->GetSceneComponent()->AddLocalPositionOffset({
+                0.0f,
+                1.5f,
+                4.0f
+            });
+            SampleSpectatorComponent->GetCameraComponent()->GetSceneComponent()->AddLocalRotationOffset({
+                0.0f, 
+                ABYTEK_F32_DEGREES_TO_RADS * 180.0f, 
+                0.0f
+            });
         
             AddActor(SpectatorActor);
         }

@@ -374,7 +374,7 @@ namespace Abytek
         void CallUnload();
         
     public:
-        virtual B8 CanSerialize() const
+        virtual B8 CanSerialize(const TW_Valid<F_SerializableEnvironment>& Environment) const
         {
             return static_cast<B8>(_Name) && static_cast<B8>(_PackageName);
         }
@@ -465,6 +465,12 @@ namespace Abytek
                 Type.template Cast<A_SerializableObject>()
             ).FastCast<__F_Object>();
         }
+        
+    public:
+        F_SerializableObjectHeader SelfGenerateSerializableObjectHeaderWithoutPayloadRange();
+        void SelfGatherReferencedSerializableObjects(TF_Set<TS<A_SerializableObject>>& OutObjects, const F_SerializableTracingOptions& TracingOptions = {});
+        void SelfGatherReferencedSerializableObjectPaths(TF_Set<F_Name>& OutObjectPaths, const F_SerializableTracingOptions& TracingOptions = {});
+        static void SortSerializableObjectLists(const TF_Span<TS<A_SerializableObject>>& Objects); // order: references -> object, equal to loading order
     };
     
     namespace Internal::SerializableObject
@@ -491,10 +497,18 @@ namespace Abytek
     {
         static F_FeedbackStatus ValueToBoostJSONValue(const ObjectSmartPointerTemplates::TW<__F_Object, __F_Config>& Value, boost::json::value& JSONValue, F_JSONContext& JSONContext)
         {
+            TW<F_SerializableEnvironment> Environment;
+            ABYTEK_FEEDBACK_STATUS_CHECK(
+                A_SerializableObject::GetGeneralMetadataElement_Environment(
+                    JSONContext.Options->Metadata,
+                    Environment    
+                )    
+            );
+            
             F_Name Name;
             if (Value)
             {
-                if (Value->CanSerialize())
+                if (Value->CanSerialize(Environment))
                 {
                     Name = Value->GetName();
                 }
@@ -545,10 +559,18 @@ namespace Abytek
     {
         static F_FeedbackStatus ValueToBoostJSONValue(const ObjectSmartPointerTemplates::TU<__F_Object, __F_Allocator, __F_Config>& Value, boost::json::value& JSONValue, F_JSONContext& JSONContext)
         {
+            TW<F_SerializableEnvironment> Environment;
+            ABYTEK_FEEDBACK_STATUS_CHECK(
+                A_SerializableObject::GetGeneralMetadataElement_Environment(
+                    JSONContext.Options->Metadata,
+                    Environment    
+                )    
+            );
+            
             F_Name Name;
             if (Value)
             {
-                if (Value->CanSerialize())
+                if (Value->CanSerialize(Environment))
                 {
                     Name = Value->GetName();
                 }
@@ -603,10 +625,18 @@ namespace Abytek
     {
         static F_FeedbackStatus ValueToBoostJSONValue(const ObjectSmartPointerTemplates::TS<__F_Object, __F_Allocator, __F_Config>& Value, boost::json::value& JSONValue, F_JSONContext& JSONContext)
         {
+            TW<F_SerializableEnvironment> Environment;
+            ABYTEK_FEEDBACK_STATUS_CHECK(
+                A_SerializableObject::GetGeneralMetadataElement_Environment(
+                    JSONContext.Options->Metadata,
+                    Environment    
+                )    
+            );
+            
             F_Name Name;
             if (Value)
             {
-                if (Value->CanSerialize())
+                if (Value->CanSerialize(Environment))
                 {
                     Name = Value->GetName();
                 }
@@ -657,10 +687,18 @@ namespace Abytek
     template<typename __F_Object, typename __F_Config ABYTEK_REQUIRES(std::is_base_of_v<A_SerializableObject, __F_Object>)>
     F_FeedbackStatus operator << (F_ArchiveReadWriteView& View, const ObjectSmartPointerTemplates::TW<__F_Object, __F_Config>& Value) noexcept
     {
+        TW<F_SerializableEnvironment> Environment;
+        ABYTEK_FEEDBACK_STATUS_CHECK(
+            A_SerializableObject::GetGeneralMetadataElement_Environment(
+                View.Metadata,
+                Environment    
+            )    
+        );
+        
         F_Name Name;
         if (Value)
         {
-            if (Value->CanSerialize())
+            if (Value->CanSerialize(Environment))
             {
                 Name = Value->GetName();
             }
@@ -705,10 +743,18 @@ namespace Abytek
     template<typename __F_Object, typename __F_Allocator, typename __F_Config ABYTEK_REQUIRES(std::is_base_of_v<A_SerializableObject, __F_Object>)>
     F_FeedbackStatus operator << (F_ArchiveReadWriteView& View, const ObjectSmartPointerTemplates::TU<__F_Object, __F_Allocator, __F_Config>& Value) noexcept
     {
+        TW<F_SerializableEnvironment> Environment;
+        ABYTEK_FEEDBACK_STATUS_CHECK(
+            A_SerializableObject::GetGeneralMetadataElement_Environment(
+                View.Metadata,
+                Environment    
+            )    
+        );
+        
         F_Name Name;
         if (Value)
         {
-            if (Value->CanSerialize())
+            if (Value->CanSerialize(Environment))
             {
                 Name = Value->GetName();
             }
@@ -753,10 +799,18 @@ namespace Abytek
     template<typename __F_Object, typename __F_Allocator, typename __F_Config ABYTEK_REQUIRES(std::is_base_of_v<A_SerializableObject, __F_Object>)>
     F_FeedbackStatus operator << (F_ArchiveReadWriteView& View, const ObjectSmartPointerTemplates::TS<__F_Object, __F_Allocator, __F_Config>& Value) noexcept
     {
+        TW<F_SerializableEnvironment> Environment;
+        ABYTEK_FEEDBACK_STATUS_CHECK(
+            A_SerializableObject::GetGeneralMetadataElement_Environment(
+                View.Metadata,
+                Environment    
+            )    
+        );
+        
         F_Name Name;
         if (Value)
         {
-            if (Value->CanSerialize())
+            if (Value->CanSerialize(Environment))
             {
                 Name = Value->GetName();
             }

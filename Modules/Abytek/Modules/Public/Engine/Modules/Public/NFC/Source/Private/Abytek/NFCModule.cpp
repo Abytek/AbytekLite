@@ -30,6 +30,8 @@
 #include "Abytek/Renderer/RenderPrimitive/Archetypes/Data_Simple.hpp"
 #include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveManager.hpp"
 
+#include "Abytek/Renderer/VertexFactory/VertexFactoryType.hpp"
+
 #include "Abytek/Assets/Texture.hpp"
 #include "Abytek/Assets/StaticMesh.hpp"
 #include "Abytek/Assets/MaterialInterface.hpp"
@@ -97,6 +99,7 @@ namespace Abytek
         RegisterStaticType<F_RenderViewUniformDataBinding>();
         RegisterStaticType<RenderGeometry::F_GlobalSRVBinding>();
         RegisterStaticType<RenderGeometry::F_GlobalUAVBinding>();
+        RegisterStaticType<A_VertexFactoryType>();
 
         RegisterStaticType<RenderPrimitive::F_Data_Simple>();
         
@@ -104,6 +107,12 @@ namespace Abytek
         RegisterStaticType<F_TextureSetting>();
         RegisterStaticType<F_StaticMesh>();
         RegisterStaticType<F_StaticMeshSetting>();
+        RegisterStaticType<A_MaterialProperty>();
+        RegisterStaticType<TF_MaterialPropertyScalar<B8>>();
+        RegisterStaticType<TF_MaterialPropertyScalar<U32>>();
+        RegisterStaticType<TF_MaterialPropertyScalar<I32>>();
+        RegisterStaticType<TF_MaterialPropertyScalar<F32>>();
+        RegisterStaticType<F_MaterialPropertyTexture>();
         RegisterStaticType<A_MaterialInterface>();
         RegisterStaticType<A_MaterialRenderPack>();
         RegisterStaticType<A_Material>();

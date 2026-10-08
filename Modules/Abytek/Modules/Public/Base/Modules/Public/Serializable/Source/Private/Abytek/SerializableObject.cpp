@@ -106,7 +106,7 @@ namespace Abytek
         OnUnload();
         _IsLoaded = false;
     }
-    
+
     void A_SerializableObject::OnPrepareForSaving(const TW_Valid<F_SerializableEnvironment>& Environment)
     {
     }
@@ -351,5 +351,118 @@ namespace Abytek
             ActualSubobjectName ? _PackageName : F_Name {},
             Type
         );
+    }
+
+    F_SerializableObjectHeader A_SerializableObject::SelfGenerateSerializableObjectHeaderWithoutPayloadRange()
+    {
+        const auto& Metadata = _Type->GetMetadata();
+        const auto& MetadataElement = Metadata.Get(GetMetadataElementName_GenerateHeaderFunction());
+        const auto& GenerateHeaderFunction = AnyCast<F_GenerateHeaderFunction>(MetadataElement);
+        return GenerateHeaderFunction(ABYTEK_WTHIS());
+    }
+    void A_SerializableObject::SelfGatherReferencedSerializableObjects(TF_Set<TS<A_SerializableObject>>& OutObjects, const F_SerializableTracingOptions& TracingOptions)
+    {
+        const auto& Metadata = _Type->GetMetadata();
+        const auto& MetadataElement = Metadata.Get(GetMetadataElementName_GatherReferencedObjectsFunction());
+        const auto& GatherFunction = AnyCast<F_GatherReferencedObjectsFunction>(MetadataElement);
+        Internal::Serializable::F_Data_GatherReferencedSerializableObjects Data;
+        Data.OutObjects = &OutObjects;
+        Data.TracingOptions = TracingOptions;
+        GatherFunction(this, Data);
+    }
+    void A_SerializableObject::SelfGatherReferencedSerializableObjectPaths(TF_Set<F_Name>& OutObjectPaths, const F_SerializableTracingOptions& TracingOptions)
+    {
+        const auto& Metadata = _Type->GetMetadata();
+        const auto& MetadataElement = Metadata.Get(GetMetadataElementName_GatherReferencedObjectPathsFunction());
+        const auto& GatherFunction = AnyCast<F_GatherReferencedObjectPathsFunction>(MetadataElement);
+        Internal::Serializable::F_Data_GatherReferencedSerializableObjectPaths Data;
+        Data.OutObjectPaths = &OutObjectPaths;
+        Data.TracingOptions = TracingOptions;
+        GatherFunction(this, Data);
+    }
+    void A_SerializableObject::SortSerializableObjectLists(const TF_Span<TS<A_SerializableObject>>& Objects)
+    {
+        TF_Set<TS<A_SerializableObject>> ObjectSet;
+        for (const auto& Object : Objects)
+        {
+            ABYTEK_BASE_SERIALIZABLE_ASSERT(ObjectSet.find(Object) == ObjectSet.end()) << "Duplicated objects are not allowed";
+            ObjectSet.insert(Object);
+        }
+
+        // Object -> objects it references.
+        TF_Map<TS<A_SerializableObject>, TF_Set<TS<A_SerializableObject>>> Dependencies;
+
+        for (const auto& Object : Objects)
+        {
+            auto& ObjectDependencies = Dependencies[Object];
+            Object->SelfGatherReferencedSerializableObjects(ObjectDependencies);
+
+            // Only objects in the input list matter for sorting.
+            for (auto It = ObjectDependencies.begin(); It != ObjectDependencies.end();)
+            {
+                if (ObjectSet.find(*It) == ObjectSet.end())
+                {
+                    It = ObjectDependencies.erase(It);
+                }
+                else
+                {
+                    ++It;
+                }
+            }
+        }
+
+        // Number of objects that must come before each object.
+        TF_Map<TS<A_SerializableObject>, I32> InDegree;
+
+        for (const auto& Object : Objects)
+        {
+            InDegree[Object] = 0;
+        }
+
+        for (const auto& [Object, ObjectDependencies] : Dependencies)
+        {
+            for (const auto& Dependency : ObjectDependencies)
+            {
+                ++InDegree[Object];
+            }
+        }
+
+        // Objects without dependencies can be placed first.
+        TF_Vector<TS<A_SerializableObject>> ReadyObjects;
+
+        for (const auto& Object : Objects)
+        {
+            if (InDegree[Object] == 0)
+            {
+                ReadyObjects.push_back(Object);
+            }
+        }
+
+        Sz SortedCount = 0;
+
+        while (!ReadyObjects.empty())
+        {
+            auto Object = ReadyObjects.back();
+            ReadyObjects.pop_back();
+
+            Objects[SortedCount++] = Object;
+
+            // Removing Object means every object depending on it has one
+            // fewer dependency.
+            for (const auto& [DependentObject, ObjectDependencies] : Dependencies)
+            {
+                if (ObjectDependencies.find(Object) != ObjectDependencies.end())
+                {
+                    --InDegree[DependentObject];
+
+                    if (InDegree[DependentObject] == 0)
+                    {
+                        ReadyObjects.push_back(DependentObject);
+                    }
+                }
+            }
+        }
+
+        ABYTEK_BASE_SERIALIZABLE_ASSERT(SortedCount == Objects.size()) << "Cyclic dependency detected between serializable objects";
     }
 }

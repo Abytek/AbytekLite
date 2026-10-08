@@ -5,9 +5,11 @@
 #include "Abytek/DevelopmentData.hpp"
 #include "Abytek/CoreUpdateGraph/HighLevelUpdateRange.hpp"
 #include "Abytek/Development/Cook/CookProfile.hpp"
+#include "Abytek/Development/Cook/CookSettingContainer.hpp"
 #include "Abytek/Development/Cook/CookUtilities.hpp"
 #include "Abytek/Development/CoreCookGraph/AssetAnalyzeCookRange.hpp"
 #include "Abytek/Development/CoreCookGraph/HighLevelCookRange.hpp"
+#include "Abytek/Development/EBT/EBTCookSetting.hpp"
 #include "Abytek/World/World.hpp"
 #include "Abytek/World/WorldContextHelper.hpp"
 
@@ -130,6 +132,7 @@ namespace Abytek
         auto Package = H_WorldContext::EnsurePackage(World, AssetPackageName);
         
         auto Objects = Package->GetOrLoadAllObjects();
+        A_SerializableObject::SortSerializableObjectLists(Objects);
         
         TF_Map<F_Name, TS<A_SerializableObject>> MapObjectPathToObject_ShouldCook;
         for (const auto& Object : Objects)
@@ -170,6 +173,8 @@ namespace Abytek
             TW<I_Cookable> Cookable = Object.DynamicCast<I_Cookable>();
             Cookable->CleanUpAfterCooking();
         }
+        
+        CookProfile->AddPackageToExport(AssetPackageName);
             
         ABYTEK_LOG_INFO() << "Cooked asset package: " << AssetPackageName;
     }

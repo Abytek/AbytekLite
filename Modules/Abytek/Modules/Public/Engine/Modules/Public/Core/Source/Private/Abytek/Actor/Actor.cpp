@@ -13,6 +13,8 @@ namespace Abytek
         ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::F_Actor"));
         
         ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(_Level);
+        ABYTEK_REFLECT_PROPERTY(_OwnedComponents);
+        ABYTEK_REFLECT_PROPERTY(_InstanceComponents);
         ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(_SerializedOwnedComponents);
     }
     
@@ -47,7 +49,7 @@ namespace Abytek
         _SerializedOwnedComponents = {};
         for (const auto& Component : _OwnedComponents)
         {
-            if (Component->CanSerialize())
+            if (Component->CanSerialize(Environment))
             {
                 _SerializedOwnedComponents.push_back(Component);
             }

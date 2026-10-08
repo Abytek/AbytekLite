@@ -11,6 +11,7 @@ namespace Abytek
     {
         ABYTEK_REFLECT_CANONICAL(ABYTEK_NAME("Abytek::F_Level"));
         
+        ABYTEK_REFLECT_PROPERTY(_Actors);
         ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(_SerializedActors);
         
         ABYTEK_REFLECT_PROPERTY_SERIALIZABLE(WorldBusinessType);
@@ -212,7 +213,7 @@ namespace Abytek
         _SerializedActors = {};
         for (const auto& Actor : _Actors)
         {
-            if (Actor->CanSerialize())
+            if (Actor->CanSerialize(Environment))
             {
                 _SerializedActors.push_back(Actor);
             }

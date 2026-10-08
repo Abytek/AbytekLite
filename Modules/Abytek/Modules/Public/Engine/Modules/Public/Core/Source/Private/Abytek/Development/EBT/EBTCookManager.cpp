@@ -118,12 +118,7 @@ namespace Abytek
                         H_FSUtilities::DeleteDirectory_(DstDirectoryPath)
                     );
                 }
-                ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
-                    H_FSUtilities::CopyDirectory_(
-                        DstDirectoryPath,
-                        CookProfile->GetIntermediateModulesDirectoryPath()
-                    )  
-                );
+                CookProfile->ExportPackages(DstDirectoryPath);
             }
             {
                 F_Text DstDirectoryPath = _ApplicationBuildResult.DirectoryPath + ABYTEK_TEXT("/Abytek/Configs");
@@ -133,12 +128,7 @@ namespace Abytek
                         H_FSUtilities::DeleteDirectory_(DstDirectoryPath)
                     );
                 }
-                ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
-                    H_FSUtilities::CopyDirectory_(
-                        DstDirectoryPath,
-                        CookProfile->GetIntermediateConfigsDirectoryPath()
-                    )  
-                );
+                CookProfile->ExportConfigs(DstDirectoryPath);
             }
             ABYTEK_LOG_INFO() << "Copied necessary cooked data into built Windows application";
         }

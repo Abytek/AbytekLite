@@ -8,6 +8,7 @@
 #include "Abytek/Renderer/GPUData/GPUData.hpp"
 #include "Abytek/Renderer/RenderGeometry/RenderGeometryStorage.hpp"
 #include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveManager.hpp"
+#include "Abytek/Renderer/VertexFactory/VertexFactoryTypeManager.hpp"
 #include "Abytek/Renderer/RenderPrimitive/Archetypes/Processor_Simple.hpp"
 
 
@@ -51,6 +52,22 @@ namespace Abytek
         }
         
         {
+            F_VertexFactoryTypeManagerBuildParams VertexFactoryTypeManagerBuildParams;
+            VertexFactoryTypeManagerBuildParams.Scene = ABYTEK_WTHIS();
+#ifdef ABYTEK_DEBUG_INFO
+            _VertexFactoryTypeManager = F_VertexFactoryTypeManager::CreateAndInit_WithDebugName(
+                *GetDebugName()
+                + ABYTEK_TEXT(".VertexFactoryTypeManager"),
+#else
+            _VertexFactoryTypeManager = F_VertexFactoryTypeManager::CreateAndInit(
+#endif
+                GetWorldRenderResource(),
+                SubmissionItemContainer, 
+                VertexFactoryTypeManagerBuildParams
+            );
+        }
+        
+        {
             if (auto Processor = GetRenderObjectFactory()->CreatePrimitiveProcessor_Simple())
             {
 #ifdef ABYTEK_DEBUG_INFO
@@ -68,6 +85,9 @@ namespace Abytek
     }
     void A_RenderScene::Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
+        _VertexFactoryTypeManager->Release(SubmissionItemContainer);
+        _VertexFactoryTypeManager = {};
+        
         _PrimitiveManager->Release(SubmissionItemContainer);
         _PrimitiveManager = {};
         

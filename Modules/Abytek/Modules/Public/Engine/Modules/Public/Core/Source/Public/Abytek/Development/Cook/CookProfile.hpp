@@ -9,6 +9,18 @@ namespace Abytek
     class A_CookSetting;
     class F_CookSettingContainer;
 
+    enum class E_CookPackageExportFlag : U8
+    {
+        NONE = 0x0,
+        USER_DATA,
+        DEFAULT = USER_DATA
+    };
+    struct F_CookPackageExport
+    {
+        F_Name Name;
+        E_CookPackageExportFlag Flags = E_CookPackageExportFlag::DEFAULT;
+    };
+    
     class ABYTEK_ENGINE_CORE_API F_CookProfile final : public A_Object
     {
     public:
@@ -38,6 +50,8 @@ namespace Abytek
         F_Text _IntermediateDataDirectoryPath;
         F_Text _IntermediateConfigsDirectoryPath;
         F_Text _IntermediateModulesDirectoryPath;
+        
+        TF_Map<F_Name, F_CookPackageExport> _PackagesToExport;
         
     public:
         ABYTEK_FORCE_INLINE const auto& GetName() const noexcept
@@ -78,12 +92,24 @@ namespace Abytek
             return _IntermediateModulesDirectoryPath;
         }
         
+        ABYTEK_FORCE_INLINE const auto& GetPackagesToExport() const noexcept
+        {
+            return _PackagesToExport;
+        }
+        
     public:
         F_CookProfile(const F_Name& Name, const F_Name& ModuleName);
         ~F_CookProfile() override;
         
     private:
         void _SetupConsole(const F_Name& Name);
+        
+    public:
+        void AddPackageToExport(const F_Name& PackageName, E_CookPackageExportFlag Flags = E_CookPackageExportFlag::DEFAULT);
+        void ExportPackages(const F_Text& DstDirectoryPath, E_CookPackageExportFlag Flags = E_CookPackageExportFlag::DEFAULT);
+        
+    public:
+        void ExportConfigs(const F_Text& DstDirectoryPath);
     };
 }
 #endif

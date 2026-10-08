@@ -265,9 +265,9 @@ namespace Abytek
         
     public:
         F_FeedbackStatus ResolveAbsolutePath(const F_Text& Raw, F_Text& OutAbsolutePath);
-        void AnalyzeObjectPaths(
+        void AnalyzeObjectPathsForLoading(
             const TF_SmallVector<F_Name, 1>& InObjectPaths,
-            TF_SmallVector<F_Name, 1>& OutOrderedObjectPaths,
+            TF_SmallVector<F_Name, 1>& OutOrderedObjectPaths, // order: references -> object, equal to loading order
             TF_Set<F_Name>& OutObjectPathSet,
             TF_Map<F_Name, TS<F_SerializablePackage>>& OutPackages
         );
@@ -277,7 +277,7 @@ namespace Abytek
         );
         void CreateObjects(
             const TF_SmallVector<F_SerializableObjectCreationParams, 1>& CreationParamsList,
-            TF_SmallVector<TS<A_SerializableObject>, 1>& OutObjects
+            TF_SmallVector<TS<A_SerializableObject>, 1>& OutObjects // creation order: object -> references, loading order: references -> objects
         );
         TS<A_SerializableObject> ForceCreateObjectDelayLoading(
             const F_Name& Name = {},

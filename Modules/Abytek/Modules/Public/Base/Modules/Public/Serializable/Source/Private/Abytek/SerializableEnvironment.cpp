@@ -128,13 +128,83 @@ namespace Abytek
         }
         return F_FeedbackStatus::MakeSucceeded();
     }
-    void F_SerializableEnvironment::AnalyzeObjectPaths(
+    
+    namespace Internal::SerializableEnvironment
+    {
+        void AnalyzeObjectPathsForLoading(
+            const TW_Valid<F_SerializableEnvironment>& Environment,
+            const F_Name& ObjectPath,
+            TF_SmallVector<F_Name, 1>& OutOrderedObjectPaths,
+            TF_Set<F_Name>& OutObjectPathSet,
+            TF_Map<F_Name, TS<F_SerializablePackage>>& OutPackages
+        )
+        {
+            if (OutObjectPathSet.find(ObjectPath) != OutObjectPathSet.end())
+            {
+                return;
+            }
+            
+            F_Name ObjectName;
+            F_Name PackageName;
+            ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
+                  F_SerializableEnvironment::ParseObjectPath(ObjectPath, ObjectName, PackageName)
+            );
+            ABYTEK_BASE_SERIALIZABLE_ASSERT(PackageName) << "Cannot load objects having invalid package";
+                    
+            TS<F_SerializablePackage> Package;
+            {
+                auto It = OutPackages.find(PackageName);
+                if (It == OutPackages.end())
+                {
+                    Package = Environment->EnsurePackage(PackageName);
+                    OutPackages.insert({ PackageName, Package });
+                }
+                else
+                {
+                    Package = It->second;
+                }
+            }
+            
+            F_SerializableObjectHeader ObjectHeader;
+            if (!Package->SearchLastObjectHeader(ObjectPath, ObjectHeader))
+            {
+                return;
+            }
+            
+            OutObjectPathSet.insert(ObjectPath);
+            
+            for (const auto& ReferencePath : ObjectHeader.ReferencePaths)
+            {
+                AnalyzeObjectPathsForLoading(
+                    Environment,
+                    ReferencePath,
+                    OutOrderedObjectPaths,
+                    OutObjectPathSet,
+                    OutPackages
+                );
+            }
+            
+            OutOrderedObjectPaths.push_back(ObjectPath);
+        }
+    }
+    void F_SerializableEnvironment::AnalyzeObjectPathsForLoading(
         const TF_SmallVector<F_Name, 1>& InObjectPaths,
         TF_SmallVector<F_Name, 1>& OutOrderedObjectPaths,
         TF_Set<F_Name>& OutObjectPathSet,
         TF_Map<F_Name, TS<F_SerializablePackage>>& OutPackages
     )
     {
+        for (const auto& ObjectPath : InObjectPaths)
+        {
+            Internal::SerializableEnvironment::AnalyzeObjectPathsForLoading(
+                ABYTEK_WTHIS(),
+                ObjectPath,
+                OutOrderedObjectPaths,
+                OutObjectPathSet,
+                OutPackages
+            );
+        }
+        return;
         
         TF_SmallVector<F_Name,  1> OrderedObjectPaths;
         TF_Set<F_Name> ObjectPathSet;
@@ -256,15 +326,17 @@ namespace Abytek
             TF_SmallVector<F_Name, 1> AnalyzedOrderedObjectPaths;
             TF_Set<F_Name> AnalyzedObjectPathSet;
             TF_Map<F_Name, TS<F_SerializablePackage>> AnalyzedPackages;
-            AnalyzeObjectPaths(
+            AnalyzeObjectPathsForLoading(
                 ObjectPathsToLoad,
                 AnalyzedOrderedObjectPaths,
                 AnalyzedObjectPathSet,
                 AnalyzedPackages
             );
             
-            for (const auto& AnalyzedObjectPath : AnalyzedOrderedObjectPaths)
+            for (auto It = AnalyzedOrderedObjectPaths.rbegin(); It != AnalyzedOrderedObjectPaths.rend(); ++It)
             {
+                const auto& AnalyzedObjectPath = *It;
+                
                 F_Name ObjectName;
                 F_Name PackageName;
                 ABYTEK_FEEDBACK_STATUS_CHECK_HARD(

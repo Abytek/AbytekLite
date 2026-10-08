@@ -89,6 +89,22 @@ namespace Abytek
                 {
                     return sizeof(I64);
                 }
+                if constexpr (std::is_same_v<__F, F32>)
+                {
+                    return sizeof(F32);
+                }
+                if constexpr (std::is_same_v<__F, F64>)
+                {
+                    return sizeof(F64);
+                }
+                if constexpr (std::is_same_v<__F, Sz>)
+                {
+                    return sizeof(Sz);
+                }
+                if constexpr (std::is_same_v<__F, PDiff>)
+                {
+                    return sizeof(PDiff);
+                }
                 if constexpr (std::is_enum_v<std::remove_const_t<__F>>)
                 {
                     return sizeof(__F);

@@ -66,7 +66,7 @@ namespace Abytek
                     {
                         ReflectionType->SetCanonical(
                             ABYTEK_TEXT("Abytek::TF_MaterialPropertyScalar<")
-                            *ValueTypeCanonical
+                            + *ValueTypeCanonical
                             + ABYTEK_TEXT(">")
                         );
                     }

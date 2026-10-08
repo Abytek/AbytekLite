@@ -25,6 +25,10 @@ namespace Abytek
     {
         for (auto It = _PrimitiveSets.rbegin(); It != _PrimitiveSets.rend(); ++It)
         {
+            (*It)->Deactivate(SubmissionItemContainer);
+        }
+        for (auto It = _PrimitiveSets.rbegin(); It != _PrimitiveSets.rend(); ++It)
+        {
             (*It)->Release(SubmissionItemContainer);
         }
         _PrimitiveSets = {};
@@ -46,5 +50,9 @@ namespace Abytek
         }
 #endif
         InitPrimitiveSets(SubmissionItemContainer, _PrimitiveSets);
+        for (const auto& PrimitiveSet : _PrimitiveSets)
+        {
+            PrimitiveSet->Activate(SubmissionItemContainer);
+        }
     }
 }

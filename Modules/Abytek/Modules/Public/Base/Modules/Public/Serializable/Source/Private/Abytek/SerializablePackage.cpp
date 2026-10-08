@@ -167,13 +167,7 @@ namespace Abytek
         ObjectSerializeParams.Environment = _Environment;
         for (const auto& Object : Objects)
         {
-            const auto& ObjectType = Object->GetType();
-            const auto& Metadata = ObjectType->GetMetadata();
-            const auto& MetadataElement = Metadata.Get(A_SerializableObject::GetMetadataElementName_GenerateHeaderFunction());
-            const auto& GenerateHeaderFunction = AnyCast<A_SerializableObject::F_GenerateHeaderFunction>(MetadataElement);
-            
-            F_SerializableObjectHeader ObjectHeader;
-            ObjectHeader = GenerateHeaderFunction(Object.Weak());
+            F_SerializableObjectHeader ObjectHeader = Object->SelfGenerateSerializableObjectHeaderWithoutPayloadRange();
             ObjectSerializeParams.MainView.Shift<F_ArchiveData>(0); // Ensure object payload alignment.
             ObjectHeader.PayloadOffsetInBytes =  ObjectSerializeParams.MainView.Offset;
             ABYTEK_FEEDBACK_STATUS_CHECK_HARD(

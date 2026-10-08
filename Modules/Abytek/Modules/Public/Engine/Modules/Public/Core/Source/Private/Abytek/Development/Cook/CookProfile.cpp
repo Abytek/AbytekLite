@@ -40,7 +40,7 @@ namespace Abytek
             H_FSUtilities::EnsureDirectory(_IntermediateDataDirectoryPath)
         );
         {
-            _IntermediateConfigsDirectoryPath = _IntermediateDataDirectoryPath + ABYTEK_TEXT("/Configs");
+            _IntermediateConfigsDirectoryPath = H_Path::Normalize(_IntermediateDataDirectoryPath + ABYTEK_TEXT("/Configs"));
             if (H_FSUtilities::Exists(_IntermediateConfigsDirectoryPath, E_FSEntryType::DIRECTORY))
             {
                 ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
@@ -52,13 +52,13 @@ namespace Abytek
             );
         }
         {
-            _IntermediateModulesDirectoryPath = _IntermediateDataDirectoryPath + ABYTEK_TEXT("/Modules");
-            if (H_FSUtilities::Exists(_IntermediateModulesDirectoryPath, E_FSEntryType::DIRECTORY))
+            _IntermediateModulesDirectoryPath = H_Path::Normalize(_IntermediateDataDirectoryPath + ABYTEK_TEXT("/Modules"));
+            /*if (H_FSUtilities::Exists(_IntermediateModulesDirectoryPath, E_FSEntryType::DIRECTORY))
             {
                 ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
                     H_FSUtilities::DeleteDirectory_(_IntermediateModulesDirectoryPath)
                 );
-            }
+            }*/
             ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
                 H_FSUtilities::EnsureDirectory(_IntermediateModulesDirectoryPath)
             );
@@ -183,6 +183,71 @@ namespace Abytek
         {
             _SetupConsole(Extend);
         }
+    }
+
+    void F_CookProfile::AddPackageToExport(const F_Name& PackageName, E_CookPackageExportFlag Flags)
+    {
+        ABYTEK_ENGINE_CORE_ASSERT(_PackagesToExport.find(PackageName) == _PackagesToExport.end());
+        F_CookPackageExport PackageExport;
+        PackageExport.Name = PackageName;
+        PackageExport.Flags = Flags;
+        _PackagesToExport.insert({ PackageName, PackageExport });
+    }
+    void F_CookProfile::ExportPackages(const F_Text& DstDirectoryPath, E_CookPackageExportFlag Flags)
+    {
+        H_FSUtilities::EnsureDirectory(DstDirectoryPath);
+        
+        for (const auto& [PackageName, PackageExport] : _PackagesToExport)
+        {
+            if (!FlagHas(PackageExport.Flags, Flags))
+            {
+                continue;
+            }
+            
+            F_Text PackagePath;
+            ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
+                F_SerializablePackage::ResolveAbsolutePath(
+                    _SerializableEnvironment.Weak(),
+                    PackageName,
+                    PackagePath
+                )   
+            );
+            
+            F_Text RelativePath;
+            ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
+                H_Path::ParseRelativePath(_IntermediateModulesDirectoryPath, PackagePath, RelativePath)    
+            );
+            
+            F_Text DstPackagePath = DstDirectoryPath + ABYTEK_TEXT("/") + RelativePath;
+            ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
+                H_FSUtilities::EnsureDirectory(
+                    H_Path::GetBaseName(DstPackagePath)
+                )
+            );
+            
+            ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
+                H_FSUtilities::CopyFile_(
+                    DstPackagePath,
+                    PackagePath
+                )
+            );
+            
+            ABYTEK_LOG_INFO() << "Exported package \"" << PackageExport.Name << "\" from \"" << PackagePath << "\" to \"" << DstPackagePath << "\"";
+        }
+    }
+
+    void F_CookProfile::ExportConfigs(const F_Text& DstDirectoryPath)
+    {
+        H_FSUtilities::EnsureDirectory(DstDirectoryPath);
+        
+        ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
+            H_FSUtilities::CopyDirectory_(
+                DstDirectoryPath,
+                _IntermediateConfigsDirectoryPath
+            )  
+        );
+            
+        ABYTEK_LOG_INFO() << "Exported configs from \"" << _IntermediateConfigsDirectoryPath << "\" to \"" << DstDirectoryPath << "\"";
     }
 }
 #endif

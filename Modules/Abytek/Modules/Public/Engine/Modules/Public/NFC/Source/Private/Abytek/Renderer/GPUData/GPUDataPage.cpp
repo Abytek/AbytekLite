@@ -1,5 +1,6 @@
 #include "Abytek/Renderer/GPUData/GPUDataPage.hpp"
 #include "Abytek/Renderer/GPUData/GPUDataStorage.hpp"
+#include "Abytek/Renderer/GPUData/GPUData.hpp"
 
 
 namespace Abytek

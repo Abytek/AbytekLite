@@ -140,9 +140,15 @@ namespace Abytek
                 );
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
                 H_ApplicationMount::Add(
+                    *ModuleName + ABYTEK_TEXT("::Intermediate::DevelopmentData"),
+                    ModuleName,
+                    ABYTEK_TEXT("Intermediate/DevelopmentData")
+                );
+                H_ApplicationMount::Add(
                     *ModuleName + ABYTEK_TEXT("::Intermediate::CookData"),
                     ModuleName,
-                    ABYTEK_TEXT("Intermediate/CookData")
+                    ABYTEK_TEXT("Intermediate/CookData"),
+                    E_ApplicationMountFlag::DEVELOPMENT_BUILD
                 );
 #endif
             }

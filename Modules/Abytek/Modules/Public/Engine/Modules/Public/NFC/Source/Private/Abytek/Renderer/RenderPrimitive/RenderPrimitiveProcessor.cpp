@@ -103,4 +103,11 @@ namespace Abytek
             }
         );
     }
+
+    void A_RenderPrimitiveProcessor::OnActivatePrimitiveSet(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, const TS<A_RenderPrimitiveSet>& PrimitiveSet)
+    {
+    }
+    void A_RenderPrimitiveProcessor::OnDeactivatePrimitiveSet(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer, const TS<A_RenderPrimitiveSet>& PrimitiveSet)
+    {
+    }
 }

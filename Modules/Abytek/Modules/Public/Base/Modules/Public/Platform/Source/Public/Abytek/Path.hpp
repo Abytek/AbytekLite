@@ -82,5 +82,7 @@ namespace Abytek
          * @return The normalized path
          */
         static F_Text Normalize(const F_Text& path);
+        
+        static F_FeedbackStatus ParseRelativePath(const F_Text& From, const F_Text& To, F_Text& OutRelativePath);
     };
 }

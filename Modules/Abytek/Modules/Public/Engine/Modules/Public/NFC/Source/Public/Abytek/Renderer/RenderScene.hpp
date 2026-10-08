@@ -9,6 +9,7 @@ namespace Abytek
     class A_WorldContext;
     class F_RenderGeometryStorage;
     class F_RenderPrimitiveManager;
+    class F_VertexFactoryTypeManager;
     
     struct F_RenderSceneBuildParams
     {
@@ -22,6 +23,7 @@ namespace Abytek
     private:
         TS<F_RenderGeometryStorage> _GeometryStorage;
         TS<F_RenderPrimitiveManager> _PrimitiveManager;
+        TS<F_VertexFactoryTypeManager> _VertexFactoryTypeManager;
         
         TW<A_RenderPrimitiveProcessor_Simple> _PrimitiveProcessor_Simple;
         
@@ -33,6 +35,10 @@ namespace Abytek
         ABYTEK_FORCE_INLINE const auto& GetPrimitiveManager() const noexcept
         {
             return _PrimitiveManager;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetVertexFactoryTypeManager() const noexcept
+        {
+            return _VertexFactoryTypeManager;
         }
         
         ABYTEK_FORCE_INLINE const auto& GetPrimitiveProcessor_Simple() const noexcept

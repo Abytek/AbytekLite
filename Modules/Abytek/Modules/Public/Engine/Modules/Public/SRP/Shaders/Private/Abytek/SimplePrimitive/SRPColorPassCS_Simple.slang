@@ -12,6 +12,8 @@ import Abytek.ClipPositionDepthReverse;
 import Abytek.ClipPositionToNDCPosition;
 import Abytek.PixelPosition2DToNDCPosition2D;
 import Abytek.Barycentric;
+import Abytek.UIntToColor;
+import Abytek.ToneMap_ACESInspired;
 
 #include "Abytek/ECMS/SRPInstancedMeshletBuffer_ECMS.slangh"
 #include "Abytek/Renderer/GPUData/Macros.slangh"
@@ -225,8 +227,11 @@ void MainCS(uint3 DispatchThreadId: SV_DispatchThreadID)
             )
         )
     );
-    float3 OutRadiance = Lighting;
+    float3 OutRadiance = Lighting * Abytek::UIntToColor(InstancedMeshlet.MeshletIndex);
 
-    ColorTexture[DispatchThreadId.xy] = float4(OutRadiance, 1.0f);
+    ColorTexture[DispatchThreadId.xy] = float4(
+        Abytek::ToneMap_ACESInspired(OutRadiance), 
+        1.0f
+    );
     DepthTexture[DispatchThreadId.xy] = Depth;
 }

@@ -58,5 +58,13 @@ namespace Abytek
         
     public:
         void Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer) override;
+        
+    protected:
+        virtual void OnActivate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
+        virtual void OnDeactivate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
+        
+    public:
+        void Activate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
+        void Deactivate(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer);
     };
 }

@@ -166,4 +166,41 @@ namespace Abytek
 
 	    return std::move(result);
 	}
+
+	F_FeedbackStatus H_Path::ParseRelativePath(const F_Text& From, const F_Text& To, F_Text& OutRelativePath)
+	{
+    	if (From.size() == 0)
+    	{
+    		OutRelativePath = To;
+    		return F_FeedbackStatus::MakeSucceeded();
+    	}
+    	F_Text NormalizedFrom = Normalize(From);
+    	F_Text NormalizedTo = Normalize(To);
+    	if (NormalizedFrom.size() > NormalizedTo.size())
+    	{
+    		return F_FeedbackStatus::MakeFailed(
+    			ABYTEK_TEXT("There is no relative path from \"")
+    			+ From
+    			+ ABYTEK_TEXT("\" to \"")
+    			+ To
+    			+ ABYTEK_TEXT("\"")
+    		);
+    	}
+    	if (NormalizedTo.substr(0, NormalizedFrom.size()) != NormalizedFrom)
+    	{
+    		return F_FeedbackStatus::MakeFailed(
+				ABYTEK_TEXT("There is no relative path from \"")
+				+ From
+				+ ABYTEK_TEXT("\" to \"")
+				+ To
+				+ ABYTEK_TEXT("\"")
+			);
+    	}
+    	OutRelativePath = NormalizedTo.substr(NormalizedFrom.size(), NormalizedTo.size() - NormalizedFrom.size());
+    	if (OutRelativePath.back() == ABYTEK_TEXT('/'))
+    	{
+    		OutRelativePath.pop_back();
+    	}
+    	return F_FeedbackStatus::MakeSucceeded();
+	}
 }

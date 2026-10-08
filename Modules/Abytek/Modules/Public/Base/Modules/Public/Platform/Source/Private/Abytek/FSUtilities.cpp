@@ -63,7 +63,7 @@ namespace Abytek
         {
             ActualAdapter = GetDefaultAdapter();
         }
-        return ActualAdapter->MoveFile_(DstPath, SrcPath);
+        return ActualAdapter->CopyFile_(DstPath, SrcPath);
     }
     F_FeedbackStatus H_FSUtilities::ReadFileBinary(const F_Text& Path, TF_Vector<U8>& OutData, const TW<A_FSAdapter>& Adapter)
     {
