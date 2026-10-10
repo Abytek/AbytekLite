@@ -34,7 +34,7 @@ namespace Abytek
     }
     void A_RHITemplateRuntime::Release()
     {
-        GetDatabase()->_UntrackTemplateRuntime(ABYTEK_WTHIS());
+        Relax();
         _IsActivated.clear(boost::memory_order_release);
         _Template = {};
         A_RHIContextChild::Release();
@@ -49,5 +49,10 @@ namespace Abytek
     {
         FinalizeActivation();
         _IsActivated.test_and_set(boost::memory_order_release);
+    }
+
+    void A_RHITemplateRuntime::Relax()
+    {
+        GetDatabase()->_TryUntrackTemplateRuntime(ABYTEK_WTHIS());
     }
 }

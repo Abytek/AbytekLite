@@ -1,4 +1,7 @@
 #include "Abytek/Assets/MaterialInstance.hpp"
+#include "Abytek/Assets/Material.hpp"
+#include "Abytek/Assets/Render/MaterialInstanceRenderProxy.hpp"
+#include "Abytek/Assets/Render/MaterialRenderProxy.hpp"
 
 
 namespace Abytek
@@ -20,17 +23,51 @@ namespace Abytek
 
     void F_MaterialInstance::OnLoad()
     {
+        A_MaterialInterface::OnLoad();
     }
     void F_MaterialInstance::OnUnload()
     {
+        A_MaterialInterface::OnUnload();
     }
 
     TS<A_Material> F_MaterialInstance::GetMaterial() const
     {
         return _Material;
     }
-    TS<F_MaterialInstance> F_MaterialInstance::GetMaterialInstance() const
+
+    B8 F_MaterialInstance::IsRenderable() const
     {
-        return ABYTEK_STHIS_MUTABLE();
+        if (!A_MaterialInterface::IsRenderable())
+        {
+            return false;
+        }
+        if (!_Material)
+        {
+            return false;
+        }
+        return _Material->IsRenderable();
+    }
+
+    TS<A_RenderProxy> F_MaterialInstance::CreateRenderProxy()
+    {
+        return TS<F_MaterialInstanceRenderProxy>()(ABYTEK_WTHIS());
+    }
+
+    void F_MaterialInstance::OnCreateRenderState()
+    {
+        A_MaterialInterface::OnCreateRenderState();
+        H_Frame::EnqueueCommand<E_FrameParamType::RENDER>(
+            [
+                CastedRenderProxy = GetRenderProxy().FastCast<F_MaterialInstanceRenderProxy>(),
+                CachedMaterialRenderProxy = _Material->GetRenderPack().FastCast<F_MaterialRenderProxy>()
+            ]
+            {
+                CastedRenderProxy->_MaterialRenderProxy = CachedMaterialRenderProxy;
+            }
+        );
+    }
+    void F_MaterialInstance::OnDestroyRenderState()
+    {
+        A_MaterialInterface::OnDestroyRenderState();
     }
 }

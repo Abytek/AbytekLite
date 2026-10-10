@@ -38,7 +38,7 @@ namespace Abytek
         using F_Metadata_BuildCommandsAndCompilationSet = TF_Function<
             F_FeedbackStatus(
                 const TS<F_RenderPack>& Pack, 
-                const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
+                const TS<F_RenderRegistry>& RenderRegistry,
                 const TW_Valid<A_RenderPackTemplateMap>& TemplateMap,
                 TF_Vector<TF_Function<void(TF_Vector<TS<A_RHITemplate>>& OutTemplates)>>& OutCommands, 
                 TF_Set<F_RHITemplateHashCode>& OutTemplateHashCodesToCompile,
@@ -207,12 +207,12 @@ namespace Abytek
             ABYTEK_ENABLE_IF_DEVELOPMENT_BUILD( \
                 static Abytek::F_FeedbackStatus BuildConfigs( \
                     const Abytek::TS<Abytek::F_RenderPack>& Pack, \
-                    const Abytek::TW_Valid<Abytek::F_SerializableEnvironment>& SerializableEnvironment, \
+                    const Abytek::TS<Abytek::F_RenderRegistry>& RenderRegistry, \
                     const Abytek::TW_Valid<Abytek::A_RenderPackTemplateMap>& TemplateMap, \
                     Abytek::TF_Vector<F_Config>& OutConfigs \
                 ) \
                 { \
-                    auto Registry = Abytek::F_RenderRegistry::GetSerializableEnvironmentMetadataElement_Registry(SerializableEnvironment); \
+                    auto Registry = RenderRegistry; \
                     auto Compiler = Registry->GetCompiler(); \
                     auto TemplateDatabase = Registry->GetTemplateDatabase(); \
                      \
@@ -241,7 +241,7 @@ namespace Abytek
             ABYTEK_ENABLE_IF_NOT_DEVELOPMENT_BUILD( \
                 static Abytek::F_FeedbackStatus BuildConfigs( \
                     const Abytek::TS<Abytek::F_RenderPack>& Pack, \
-                    const Abytek::TW_Valid<Abytek::F_SerializableEnvironment>& SerializableEnvironment, \
+                    const Abytek::TS<Abytek::F_RenderRegistry>& RenderRegistry, \
                     const Abytek::TW_Valid<Abytek::A_RenderPackTemplateMap>& TemplateMap, \
                     Abytek::TF_Vector<F_Config>& OutConfigs \
                 ) \
@@ -252,121 +252,31 @@ namespace Abytek
             ABYTEK_ENABLE_IF_DEVELOPMENT_BUILD( \
                 static Abytek::F_FeedbackStatus BuildCommandsAndCompilationSet( \
                     const Abytek::TS<Abytek::F_RenderPack>& Pack, \
-                    const Abytek::TW_Valid<Abytek::F_SerializableEnvironment>& SerializableEnvironment, \
+                    const Abytek::TS<Abytek::F_RenderRegistry>& RenderRegistry, \
                     const Abytek::TW_Valid<Abytek::A_RenderPackTemplateMap>& TemplateMap, \
                     Abytek::TF_Vector<Abytek::TF_Function<void(Abytek::TF_Vector<Abytek::TS<Abytek::A_RHITemplate>>& OutTemplates)>>& OutCommands, \
                     Abytek::TF_Set<Abytek::F_RHITemplateHashCode>& OutTemplateHashCodesToCompile, \
                     Abytek::TF_Set<Abytek::F_RHITemplateHashCode>& OutTemplateHashCodes \
                 ) \
                 { \
-                    auto Registry = Abytek::F_RenderRegistry::GetSerializableEnvironmentMetadataElement_Registry(SerializableEnvironment); \
+                    auto Registry = RenderRegistry; \
                     auto Compiler = Registry->GetCompiler(); \
                     auto TemplateDatabase = Registry->GetTemplateDatabase(); \
                      \
                     Abytek::TF_Vector<F_Config> Configs; \
                     ABYTEK_FEEDBACK_STATUS_CHECK( \
-                        BuildConfigs(Pack, SerializableEnvironment, TemplateMap, Configs) \
+                        BuildConfigs(Pack, RenderRegistry, TemplateMap, Configs) \
                     ); \
                     for (const auto& Config : Configs) \
                     { \
-                        B8 ShouldCompile = Abytek::Internal::GlobalRenderPipeline::EnableInternalDebugger; \
-                        OutTemplateHashCodes.insert(Config.HashCode); \
-                        if (TemplateMap->HasTemplate(Config.HashCode)) \
-                        { \
-                            Abytek::TW<Abytek::A_RHIPipelineStateTemplate> Template; \
-                            if (TemplateMap->GetTemplate(Config.HashCode).TryDynamicCast<Abytek::A_RHIPipelineStateTemplate>(Template)) \
-                            { \
-                                const auto& LastSlangShaderFileVersions = Template->GetSlangShaderFileVersions(); \
-                                if (Template->GetConfig() != static_cast<const Abytek::F_RHIPipelineStateTemplateConfig&>(Config)) \
-                                { \
-                                    ShouldCompile = true; \
-                                } \
-                                if (Template->GetCompileConfig() != static_cast<const Abytek::F_RHIPipelineStateTemplateCompileConfig&>(Config)) \
-                                { \
-                                    ShouldCompile = true; \
-                                } \
-                                Abytek::TF_Set<Abytek::F_Text> SlangShaderFilePaths; \
-                                for (const auto& [_, SlangShaderFileVersion] : Template->GetSlangShaderFileVersions()) \
-                                { \
-                                    if (SlangShaderFilePaths.find(SlangShaderFileVersion.Path) != SlangShaderFilePaths.end()) continue; \
-                                    SlangShaderFilePaths.insert(SlangShaderFileVersion.Path); \
-                                } \
-                                Config.ForEachShaderSource( \
-                                    [&](const Abytek::F_RHIShaderSource& ShaderSource) \
-                                    { \
-                                        if (ShaderSource.Type == Abytek::E_RHIShaderSourceType::SLANG) \
-                                        { \
-                                            ShaderSource.Slang.ForEachModuleFile( \
-                                                [&](const Abytek::F_Name& ModuleName, const Abytek::TF_Optional<Abytek::F_Text>& SlangShaderFilePath) \
-                                                { \
-                                                    ABYTEK_ENGINE_RENDER_CORE_ASSERT(SlangShaderFilePath) << "Not found slang shader file for module: " << ModuleName << ", in global render pipeline: " << Abytek::TypeFullName<Name>(); \
-                                                    if (SlangShaderFilePaths.find(*SlangShaderFilePath) != SlangShaderFilePaths.end()) return; \
-                                                    SlangShaderFilePaths.insert(*SlangShaderFilePath); \
-                                                } \
-                                            ); \
-                                            return; \
-                                        } \
-                                        ShouldCompile = true; \
-                                    } \
-                                ); \
-                                for (const auto& SlangShaderFilePath : SlangShaderFilePaths) \
-                                { \
-                                    auto SlangShaderFileVersion = Abytek::F_RHISlangShaderFileVersion::Make(SlangShaderFilePath); \
-                                    if (!SlangShaderFileVersion.LoadCurrent()) \
-                                    { \
-                                        ShouldCompile = true; \
-                                        continue; \
-                                    } \
-                                    auto It = LastSlangShaderFileVersions.find(SlangShaderFilePath); \
-                                    if (It == LastSlangShaderFileVersions.end()) \
-                                    { \
-                                        ShouldCompile = true; \
-                                        continue; \
-                                    } \
-                                    if (It->second.Hash != SlangShaderFileVersion.Hash) \
-                                    { \
-                                        ShouldCompile = true; \
-                                        continue; \
-                                    } \
-                                } \
-                                 \
-                                for (const auto& BindGroup : Config.BindGroups) \
-                                { \
-                                    if (OutTemplateHashCodesToCompile.find(BindGroup.TemplateHashCode) != OutTemplateHashCodesToCompile.end()) \
-                                    { \
-                                        ShouldCompile = true; \
-                                        break; \
-                                    } \
-                                } \
-                            } \
-                        } \
-                        else \
-                        { \
-                            ShouldCompile = true; \
-                        } \
-                        if (ShouldCompile) \
-                        { \
-                            OutTemplateHashCodesToCompile.insert(Config.HashCode); \
-                        } \
-                        else \
-                        { \
-                            ABYTEK_LOG_INFO() << "Re-use precompiled global render pipeline: " << Abytek::TypeFullName<Name>() << ", permutation hash code: " << Config.PermutationHashCode << ", template hash code: " << Config.HashCode; \
-                            continue; \
-                        } \
-                        OutCommands.push_back( \
-                            [=](Abytek::TF_Vector<Abytek::TS<Abytek::A_RHITemplate>>& OutTemplates) \
-                            { \
-                                ABYTEK_LOG_INFO() << "Compiling global render pipeline: " << Abytek::TypeFullName<Name>() << ", permutation hash code: " << Config.PermutationHashCode << ", template hash code: " << Config.HashCode; \
-                                Abytek::TS<Abytek::A_RHIPipelineStateTemplate> PipelineStateTemplate; \
-                                ABYTEK_FEEDBACK_STATUS_CHECK_HARD( \
-                                    Compiler->CompilePipelineStateTemplate( \
-                                        Config, \
-                                        PipelineStateTemplate \
-                                    ) \
-                                ); \
-                                OutTemplates.push_back(PipelineStateTemplate); \
-                                ABYTEK_LOG_INFO() << "Compiled global render pipeline: " << Abytek::TypeFullName<Name>() << ", permutation hash code: " << Config.PermutationHashCode << ", template hash code: " << Config.HashCode; \
-                            } \
+                        TemplateMap->TryBuildCommand( \
+                            RenderRegistry, \
+                            Abytek::Internal::GlobalRenderPipeline::EnableInternalDebugger, \
+                            Config, \
+                            OutCommands, \
+                            OutTemplateHashCodesToCompile, \
+                            OutTemplateHashCodes, \
+                            Abytek::ToText(Abytek::TypeFullName<Name>()) \
                         ); \
                     } \
                     return Abytek::F_FeedbackStatus::MakeSucceeded(); \
@@ -375,7 +285,7 @@ namespace Abytek
             ABYTEK_ENABLE_IF_NOT_DEVELOPMENT_BUILD( \
                 static Abytek::F_FeedbackStatus BuildCommandsAndCompilationSet( \
                     const Abytek::TS<Abytek::F_RenderPack>& Pack, \
-                    const Abytek::TW_Valid<Abytek::F_SerializableEnvironment>& SerializableEnvironment, \
+                    const Abytek::TS<Abytek::F_RenderRegistry>& RenderRegistry, \
                     const Abytek::TW_Valid<Abytek::A_RenderPackTemplateMap>& TemplateMap, \
                     Abytek::TF_Vector<Abytek::TF_Function<void(Abytek::TF_Vector<Abytek::TS<Abytek::A_RHITemplate>>& OutTemplates)>>& OutCommands, \
                     Abytek::TF_Set<Abytek::F_RHITemplateHashCode>& OutTemplateHashCodesToCompile, \

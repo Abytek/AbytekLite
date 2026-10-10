@@ -41,7 +41,10 @@ namespace Abytek
         ) override;
         
     public:
-        void UpdateWorldTransformMatrix_Simple(const F_Matrix4x4_F32& Value);
-        void UpdateStaticMesh_Simple(const TS<F_StaticMeshRenderProxy>& StaticMeshRenderProxy);
+        void UpdateWorldTransformMatrix(const F_Matrix4x4_F32& Value);
+        void UpdateStaticMesh(const TS<F_StaticMeshRenderProxy>& StaticMeshRenderProxy);
+        
+    public:
+        B8 ShouldUseSimplePrimitive() const;
     };
 }

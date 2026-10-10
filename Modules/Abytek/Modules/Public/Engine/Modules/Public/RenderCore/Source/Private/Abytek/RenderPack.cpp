@@ -146,7 +146,205 @@ namespace Abytek
     void A_RenderPackTemplateMap::OnModifyTemplates()
     {
     }
-    
+
+    B8 A_RenderPackTemplateMap::ShouldCompile(
+        const F_RHIPipelineStateTemplateCompileParams& CompileParams,
+        const TF_Set<F_RHITemplateHashCode>& TemplateHashCodesToCompile,
+        const F_Name& Name
+    )
+    {
+        B8 Result = false; 
+        if (HasTemplate(CompileParams.HashCode))
+        {
+            TW<A_RHIPipelineStateTemplate> Template;
+            if (GetTemplate(CompileParams.HashCode).TryDynamicCast<A_RHIPipelineStateTemplate>(Template))
+            {
+                const auto& LastSlangShaderFileVersions = Template->GetSlangShaderFileVersions();
+                if (Template->GetConfig() != static_cast<const F_RHIPipelineStateTemplateConfig&>(CompileParams))
+                {
+                    Result = true;
+                }
+                if (Template->GetCompileConfig() != static_cast<const F_RHIPipelineStateTemplateCompileConfig&>(CompileParams))
+                {
+                    Result = true;
+                }
+                TF_Set<F_Text> SlangShaderFilePaths;
+                for (const auto& [_, SlangShaderFileVersion] : Template->GetSlangShaderFileVersions())
+                {
+                    if (SlangShaderFilePaths.find(SlangShaderFileVersion.Path) != SlangShaderFilePaths.end()) continue;
+                    SlangShaderFilePaths.insert(SlangShaderFileVersion.Path);
+                }
+                CompileParams.ForEachShaderSource(
+                    [&](const F_RHIShaderSource& ShaderSource)
+                    {
+                        if (ShaderSource.Type == E_RHIShaderSourceType::SLANG)
+                        {
+                            ShaderSource.Slang.ForEachModuleFile(
+                                [&](const F_Name& ModuleName, const TF_Optional<F_Text>& SlangShaderFilePath)
+                                {
+                                    ABYTEK_ENGINE_RENDER_CORE_ASSERT(SlangShaderFilePath) << "Not found slang shader file for module: " << ModuleName << ", in render pipeline: " << Name;
+                                    if (SlangShaderFilePaths.find(*SlangShaderFilePath) != SlangShaderFilePaths.end()) return;
+                                    SlangShaderFilePaths.insert(*SlangShaderFilePath);
+                                }
+                            );
+                            return;
+                        }
+                        Result = true;
+                    }
+                );
+                for (const auto& SlangShaderFilePath : SlangShaderFilePaths)
+                {
+                    auto SlangShaderFileVersion = F_RHISlangShaderFileVersion::Make(SlangShaderFilePath);
+                    if (!SlangShaderFileVersion.LoadCurrent())
+                    {
+                        Result = true;
+                        continue;
+                    }
+                    auto It = LastSlangShaderFileVersions.find(SlangShaderFilePath);
+                    if (It == LastSlangShaderFileVersions.end())
+                    {
+                        Result = true;
+                        continue;
+                    }
+                    if (It->second.Hash != SlangShaderFileVersion.Hash)
+                    {
+                        Result = true;
+                        continue;
+                    }
+                }
+                
+                for (const auto& BindGroup : CompileParams.BindGroups)
+                {
+                    if (TemplateHashCodesToCompile.find(BindGroup.TemplateHashCode) != TemplateHashCodesToCompile.end())
+                    {
+                        Result = true;
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            Result = true;
+        }
+        return Result;
+    }
+    B8 A_RenderPackTemplateMap::ShouldCompile(
+        const F_RHIBindGroupTemplateCompileParams& CompileParams,
+        const TF_Set<F_RHITemplateHashCode>& TemplateHashCodesToCompile,
+        const F_Name& Name
+    )
+    {
+        B8 Result = false; 
+        if (HasTemplate(CompileParams.HashCode))
+        {
+            TW<A_RHIBindGroupTemplate> Template;
+            if (GetTemplate(CompileParams.HashCode).TryDynamicCast<A_RHIBindGroupTemplate>(Template))
+            {
+                if (Template->GetConfig() != static_cast<const F_RHIBindGroupTemplateConfig&>(CompileParams))
+                {
+                    Result = true;
+                }
+                if (Template->GetCompileConfig() != static_cast<const F_RHIBindGroupTemplateCompileConfig&>(CompileParams))
+                {
+                    Result = true;
+                }
+            }
+        }
+        else
+        {
+            Result = true;
+        }
+        return Result;
+    }
+
+    B8 A_RenderPackTemplateMap::TryBuildCommand(
+        const TS<F_RenderRegistry>& RenderRegistry,
+        B8 ShouldCompileByDefault,
+        const F_RHIPipelineStateTemplateCompileParams& CompileParams,
+        TF_Vector<TF_Function<void(TF_Vector<TS<A_RHITemplate>>& OutTemplates)>>& OutCommands,
+        TF_Set<F_RHITemplateHashCode>& OutTemplateHashCodesToCompile,
+        TF_Set<F_RHITemplateHashCode>& OutTemplateHashCodes, 
+        const F_Name& Name
+    )
+    {
+        B8 ShouldCompileTemplate = ShouldCompileByDefault | ShouldCompile(CompileParams, OutTemplateHashCodesToCompile, Name);
+        OutTemplateHashCodes.insert(CompileParams.HashCode);
+        if (ShouldCompileTemplate)
+        {
+            OutTemplateHashCodesToCompile.insert(CompileParams.HashCode);
+        }
+        else
+        {
+            ABYTEK_LOG_INFO() << "Re-use precompiled global render pipeline: " << Name << ", template hash code: " << CompileParams.HashCode;
+            return false;
+        }
+        
+        auto Registry = RenderRegistry;
+        auto TemplateDatabase = Registry->GetTemplateDatabase();
+        auto Compiler = Registry->GetCompiler();
+        
+        OutCommands.push_back(
+            [=](TF_Vector<TS<A_RHITemplate>>& OutTemplates)
+            {
+                ABYTEK_LOG_INFO() << "Compiling render pipeline: " << Name << ", template hash code: " << CompileParams.HashCode;
+                TS<A_RHIPipelineStateTemplate> PipelineStateTemplate;
+                ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
+                    Compiler->CompilePipelineStateTemplate(
+                        CompileParams,
+                        PipelineStateTemplate
+                    )
+                );
+                OutTemplates.push_back(PipelineStateTemplate);
+                ABYTEK_LOG_INFO() << "Compiled render pipeline: " << Name << ", template hash code: " << CompileParams.HashCode;
+            }
+        );
+        return true;
+    }
+    B8 A_RenderPackTemplateMap::TryBuildCommand(
+        const TS<F_RenderRegistry>& RenderRegistry,
+        B8 ShouldCompileByDefault,
+        const F_RHIBindGroupTemplateCompileParams& CompileParams,
+        TF_Vector<TF_Function<void(TF_Vector<TS<A_RHITemplate>>& OutTemplates)>>& OutCommands,
+        TF_Set<F_RHITemplateHashCode>& OutTemplateHashCodesToCompile,
+        TF_Set<F_RHITemplateHashCode>& OutTemplateHashCodes, 
+        const F_Name& Name
+    )
+    {
+        B8 ShouldCompileTemplate = ShouldCompileByDefault | ShouldCompile(CompileParams, OutTemplateHashCodesToCompile, Name);
+        OutTemplateHashCodes.insert(CompileParams.HashCode);
+        if (ShouldCompileTemplate)
+        {
+            OutTemplateHashCodesToCompile.insert(CompileParams.HashCode);
+        }
+        else
+        {
+            ABYTEK_LOG_INFO() << "Re-use precompiled global render binding: " << Name << ", template hash code: " << CompileParams.HashCode;
+            return false;
+        }
+        
+        auto Registry = RenderRegistry;
+        auto TemplateDatabase = Registry->GetTemplateDatabase();
+        auto Compiler = Registry->GetCompiler();
+        
+        OutCommands.push_back(
+            [=](TF_Vector<TS<A_RHITemplate>>& OutTemplates)
+            {
+                ABYTEK_LOG_INFO() << "Compiling render binding: " << Name << ", template hash code: " << CompileParams.HashCode;
+                TS<A_RHIBindGroupTemplate> BindGroupTemplate;
+                ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
+                    Compiler->CompileBindGroupTemplate(
+                        CompileParams,
+                        BindGroupTemplate
+                    )
+                );
+                OutTemplates.push_back(BindGroupTemplate);
+                ABYTEK_LOG_INFO() << "Compiled render binding: " << Name << ", template hash code: " << CompileParams.HashCode;
+            }
+        );
+        return true;
+    }
+
     F_RenderPackTemplateMap::F_RenderPackTemplateMap()
     {
     }
@@ -173,7 +371,10 @@ namespace Abytek
     }
     void F_RenderPackData::OnRemoveTemplate(F_RHITemplateHashCode HashCode)
     {
-        _TemplateRuntimes.erase(_TemplateRuntimes.find(HashCode));
+        auto It = _TemplateRuntimes.find(HashCode);
+        It->second->GetTemplate()->Relax(); // make sure that other templates with this hash code can be added to the template database
+        It->second->Relax(); // make sure that other template runtimes with this hash code can be added to the template runtime database
+        _TemplateRuntimes.erase(It);
     }
 
     void F_RenderPackData::EnqueueCommand(TF_Function<void()>&& Command)
@@ -192,11 +393,8 @@ namespace Abytek
         if (!HasSerializableFlags(E_SerializableObjectFlag::CDO))
         {
             ABYTEK_ENGINE_RENDER_CORE_ASSERT(GetWorld()->GetSubsystemContainer()->GetUnit<F_RenderCoreManager>()->GetAllowCreateRenderPacks());
-            const auto& Metadata = GetEnvironment()->Metadata;
-            _Registry = AnyCast<TS<F_RenderRegistry>>(
-                Metadata.find(
-                    F_RenderRegistry::GetSerializableEnvironmentMetadataElementName_Registry()
-                )->second
+            _Registry = F_RenderRegistry::GetSerializableEnvironmentMetadataElement_Registry(
+                GetEnvironment()
             );
         }
     }
@@ -210,16 +408,6 @@ namespace Abytek
     
     void F_RenderPack::OnLoad()
     {
-#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
-        if (!HasSerializableFlags(E_SerializableObjectFlag::CDO))
-        {
-            PrepareTemplates(
-                GetEnvironment(), 
-                ABYTEK_WTHIS().DynamicCast<A_RenderPackTemplateMap>()
-            );
-        }
-#endif
-        
         _IsTemplatesLoaded = true;
         if (!HasSerializableFlags(E_SerializableObjectFlag::CDO))
         {
@@ -232,14 +420,11 @@ namespace Abytek
     }
     void F_RenderPack::OnUnload()
     {
-        if (!HasSerializableFlags(E_SerializableObjectFlag::CDO))
+        for (const auto& Port : _Registry->GetPorts())
         {
-            for (const auto& Port : _Registry->GetPorts())
-            {
-                RemoveData(Port->GetData());
-            }
-            _Registry->_UnregistryPack(ABYTEK_WTHIS());
+            RemoveData(Port->GetData());
         }
+        _Registry->_UnregistryPack(ABYTEK_WTHIS());
         _IsTemplatesLoaded = false;
     }
 
@@ -323,7 +508,7 @@ namespace Abytek
 
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
     void F_RenderPack::PrepareTemplates(
-        const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
+        const TS<F_RenderRegistry>& RenderRegistry,
         const TW_Valid<A_RenderPackTemplateMap>& RenderPackTemplateMap
     )
     {
@@ -395,7 +580,9 @@ namespace Abytek
         auto CookProfile = F_CookProfile::GetMain();
         auto SerializableEnvironment = CookProfile->GetSerializableEnvironment();
         PrepareTemplates(
-            SerializableEnvironment.Weak(),
+            F_RenderRegistry::GetSerializableEnvironmentMetadataElement_Registry(
+                SerializableEnvironment.Weak()
+            ),
             _CookedTemplateMap.Weak()
         );
     }
@@ -409,6 +596,10 @@ namespace Abytek
     {
         auto Data = TS<F_RenderPackData>()(ABYTEK_WTHIS(), PortData);
         _DataList.push_back(Data);
+        if (PortData->GetPort() == _Registry->GetMainPort().Weak())
+        {
+            _MainData = Data;
+        }
         
         const auto& Templates = GetSortedTemplates();
         TF_Vector<TS<A_RHITemplateExportedData>> ExportedDataList;
@@ -447,6 +638,10 @@ namespace Abytek
                     {
                     }
                 );
+                if (_MainData == Data)
+                {
+                    _MainData = {};
+                }
                 _DataList.erase(It);
                 break;
             }
@@ -455,14 +650,14 @@ namespace Abytek
 
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
     void F_RenderPack::ExecuteExclusiveTemplateCompilation(
-        const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
+        const TS<F_RenderRegistry>& RenderRegistry,
         const TW_Valid<A_RenderPackTemplateMap>& RenderPackTemplateMap,
         const TF_Set<F_RHITemplateHashCode>& TemplateHashCodesToCompile,
         const TF_Set<F_RHITemplateHashCode>& RootTemplateHashCodes, 
         TF_Function<void(TF_Vector<TS<A_RHITemplate>>& OutNewTemplates)>&& MainWork
     )
     {
-        auto Registry = F_RenderRegistry::GetSerializableEnvironmentMetadataElement_Registry(SerializableEnvironment);
+        auto Registry = RenderRegistry;
         auto TemplateDatabase = Registry->GetTemplateDatabase();
         
         {

@@ -7,7 +7,7 @@ namespace Abytek
 {
     class A_RHITemplate;
     
-    using F_RHITemplateHashCode = Sz;
+    using F_RHITemplateHashCode = U64;
 
     enum class E_RHITemplateHashMode : U8
     {

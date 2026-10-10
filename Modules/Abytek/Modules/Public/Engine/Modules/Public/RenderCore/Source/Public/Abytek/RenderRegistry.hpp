@@ -157,6 +157,7 @@ namespace Abytek
         
     private:
         TW<F_World> _World;
+        TW<F_SerializableEnvironment> _SerializableEnvironment;
         F_RenderCoreRHIConfig _RHIConfig;
         B8 _DebugGeneratedShaders = false;
         TF_Vector<TS<F_RenderRegistry>> _Dependencies;
@@ -176,6 +177,10 @@ namespace Abytek
         TW_Valid<F_World> GetWorld() const override
         {
             return _World;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetSerializableEnvironment() const noexcept
+        {
+            return _SerializableEnvironment;
         }
         ABYTEK_FORCE_INLINE const auto& GetRHIConfig() const noexcept
         {

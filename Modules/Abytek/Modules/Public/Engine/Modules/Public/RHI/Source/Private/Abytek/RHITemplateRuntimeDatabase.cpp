@@ -34,10 +34,15 @@ namespace Abytek
         ABYTEK_ENGINE_RHI_ASSERT(_TemplateRuntimes.find(TemplateRuntime->GetHashCode()) == _TemplateRuntimes.end());
         _TemplateRuntimes.insert({ TemplateRuntime->GetHashCode(), TemplateRuntime });
     }
-    void A_RHITemplateRuntimeDatabase::_UntrackTemplateRuntime(const TW_Valid<A_RHITemplateRuntime>& TemplateRuntime)
+    void A_RHITemplateRuntimeDatabase::_TryUntrackTemplateRuntime(const TW_Valid<A_RHITemplateRuntime>& TemplateRuntime)
     {
         TF_ScopeLock<F_SpinLock> _(_SpinLock);
+        if (TemplateRuntime->_IsRelaxed)
+        {
+            return;
+        }
         ABYTEK_ENGINE_RHI_ASSERT(_TemplateRuntimes.find(TemplateRuntime->GetHashCode()) != _TemplateRuntimes.end());
+        TemplateRuntime->_IsRelaxed = true;
         _TemplateRuntimes.erase(_TemplateRuntimes.find(TemplateRuntime->GetHashCode()));
     }
 

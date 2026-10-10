@@ -33,9 +33,24 @@ namespace Abytek
     {
     }
 
+    void F_GlobalRenderPack::OnLoad()
+    {
+        F_RenderPack::OnLoad();
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        PrepareTemplates(
+            GetRegistry(), 
+            ABYTEK_WTHIS().DynamicCast<A_RenderPackTemplateMap>()
+        );
+#endif
+    }
+    void F_GlobalRenderPack::OnUnload()
+    {
+        F_RenderPack::OnUnload();
+    }
+
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
     void F_GlobalRenderPack::PrepareTemplates(
-        const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
+        const TS<F_RenderRegistry>& RenderRegistry,
         const TW_Valid<A_RenderPackTemplateMap>& RenderPackTemplateMap
     )
     {
@@ -102,7 +117,7 @@ namespace Abytek
             ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
                 CastedMetadataElement(
                     ABYTEK_STHIS(), 
-                    SerializableEnvironment, 
+                    RenderRegistry, 
                     RenderPackTemplateMap, 
                     Commands_CompileBinding, 
                     TemplateHashCodesToCompile,
@@ -125,7 +140,7 @@ namespace Abytek
             ABYTEK_FEEDBACK_STATUS_CHECK_HARD(
                 CastedMetadataElement(
                     ABYTEK_STHIS(), 
-                    SerializableEnvironment, 
+                    RenderRegistry, 
                     RenderPackTemplateMap, 
                     Commands_CompilePipeline, 
                     TemplateHashCodesToCompile,
@@ -136,7 +151,7 @@ namespace Abytek
         
         // Compile
         ExecuteExclusiveTemplateCompilation(
-            SerializableEnvironment,
+            RenderRegistry,
             RenderPackTemplateMap,
             TemplateHashCodesToCompile,
             TemplateHashCodes,

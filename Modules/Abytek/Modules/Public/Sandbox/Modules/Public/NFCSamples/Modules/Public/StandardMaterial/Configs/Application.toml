@@ -1,0 +1,4 @@
+
+[Abytek.PersistentLevel]
+Types = [ "Abytek::F_StandardMaterialSampleLevel" ]
+Paths = [ "@Abytek.Sandbox.NFCSamples.StandardMaterial::Assets:/.IgnoreSVC/StandardMaterialSampleLevel::StandardMaterialSampleLevel" ]

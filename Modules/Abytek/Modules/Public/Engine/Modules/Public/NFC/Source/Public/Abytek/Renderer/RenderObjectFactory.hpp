@@ -16,6 +16,8 @@ namespace Abytek
     struct F_RendererBuildParams;
     class A_RenderPrimitiveProcessor_Simple;
     class A_RenderPrimitiveSet_Simple;
+    class A_RenderPrimitiveProcessor_Standard;
+    class A_RenderPrimitiveSet_Standard;
     
     class ABYTEK_ENGINE_NFC_API A_RenderObjectFactory : public A_Object
     {
@@ -43,5 +45,9 @@ namespace Abytek
     public:
         virtual TS<A_RenderPrimitiveProcessor_Simple> CreatePrimitiveProcessor_Simple();
         virtual TS<A_RenderPrimitiveSet_Simple> CreatePrimitiveSet_Simple();
+        
+    public:
+        virtual TS<A_RenderPrimitiveProcessor_Standard> CreatePrimitiveProcessor_Standard();
+        virtual TS<A_RenderPrimitiveSet_Standard> CreatePrimitiveSet_Standard();
     };
 }

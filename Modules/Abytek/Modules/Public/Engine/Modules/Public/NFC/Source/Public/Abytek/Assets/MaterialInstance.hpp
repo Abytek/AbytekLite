@@ -27,6 +27,15 @@ namespace Abytek
         
     public:
         TS<A_Material> GetMaterial() const override;
-        TS<F_MaterialInstance> GetMaterialInstance() const override;
+        
+    public:
+        B8 IsRenderable() const override;
+        
+    protected:
+        TS<A_RenderProxy> CreateRenderProxy() override;
+        
+    protected:
+        void OnCreateRenderState() override;
+        void OnDestroyRenderState() override;
     };
 }

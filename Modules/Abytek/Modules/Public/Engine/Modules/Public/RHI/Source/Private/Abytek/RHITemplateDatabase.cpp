@@ -20,10 +20,15 @@ namespace Abytek
         ABYTEK_ENGINE_RHI_ASSERT(_Templates.find(Template->GetHashCode()) == _Templates.end());
         _Templates.insert({ Template->GetHashCode(), Template });
     }
-    void A_RHITemplateDatabase::_UntrackTemplate(const TW_Valid<A_RHITemplate>& Template)
+    void A_RHITemplateDatabase::_TryUntrackTemplate(const TW_Valid<A_RHITemplate>& Template)
     {
         TF_ScopeLock<F_SpinLock> _(_SpinLock);
+        if (Template->_IsRelaxed)
+        {
+            return;
+        }
         ABYTEK_ENGINE_RHI_ASSERT(_Templates.find(Template->GetHashCode()) != _Templates.end());
+        Template->_IsRelaxed = true;
         _Templates.erase(_Templates.find(Template->GetHashCode()));
     }
 

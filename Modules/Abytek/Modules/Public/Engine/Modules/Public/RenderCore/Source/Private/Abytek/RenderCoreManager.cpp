@@ -34,6 +34,7 @@ namespace Abytek
             
             F_RenderRegistryBuildParams BuildParams;
             BuildParams.World = GetWorld();
+            BuildParams.SerializableEnvironment = GetWorld()->GetEnvironment();
             BuildParams.RHIConfig.API = F_RHISubsystem::GetInstance()->GetActiveAPI();
             BuildParams.RHIConfig.FeatureSupports = _MainFeatureSupports;
 #ifdef ABYTEK_ENGINE_RHI_ENABLE_DRIVER_DEBUGGER

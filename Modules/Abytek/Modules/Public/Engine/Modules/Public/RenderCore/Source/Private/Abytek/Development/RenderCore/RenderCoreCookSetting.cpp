@@ -51,6 +51,7 @@ namespace Abytek
             
         F_RenderRegistryBuildParams BuildParams;
         BuildParams.World = World;
+        BuildParams.SerializableEnvironment = SerializableEnvironment.Weak();
         BuildParams.RHIConfig = _RHIConfig;
         _RenderRegistry = TS<F_RenderRegistry>()(BuildParams);
         

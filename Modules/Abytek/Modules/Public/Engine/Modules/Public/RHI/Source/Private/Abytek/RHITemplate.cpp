@@ -15,7 +15,12 @@ namespace Abytek
     }
     A_RHITemplate::~A_RHITemplate()
     {
-        _Database->_UntrackTemplate(ABYTEK_WTHIS());
+        Relax();
+    }
+
+    void A_RHITemplate::Relax()
+    {
+        _Database->_TryUntrackTemplate(ABYTEK_WTHIS());
     }
 
     B8 A_RHITemplate::HasDependencyHashCode(F_RHITemplateHashCode DependencyHashCode)

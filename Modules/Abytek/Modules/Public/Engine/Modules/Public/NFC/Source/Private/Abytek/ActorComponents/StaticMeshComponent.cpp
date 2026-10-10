@@ -73,7 +73,7 @@ namespace Abytek
                 ]
                 {
                     CachedRenderProxy->_StaticMeshRenderProxy = CachedStaticMeshRenderProxy;
-                    CachedRenderProxy->UpdateStaticMesh_Simple(CachedStaticMeshRenderProxy);
+                    CachedRenderProxy->UpdateStaticMesh(CachedStaticMeshRenderProxy);
                 }
             );
         }
@@ -90,7 +90,7 @@ namespace Abytek
                     CachedRenderProxy = RenderProxy.StaticCast<F_StaticMeshComponentRenderProxy>()
                 ]
                 {
-                    CachedRenderProxy->UpdateWorldTransformMatrix_Simple(
+                    CachedRenderProxy->UpdateWorldTransformMatrix(
                         CachedRenderProxy->GetWorldTransformMatrix()    
                     );
                 }

@@ -30,13 +30,21 @@
 #include "Abytek/Renderer/RenderPrimitive/Archetypes/Data_Simple.hpp"
 #include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveManager.hpp"
 
-#include "Abytek/Renderer/VertexFactory/VertexFactoryType.hpp"
+#include "Abytek/Renderer/StandardPrimitive/GeometryFactoryType.hpp"
+#include "Abytek/Renderer/StandardPrimitive/GeometryFactoryTypeManager.hpp"
+#include "Abytek/Renderer/StandardPrimitive/GeometryFactoryType_StaticMeshECMS.hpp"
+#include "Abytek/Renderer/StandardPrimitive/RenderPrimitiveData.hpp"
 
 #include "Abytek/Assets/Texture.hpp"
 #include "Abytek/Assets/StaticMesh.hpp"
 #include "Abytek/Assets/MaterialInterface.hpp"
 #include "Abytek/Assets/Material.hpp"
+#include "Abytek/Assets/MaterialCommon.hpp"
 #include "Abytek/Assets/MaterialInstance.hpp"
+#include "Abytek/Assets/MaterialProperty.hpp"
+#include "Abytek/Assets/StandardMaterialCommon.hpp"
+#include "Abytek/Assets/StandardMaterial.hpp"
+#include "Abytek/Renderer/StandardPrimitive/MaterialTargetType.hpp"
 
 
 namespace Abytek
@@ -99,24 +107,45 @@ namespace Abytek
         RegisterStaticType<F_RenderViewUniformDataBinding>();
         RegisterStaticType<RenderGeometry::F_GlobalSRVBinding>();
         RegisterStaticType<RenderGeometry::F_GlobalUAVBinding>();
-        RegisterStaticType<A_VertexFactoryType>();
 
         RegisterStaticType<RenderPrimitive::F_Data_Simple>();
+        
+        RegisterStaticType<A_GeometryFactoryType>();
+        RegisterStaticType<F_GeometryFactoryTypeManager>();
+        RegisterStaticType<A_GeometryFactoryType_StaticMeshECMS>();
+        RegisterStaticType<A_MaterialTargetType>();
+        RegisterStaticType<F_MaterialTargetTypeManager>();
+        RegisterStaticType<RenderPrimitive::F_Data_Standard>();
         
         RegisterStaticType<F_Texture>();
         RegisterStaticType<F_TextureSetting>();
         RegisterStaticType<F_StaticMesh>();
         RegisterStaticType<F_StaticMeshSetting>();
-        RegisterStaticType<A_MaterialProperty>();
+        RegisterStaticType<A_MaterialPropertyBase>();
         RegisterStaticType<TF_MaterialPropertyScalar<B8>>();
         RegisterStaticType<TF_MaterialPropertyScalar<U32>>();
         RegisterStaticType<TF_MaterialPropertyScalar<I32>>();
         RegisterStaticType<TF_MaterialPropertyScalar<F32>>();
         RegisterStaticType<F_MaterialPropertyTexture>();
+        RegisterStaticType<F_MaterialPropertyList>();
+        RegisterStaticType<A_MaterialPropertyInstanceBase>();
+        RegisterStaticType<TF_MaterialPropertyInstanceScalar<B8>>();
+        RegisterStaticType<TF_MaterialPropertyInstanceScalar<U32>>();
+        RegisterStaticType<TF_MaterialPropertyInstanceScalar<I32>>();
+        RegisterStaticType<TF_MaterialPropertyInstanceScalar<F32>>();
+        RegisterStaticType<F_MaterialPropertyInstanceTexture>();
+        RegisterStaticType<F_MaterialPropertyInstanceList>();
         RegisterStaticType<A_MaterialInterface>();
-        RegisterStaticType<A_MaterialRenderPack>();
+        RegisterStaticType<F_MaterialRenderPack>();
         RegisterStaticType<A_Material>();
         RegisterStaticType<F_MaterialInstance>();
+        RegisterStaticType<E_MaterialShaderSourceType>();
+        RegisterStaticType<F_MaterialShaderSource>();
+        RegisterStaticType<F_MaterialShaderSource_Slang>();
+        RegisterStaticType<E_StandardMaterialDomain>();
+        RegisterStaticType<E_StandardMaterialShadingModel>();
+        RegisterStaticType<F_StandardMaterialShaderParameters>();
+        RegisterStaticType<F_StandardMaterial>();
     }
 
     void F_NFCModule::OnInit()

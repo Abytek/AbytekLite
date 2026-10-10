@@ -17,6 +17,7 @@ namespace Abytek
     struct F_RenderRegistryBuildParams
     {
         TW<F_World> World;
+        TW<F_SerializableEnvironment> SerializableEnvironment;
         F_RenderCoreRHIConfig RHIConfig;
         TF_Vector<TS<F_RenderRegistry>> Dependencies;
         B8 DebugGeneratedShaders = false;

@@ -5,6 +5,7 @@
 
 namespace Abytek
 {
+    class F_WorldContextDevelopmentData;
     class F_World;
 
     struct I_GetWorld
@@ -27,5 +28,10 @@ namespace Abytek
     public:
         A_WorldContext(const F_SerializableObjectInitParams& InitParams);
         ~A_WorldContext() override;
+        
+    public:
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        virtual TS<F_WorldContextDevelopmentData> GetWorldContextDevelopmentData() const;
+#endif
     };
 }

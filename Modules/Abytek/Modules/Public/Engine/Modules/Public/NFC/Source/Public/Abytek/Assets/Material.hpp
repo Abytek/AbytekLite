@@ -3,116 +3,35 @@
 #include "Abytek/Engine.NFC.prerequisites.hpp"
 #include "Abytek/RenderPack.hpp"
 #include "Abytek/Assets/MaterialInterface.hpp"
+#include "Abytek/Development/WorldContextDevelopmentData.hpp"
 
 
 namespace Abytek
 {
-    class ABYTEK_ENGINE_NFC_API A_MaterialProperty : public A_WorldContext
+    class F_MaterialInstance;
+    
+    struct F_MaterialCompileBinding
     {
-    public:
-        ABYTEK_BEGIN_REFLECTOR(A_WorldContext)
-        ABYTEK_END_REFLECTOR(A_MaterialProperty);
-        
-    private:
-        
-    public:
-        
-    protected:
-        A_MaterialProperty(const F_SerializableObjectInitParams& InitParam);
-        
-    public:
-        ~A_MaterialProperty() override;
-        
-    protected:
-        void OnLoad() override;
-        void OnUnload() override;
+        F_RHIBindGroupTemplateCompileParams RHICompileParams;
+    };
+    struct F_MaterialCompilePipeline
+    {
+        F_RHIPipelineStateTemplateCompileParams RHICompileParams;
+    };
+    struct F_MaterialCompilePermutation
+    {
+        B8 ShouldCompile = true;
+        F_MaterialPermutationHashCode MaterialPermutationHashCode = 0;
+        F_MaterialPermutationHashCode TargetSignatureHashCode = 0;
+        TF_Vector<F_MaterialCompileBinding> ExternalBindings;
+        TF_Vector<F_MaterialCompilePipeline> ExternalPipelines;
     };
     
-    namespace Internal::MaterialProperty
-    {
-        template<typename __F>
-        struct TH_ValueForward 
-        {
-            using F = __F;
-        };
-        template<>
-        struct TH_ValueForward<Sz>
-        {
-            using F = TF_UInt<sizeof(Sz)>;
-        };
-        template<>
-        struct TH_ValueForward<PDiff>
-        {
-            using F = TF_Int<sizeof(PDiff)>;
-        };
-    }
-    
-    template<typename __F_Value>
-    class ABYTEK_ENGINE_NFC_API TF_MaterialPropertyScalar : public A_MaterialProperty
-    {
-    public:
-        using F_Value = typename Internal::MaterialProperty::TH_ValueForward<__F_Value>::F;
-        
-    public:
-        ABYTEK_BEGIN_REFLECTOR(A_MaterialProperty)
-        ABYTEK_END_REFLECTOR(TF_MaterialPropertyScalar)
-        {
-            auto ValueType = ReflectionType->ReflectReferenced<F_Value>();
-            ABYTEK_REFLECT_COMMAND(
-                OnReflectCanonicals,
-                [=]()
-                {
-                    if (auto ValueTypeCanonical = ValueType->GetCanonical())
-                    {
-                        ReflectionType->SetCanonical(
-                            ABYTEK_TEXT("Abytek::TF_MaterialPropertyScalar<")
-                            + *ValueTypeCanonical
-                            + ABYTEK_TEXT(">")
-                        );
-                    }
-                }
-            );
-        }
-        
-    private:
-        F_Value _Value = F_Value(0);
-        
-    public:
-        ABYTEK_FORCE_INLINE const auto& GetValue() const noexcept
-        {
-            return _Value;
-        }
-        
-    public:
-        TF_MaterialPropertyScalar(const F_SerializableObjectInitParams& InitParam) :
-            A_MaterialProperty(InitParam)
-        {
-        }
-        ~TF_MaterialPropertyScalar() override
-        {
-        }
-    };
-    
-    class ABYTEK_ENGINE_NFC_API F_MaterialPropertyTexture : public A_MaterialProperty
-    {
-    public:
-        ABYTEK_BEGIN_REFLECTOR(A_MaterialProperty)
-        ABYTEK_END_REFLECTOR(F_MaterialPropertyTexture);
-        
-    private:
-        
-    public:
-        
-    public:
-        F_MaterialPropertyTexture(const F_SerializableObjectInitParams& InitParam);
-        ~F_MaterialPropertyTexture() override;
-    };
-    
-    class ABYTEK_ENGINE_NFC_API A_MaterialRenderPack final : public F_RenderPack
+    class ABYTEK_ENGINE_NFC_API F_MaterialRenderPack : public F_RenderPack
     {
     public:
         ABYTEK_BEGIN_REFLECTOR(F_RenderPack)
-        ABYTEK_END_REFLECTOR(A_MaterialRenderPack);
+        ABYTEK_END_REFLECTOR(F_MaterialRenderPack);
         
     public:
         friend class A_Material;
@@ -126,16 +45,14 @@ namespace Abytek
             return _Material;
         }
         
-    protected:
-        A_MaterialRenderPack(const F_SerializableObjectInitParams& InitParams);
-        
     public:
-        ~A_MaterialRenderPack() override;
+        F_MaterialRenderPack(const F_SerializableObjectInitParams& InitParams);
+        ~F_MaterialRenderPack() override;
         
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
     public:
         void PrepareTemplates(
-            const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
+            const TS<F_RenderRegistry>& RenderRegistry,
             const TW_Valid<A_RenderPackTemplateMap>& RenderPackTemplateMap
         ) override;
 #endif
@@ -147,33 +64,78 @@ namespace Abytek
         ABYTEK_BEGIN_REFLECTOR(A_MaterialInterface)
         ABYTEK_END_REFLECTOR(A_Material);
         
+    public:
+        friend class F_MaterialRenderPack;
+        
     private:
-        TS<F_MaterialInstance> _MainInstance;
-        TS<A_MaterialRenderPack> _RenderPack;
+        TS<F_MaterialRenderPack> _RenderPack;
+        
+        F_MaterialPropertyList _SystemPropertyList;
+        F_MaterialPropertyList _UserDefinedPropertyList;
+        F_MaterialPropertyList _PropertyList;
+        F_MaterialPropertyListLayout _PropertyListLayout;
+        F_MaterialPropertyInstanceList _DefaultPropertyInstanceList;
+        F_MaterialPermutationHashCode _DefaultPermutationHashCode = 0;
+        
+        B8 _IsPropertyListLayoutDirty = true;
+        B8 _IsShaderDirty = true;
+        
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        TS<F_WorldContextDevelopmentData> _WorldContextDevelopmentData;
+#endif
         
         TF_Vector<TW<F_MaterialInstance>> _Instances;
         
-    protected:
-        TF_ReflectionTypeHandle<A_MaterialRenderPack> RenderPackType;
-        
     public:
-        ABYTEK_FORCE_INLINE const auto& GetMainInstance() const noexcept
-        {
-            return _MainInstance;
-        }
         ABYTEK_FORCE_INLINE const auto& GetRenderPack() const noexcept
         {
             return _RenderPack;
         }
         
+        ABYTEK_FORCE_INLINE const auto& GetSystemPropertyList() const noexcept
+        {
+            return _SystemPropertyList;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetUserDefinedPropertyList() const noexcept
+        {
+            return _UserDefinedPropertyList;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetPropertyList() const noexcept
+        {
+            return _PropertyList;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetPropertyListLayout() const noexcept
+        {
+            return _PropertyListLayout;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetDefaultPropertyInstanceList() const noexcept
+        {
+            return _DefaultPropertyInstanceList;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetDefaultPermutationHashCode() const noexcept
+        {
+            return _DefaultPermutationHashCode;
+        }
+        
+        ABYTEK_FORCE_INLINE const auto& IsPropertyListLayoutDirty() const noexcept
+        {
+            return _IsPropertyListLayoutDirty;
+        }
+        ABYTEK_FORCE_INLINE const auto& IsShaderDirty() const noexcept
+        {
+            return _IsShaderDirty;
+        }
+        
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        TS<F_WorldContextDevelopmentData> GetWorldContextDevelopmentData() const final
+        {
+            return _WorldContextDevelopmentData;
+        }
+#endif
+        
         ABYTEK_FORCE_INLINE const auto& GetInstances() const noexcept
         {
             return _Instances;
-        }
-        
-        ABYTEK_FORCE_INLINE const auto& GetRenderPackType() const noexcept
-        {
-            return RenderPackType;
         }
         
     protected:
@@ -192,6 +154,49 @@ namespace Abytek
         
     public:
         TS<A_Material> GetMaterial() const override;
-        TS<F_MaterialInstance> GetMaterialInstance() const override;
+        
+    public:
+        void AddSystemProperty_B8(const TF_MaterialPropertyScalar<B8>& Property);
+        void AddSystemProperty_U32(const TF_MaterialPropertyScalar<U32>& Property);
+        void AddSystemProperty_I32(const TF_MaterialPropertyScalar<I32>& Property);
+        void AddSystemProperty_F32(const TF_MaterialPropertyScalar<F32>& Property);
+        void AddSystemProperty_Texture(const F_MaterialPropertyTexture& Property);
+        
+    public:
+        void AddUserDefinedProperty_B8(const TF_MaterialPropertyScalar<B8>& Property);
+        void AddUserDefinedProperty_U32(const TF_MaterialPropertyScalar<U32>& Property);
+        void AddUserDefinedProperty_I32(const TF_MaterialPropertyScalar<I32>& Property);
+        void AddUserDefinedProperty_F32(const TF_MaterialPropertyScalar<F32>& Property);
+        void AddUserDefinedProperty_Texture(const F_MaterialPropertyTexture& Property);
+        
+    private:
+        void _UpdatePropertyList();
+        void _MarkPropertyListLayoutDirty();
+        
+    protected:
+        void MarkShaderDirty();
+        
+    public:
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        void PrepareMaterial();
+        void PrepareMaterialIfDirty();
+#endif
+        
+    public:
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+        virtual void GatherCompilePermutations(
+            const TS<F_RenderRegistry>& RenderRegistry,
+            const TW_Valid<A_RenderPackTemplateMap>& RenderPackTemplateMap,
+            const TF_Span<const F_MaterialPropertyInstanceList>& MaterialPermutations,
+            TF_Vector<F_MaterialCompilePermutation>& OutList
+        );
+#endif
+        
+    protected:
+        TS<A_RenderProxy> CreateRenderProxy() override;
+        
+    protected:
+        void OnCreateRenderState() override;
+        void OnDestroyRenderState() override;
     };
 }

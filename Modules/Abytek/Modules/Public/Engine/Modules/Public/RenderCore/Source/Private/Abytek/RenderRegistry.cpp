@@ -176,6 +176,7 @@ namespace Abytek
 
     F_RenderRegistry::F_RenderRegistry(const F_RenderRegistryBuildParams& BuildParams) :
         _World(BuildParams.World),
+        _SerializableEnvironment(BuildParams.SerializableEnvironment),
         _RHIConfig(BuildParams.RHIConfig),
         _DebugGeneratedShaders(BuildParams.DebugGeneratedShaders),
         _Dependencies(BuildParams.Dependencies)

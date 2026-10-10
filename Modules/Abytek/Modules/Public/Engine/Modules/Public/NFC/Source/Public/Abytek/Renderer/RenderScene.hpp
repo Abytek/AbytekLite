@@ -6,10 +6,12 @@
 namespace Abytek
 {
     class A_RenderPrimitiveProcessor_Simple;
+    class A_RenderPrimitiveProcessor_Standard;
     class A_WorldContext;
     class F_RenderGeometryStorage;
     class F_RenderPrimitiveManager;
-    class F_VertexFactoryTypeManager;
+    class F_GeometryFactoryTypeProxyManager;
+    class F_MaterialTargetTypeProxyManager;
     
     struct F_RenderSceneBuildParams
     {
@@ -23,9 +25,11 @@ namespace Abytek
     private:
         TS<F_RenderGeometryStorage> _GeometryStorage;
         TS<F_RenderPrimitiveManager> _PrimitiveManager;
-        TS<F_VertexFactoryTypeManager> _VertexFactoryTypeManager;
+        TS<F_GeometryFactoryTypeProxyManager> _GeometryFactoryTypeProxyManager;
+        TS<F_MaterialTargetTypeProxyManager> _MaterialTargetTypeProxyManager;
         
         TW<A_RenderPrimitiveProcessor_Simple> _PrimitiveProcessor_Simple;
+        TW<A_RenderPrimitiveProcessor_Standard> _PrimitiveProcessor_Standard;
         
     public:
         ABYTEK_FORCE_INLINE const auto& GetGeometryStorage() const noexcept
@@ -36,14 +40,22 @@ namespace Abytek
         {
             return _PrimitiveManager;
         }
-        ABYTEK_FORCE_INLINE const auto& GetVertexFactoryTypeManager() const noexcept
+        ABYTEK_FORCE_INLINE const auto& GetGeometryFactoryTypeProxyManager() const noexcept
         {
-            return _VertexFactoryTypeManager;
+            return _GeometryFactoryTypeProxyManager;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetMaterialTargetTypeProxyManager() const noexcept
+        {
+            return _MaterialTargetTypeProxyManager;
         }
         
         ABYTEK_FORCE_INLINE const auto& GetPrimitiveProcessor_Simple() const noexcept
         {
             return _PrimitiveProcessor_Simple;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetPrimitiveProcessor_Standard() const noexcept
+        {
+            return _PrimitiveProcessor_Standard;
         }
         
     public:

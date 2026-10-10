@@ -43,7 +43,7 @@ namespace Abytek
 
     private:
         void _TrackTemplate(const TW_Valid<A_RHITemplate>& Template);
-        void _UntrackTemplate(const TW_Valid<A_RHITemplate>& Template);
+        void _TryUntrackTemplate(const TW_Valid<A_RHITemplate>& Template);
 
     public:
         static TU<A_RHITemplateDatabase> Create(E_RHIAPI API, const F_RHIFeatureSupports& FeatureSupports);

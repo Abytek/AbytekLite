@@ -32,6 +32,7 @@ namespace Abytek
         TS<A_RHITemplateDatabase> _Database;
         TF_Vector<F_RHITemplateHashCode> _DependencyHashCodes;
         F_RHITemplateHashCode _HashCode;
+        B8 _IsRelaxed = false;
 
     public:
         ABYTEK_FORCE_INLINE const auto& GetDatabase() const noexcept
@@ -46,6 +47,10 @@ namespace Abytek
         {
             return _HashCode;
         }
+        ABYTEK_FORCE_INLINE auto IsRelaxed() const noexcept
+        {
+            return _IsRelaxed;
+        }
         
     protected:
         A_RHITemplate(
@@ -55,6 +60,9 @@ namespace Abytek
 
     public:
         ~A_RHITemplate() override;
+        
+    public:
+        void Relax();
 
     public:
         B8 HasDependencyHashCode(F_RHITemplateHashCode DependencyHashCode);

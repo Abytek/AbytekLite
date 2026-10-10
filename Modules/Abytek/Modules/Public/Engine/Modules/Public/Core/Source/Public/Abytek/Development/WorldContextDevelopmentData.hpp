@@ -37,6 +37,27 @@ namespace Abytek
         
     public:
         B8 CanSerialize(const TW_Valid<F_SerializableEnvironment>& Environment) const override;
+        
+    public:
+        B8 CheckGeneratedTextFile(
+            const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
+            const F_Name& FileName
+        );
+        F_FeedbackStatus GetGeneratedTextFileAbsolutePath(
+            const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
+            const F_Name& FileName,
+            F_Text& OutAbsolutePath
+        );
+        F_FeedbackStatus WriteGeneratedTextFile(
+            const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
+            const F_Name& FileName, 
+            const F_Text& Content
+        );
+        F_FeedbackStatus ReadGeneratedTextFile(
+            const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
+            const F_Name& FileName, 
+            F_Text& OutContent
+        );
     };
 }
 #endif

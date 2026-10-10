@@ -8,8 +8,10 @@
 #include "Abytek/Renderer/GPUData/GPUData.hpp"
 #include "Abytek/Renderer/RenderGeometry/RenderGeometryStorage.hpp"
 #include "Abytek/Renderer/RenderPrimitive/RenderPrimitiveManager.hpp"
-#include "Abytek/Renderer/VertexFactory/VertexFactoryTypeManager.hpp"
+#include "Abytek/Renderer/StandardPrimitive/GeometryFactoryTypeProxyManager.hpp"
+#include "Abytek/Renderer/StandardPrimitive/MaterialTargetTypeProxyManager.hpp"
 #include "Abytek/Renderer/RenderPrimitive/Archetypes/Processor_Simple.hpp"
+#include "Abytek/Renderer/StandardPrimitive/RenderPrimitiveProcessor.hpp"
 
 
 namespace Abytek
@@ -52,18 +54,34 @@ namespace Abytek
         }
         
         {
-            F_VertexFactoryTypeManagerBuildParams VertexFactoryTypeManagerBuildParams;
-            VertexFactoryTypeManagerBuildParams.Scene = ABYTEK_WTHIS();
+            F_GeometryFactoryTypeProxyManagerBuildParams GeometryFactoryTypeProxyManagerBuildParams;
+            GeometryFactoryTypeProxyManagerBuildParams.Scene = ABYTEK_WTHIS();
 #ifdef ABYTEK_DEBUG_INFO
-            _VertexFactoryTypeManager = F_VertexFactoryTypeManager::CreateAndInit_WithDebugName(
+            _GeometryFactoryTypeProxyManager = F_GeometryFactoryTypeProxyManager::CreateAndInit_WithDebugName(
                 *GetDebugName()
-                + ABYTEK_TEXT(".VertexFactoryTypeManager"),
+                + ABYTEK_TEXT(".GeometryFactoryTypeProxyManager"),
 #else
-            _VertexFactoryTypeManager = F_VertexFactoryTypeManager::CreateAndInit(
+            _GeometryFactoryTypeProxyManager = F_GeometryFactoryTypeProxyManager::CreateAndInit(
 #endif
                 GetWorldRenderResource(),
                 SubmissionItemContainer, 
-                VertexFactoryTypeManagerBuildParams
+                GeometryFactoryTypeProxyManagerBuildParams
+            );
+        }
+        
+        {
+            F_MaterialTargetTypeProxyManagerBuildParams MaterialTargetTypeProxyManagerBuildParams;
+            MaterialTargetTypeProxyManagerBuildParams.Scene = ABYTEK_WTHIS();
+#ifdef ABYTEK_DEBUG_INFO
+            _MaterialTargetTypeProxyManager = F_MaterialTargetTypeProxyManager::CreateAndInit_WithDebugName(
+                *GetDebugName()
+                + ABYTEK_TEXT(".MaterialTargetTypeProxyManager"),
+#else
+            _MaterialTargetTypeProxyManager = F_MaterialTargetTypeProxyManager::CreateAndInit(
+#endif
+                GetWorldRenderResource(),
+                SubmissionItemContainer, 
+                MaterialTargetTypeProxyManagerBuildParams
             );
         }
         
@@ -82,11 +100,30 @@ namespace Abytek
                 );
             }
         }
+        
+        {
+            if (auto Processor = GetRenderObjectFactory()->CreatePrimitiveProcessor_Standard())
+            {
+#ifdef ABYTEK_DEBUG_INFO
+                Processor->SetDebugName(
+                    *GetDebugName()
+                    + ABYTEK_TEXT(".PrimitiveProcessor_Standard")
+                );
+#endif
+                _PrimitiveProcessor_Standard = _PrimitiveManager->AddProcessor(
+                    SubmissionItemContainer,
+                    Processor
+                );
+            }
+        }
     }
     void A_RenderScene::Release(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
-        _VertexFactoryTypeManager->Release(SubmissionItemContainer);
-        _VertexFactoryTypeManager = {};
+        _MaterialTargetTypeProxyManager->Release(SubmissionItemContainer);
+        _MaterialTargetTypeProxyManager = {};
+        
+        _GeometryFactoryTypeProxyManager->Release(SubmissionItemContainer);
+        _GeometryFactoryTypeProxyManager = {};
         
         _PrimitiveManager->Release(SubmissionItemContainer);
         _PrimitiveManager = {};

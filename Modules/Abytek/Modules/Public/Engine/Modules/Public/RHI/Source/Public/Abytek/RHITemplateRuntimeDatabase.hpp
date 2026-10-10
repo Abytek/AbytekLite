@@ -39,7 +39,7 @@ namespace Abytek
 
     private:
         void _TrackTemplateRuntime(const TW_Valid<A_RHITemplateRuntime>& TemplateRuntime);
-        void _UntrackTemplateRuntime(const TW_Valid<A_RHITemplateRuntime>& TemplateRuntime);
+        void _TryUntrackTemplateRuntime(const TW_Valid<A_RHITemplateRuntime>& TemplateRuntime);
 
     public:
         TS_Valid<A_RHITemplateRuntime> GetOrActivateRuntime(

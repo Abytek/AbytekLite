@@ -8,6 +8,8 @@
 #include "Abytek/Renderer/WorldRenderResource.hpp"
 #include "Abytek/Renderer/RenderPrimitive/Archetypes/Processor_Simple.hpp"
 #include "Abytek/Renderer/RenderPrimitive/Archetypes/PrimitiveSet_Simple.hpp"
+#include "Abytek/Renderer/StandardPrimitive/RenderPrimitiveSet.hpp"
+#include "Abytek/Renderer/StandardPrimitive/RenderPrimitiveProcessor.hpp"
 
 
 namespace Abytek
@@ -24,8 +26,8 @@ namespace Abytek
     {
         A_PrimitiveComponentRenderProxy::OnCreateRenderState_RenderTask(SubmissionItemContainer);
         
-        UpdateWorldTransformMatrix_Simple(GetWorldTransformMatrix());
-        UpdateStaticMesh_Simple(GetStaticMeshRenderProxy());
+        UpdateWorldTransformMatrix(GetWorldTransformMatrix());
+        UpdateStaticMesh(GetStaticMeshRenderProxy());
     }
     void F_StaticMeshComponentRenderProxy::OnDestroyRenderState_RenderTask(const TS<A_RHISubmissionItemContainer>& SubmissionItemContainer)
     {
@@ -40,9 +42,19 @@ namespace Abytek
     {
         auto StaticMeshRenderProxy = GetStaticMeshRenderProxy();
         ABYTEK_ENGINE_NFC_ASSERT(StaticMeshRenderProxy->GetDataType() == E_StaticMeshDataType::ECMS);
+        
+        if (ShouldUseSimplePrimitive())
+        {
+            if (const auto& Resource = StaticMeshRenderProxy->GetResource_ECMS())
+            {
+                OutPrimitiveSets.push_back(GetRenderObjectFactory()->CreatePrimitiveSet_Simple());
+            }
+            return;
+        }
+        
         if (const auto& Resource = StaticMeshRenderProxy->GetResource_ECMS())
         {
-            OutPrimitiveSets.push_back(GetRenderObjectFactory()->CreatePrimitiveSet_Simple());
+            OutPrimitiveSets.push_back(GetRenderObjectFactory()->CreatePrimitiveSet_Standard());
         }
     }
     void F_StaticMeshComponentRenderProxy::InitPrimitiveSets(
@@ -54,38 +66,84 @@ namespace Abytek
         {
             return;
         }
+        
+        if (ShouldUseSimplePrimitive())
+        {
+            F_RenderPrimitiveSetConfig Config;
+            Config.Num = 1;
+            const auto& PrimitiveSet = PrimitiveSets[0];
+            PrimitiveSet.StaticCast<A_RenderPrimitiveSet_Simple>()->Init(
+                SubmissionItemContainer,
+                GetWorldRenderResource()->GetScene()->GetPrimitiveProcessor_Simple(),
+                Config,
+                ABYTEK_WTHIS()
+            );
+        }
+        
         F_RenderPrimitiveSetConfig Config;
         Config.Num = 1;
         const auto& PrimitiveSet = PrimitiveSets[0];
-        PrimitiveSet.StaticCast<A_RenderPrimitiveSet_Simple>()->Init(
+        PrimitiveSet.StaticCast<A_RenderPrimitiveSet_Standard>()->Init(
             SubmissionItemContainer,
-            GetWorldRenderResource()->GetScene()->GetPrimitiveProcessor_Simple(),
+            GetWorldRenderResource()->GetScene()->GetPrimitiveProcessor_Standard(),
             Config,
             ABYTEK_WTHIS()
         );
     }
 
-    void F_StaticMeshComponentRenderProxy::UpdateWorldTransformMatrix_Simple(const F_Matrix4x4_F32& Value)
+    void F_StaticMeshComponentRenderProxy::UpdateWorldTransformMatrix(const F_Matrix4x4_F32& Value)
     {
+        if (ShouldUseSimplePrimitive())
+        {
+            for (const auto& PrimitiveSet : GetPrimitiveSets())
+            {
+                auto CastedPrimitiveSet = PrimitiveSet.FastCast<A_RenderPrimitiveSet_Simple>();
+                CastedPrimitiveSet->UploadComponent_Transform({ Value });
+                CastedPrimitiveSet->UploadComponent_InverseTransposeTransform({ Inverse(Transpose(Value)) });
+            }
+            return;
+        }
+        
         for (const auto& PrimitiveSet : GetPrimitiveSets())
         {
-            auto CastedPrimitiveSet = PrimitiveSet.FastCast<A_RenderPrimitiveSet_Simple>();
+            auto CastedPrimitiveSet = PrimitiveSet.FastCast<A_RenderPrimitiveSet_Standard>();
             CastedPrimitiveSet->UploadComponent_Transform({ Value });
             CastedPrimitiveSet->UploadComponent_InverseTransposeTransform({ Inverse(Transpose(Value)) });
         }
     }
-    void F_StaticMeshComponentRenderProxy::UpdateStaticMesh_Simple(const TS<F_StaticMeshRenderProxy>& StaticMeshRenderProxy)
+    void F_StaticMeshComponentRenderProxy::UpdateStaticMesh(const TS<F_StaticMeshRenderProxy>& StaticMeshRenderProxy)
     {
+        if (ShouldUseSimplePrimitive())
+        {
+            const auto& PrimitiveSet = GetPrimitiveSets()[0];
+            auto CastedPrimitiveSet = PrimitiveSet.FastCast<A_RenderPrimitiveSet_Simple>();
+            
+            F_RenderGeometryAddress GeometryAddress = INVALID_RENDER_GEOMETRY_ADDRESS;
+            
+            if (const auto& StaticMeshResource = StaticMeshRenderProxy->GetResource_ECMS())
+            {
+                GeometryAddress = F_RenderGeometryAddress::From(StaticMeshResource->GeometryAllocation);
+            }
+        
+            CastedPrimitiveSet->UploadComponent_GeometryAddress_ECMS({ GeometryAddress });
+            return;
+        }
+        
         const auto& PrimitiveSet = GetPrimitiveSets()[0];
-        auto CastedPrimitiveSet = PrimitiveSet.FastCast<A_RenderPrimitiveSet_Simple>();
-        
+        auto CastedPrimitiveSet = PrimitiveSet.FastCast<A_RenderPrimitiveSet_Standard>();
+            
         F_RenderGeometryAddress GeometryAddress = INVALID_RENDER_GEOMETRY_ADDRESS;
-        
+            
         if (const auto& StaticMeshResource = StaticMeshRenderProxy->GetResource_ECMS())
         {
             GeometryAddress = F_RenderGeometryAddress::From(StaticMeshResource->GeometryAllocation);
         }
         
         CastedPrimitiveSet->UploadComponent_GeometryAddress_ECMS({ GeometryAddress });
+    }
+
+    B8 F_StaticMeshComponentRenderProxy::ShouldUseSimplePrimitive() const
+    {
+        return false;
     }
 }

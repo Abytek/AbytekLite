@@ -23,10 +23,14 @@ namespace Abytek
         F_GlobalRenderPack(const F_SerializableObjectInitParams& InitParams);
         ~F_GlobalRenderPack() override;
         
+    protected:
+        void OnLoad() override;
+        void OnUnload() override;
+        
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
     public:
         void PrepareTemplates(
-            const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
+            const TS<F_RenderRegistry>& RenderRegistry,
             const TW_Valid<A_RenderPackTemplateMap>& RenderPackTemplateMap
         ) override;
 #endif

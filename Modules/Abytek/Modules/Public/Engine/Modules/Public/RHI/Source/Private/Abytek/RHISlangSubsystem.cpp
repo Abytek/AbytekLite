@@ -33,9 +33,16 @@ namespace Abytek
         Slang::ComPtr<slang::IGlobalSession> globalSession;
         if (!_GlobalSessions.TryPop(globalSession))
         {
-            SlangGlobalSessionDesc desc = {};
-            desc.minLanguageVersion = SLANG_LANGUAGE_VERSION_2025;
-            createGlobalSession(&desc, globalSession.writeRef());
+            F_TaskInstanceSet TaskInstanceSet;
+            TaskInstanceSet.Name = ABYTEK_NAME("SlangCreateGlobalSession");
+            TaskInstanceSet.StackSize = E_TaskStackSize::EXTREME;
+            TaskInstanceSet.Functor = [&]
+            {
+                SlangGlobalSessionDesc desc = {};
+                desc.minLanguageVersion = SLANG_LANGUAGE_VERSION_2025;
+                createGlobalSession(&desc, globalSession.writeRef());
+            };
+            ABYTEK_AWAIT H_TaskUtilities::Schedule(ABYTEK_MOVE(TaskInstanceSet));
         }
         return globalSession;
     }

@@ -1,8 +1,0 @@
-
-void MaterialVS(inout Abytek::SRP::SimplePrimitive::F_MaterialDataVS MaterialData)
-{
-}
-
-void MaterialPS(inout Abytek::SRP::SimplePrimitive::F_MaterialDataPS MaterialData)
-{
-}

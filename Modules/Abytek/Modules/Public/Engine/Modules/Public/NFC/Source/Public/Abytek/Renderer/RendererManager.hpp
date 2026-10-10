@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "Abytek/Engine.NFC.prerequisites.hpp"
 #include "Abytek/World/WorldSubsystem.hpp"
 #include "Abytek/Renderable.hpp"
 

@@ -68,6 +68,38 @@ namespace Abytek
         virtual void OnAddTemplate(const TS<A_RHITemplate>& Template);
         virtual void OnRemoveTemplate(F_RHITemplateHashCode HashCode);
         virtual void OnModifyTemplates();
+        
+    public:
+        B8 ShouldCompile(
+            const F_RHIPipelineStateTemplateCompileParams& CompileParams,
+            const TF_Set<F_RHITemplateHashCode>& TemplateHashCodesToCompile = {},
+            const F_Name& Name = {}
+        );
+        B8 ShouldCompile(
+            const F_RHIBindGroupTemplateCompileParams& CompileParams,
+            const TF_Set<F_RHITemplateHashCode>& TemplateHashCodesToCompile = {},
+            const F_Name& Name = {}
+        );
+        
+    public:
+        B8 TryBuildCommand(
+            const TS<F_RenderRegistry>& RenderRegistry,
+            B8 ShouldCompileByDefault,
+            const F_RHIPipelineStateTemplateCompileParams& CompileParams,
+            TF_Vector<TF_Function<void(TF_Vector<TS<A_RHITemplate>>& OutTemplates)>>& OutCommands,
+            TF_Set<F_RHITemplateHashCode>& OutTemplateHashCodesToCompile,
+            TF_Set<F_RHITemplateHashCode>& OutTemplateHashCodes,
+            const F_Name& Name = {}
+        );
+        B8 TryBuildCommand(
+            const TS<F_RenderRegistry>& RenderRegistry,
+            B8 ShouldCompileByDefault,
+            const F_RHIBindGroupTemplateCompileParams& CompileParams,
+            TF_Vector<TF_Function<void(TF_Vector<TS<A_RHITemplate>>& OutTemplates)>>& OutCommands,
+            TF_Set<F_RHITemplateHashCode>& OutTemplateHashCodesToCompile,
+            TF_Set<F_RHITemplateHashCode>& OutTemplateHashCodes,
+            const F_Name& Name = {}
+        );
     };
     
     class ABYTEK_ENGINE_RENDER_CORE_API F_RenderPackTemplateMap : public A_Object, public A_RenderPackTemplateMap
@@ -133,6 +165,7 @@ namespace Abytek
 #endif
         
         TF_Vector<TS<F_RenderPackData>> _DataList;
+        TS<F_RenderPackData> _MainData;
         
     public:
         ABYTEK_FORCE_INLINE const auto& GetRegistry() const noexcept
@@ -156,6 +189,10 @@ namespace Abytek
         ABYTEK_FORCE_INLINE const auto& GetDataList() const noexcept
         {
             return _DataList;
+        }
+        ABYTEK_FORCE_INLINE const auto& GetMainData() const noexcept
+        {
+            return _MainData;
         }
         TS<F_RenderPackData> FindData(const TW_Valid<A_RenderRegistryPortData> PortData) const noexcept
         {
@@ -184,7 +221,7 @@ namespace Abytek
 #ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
     public:
         virtual void PrepareTemplates(
-            const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
+            const TS<F_RenderRegistry>& RenderRegistry,
             const TW_Valid<A_RenderPackTemplateMap>& RenderPackTemplateMap
         );
 #endif
@@ -210,7 +247,7 @@ namespace Abytek
         // Compile new templates.
         // Notes that this function will remove all the unused templates.
         static void ExecuteExclusiveTemplateCompilation(
-            const TW_Valid<F_SerializableEnvironment>& SerializableEnvironment,
+            const TS<F_RenderRegistry>& RenderRegistry,
             const TW_Valid<A_RenderPackTemplateMap>& RenderPackTemplateMap,
             const TF_Set<F_RHITemplateHashCode>& TemplateHashCodesToCompile,
             const TF_Set<F_RHITemplateHashCode>& RootTemplateHashCodes,

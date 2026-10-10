@@ -16,9 +16,16 @@ namespace Abytek
     A_WorldContext::~A_WorldContext()
     {
     }
-    
+
     TW_Valid<F_World> A_WorldContext::GetWorld() const
     {
         return GetEnvironment()->GetOwner().FastCast<F_World>();
     }
+
+#ifdef ABYTEK_ENABLE_DEVELOPMENT_BUILD
+    TS<F_WorldContextDevelopmentData> A_WorldContext::GetWorldContextDevelopmentData() const
+    {
+        return {};
+    }
+#endif
 }

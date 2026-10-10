@@ -1,11 +1,12 @@
 #include "Abytek/SRPModule.hpp"
-#include "Abytek/SRPSubsystem.hpp"
-#include "Abytek/SRPRenderPath.hpp"
-#include "Abytek/SRPBasicDrawers/Cube.hpp"
-#include "Abytek/SRPBasicDrawers/StaticMesh.hpp"
-#include "Abytek/SRPVisibilityBuffer.hpp"
-#include "Abytek/SimplePrimitive/SRPVisibilityBufferPass_Simple.hpp"
-#include "Abytek/SimplePrimitive/SRPColorPass_Simple.hpp"
+#include "Abytek/Renderer/SRPManager.hpp"
+#include "Abytek/Renderer/SRPRenderPath.hpp"
+#include "Abytek/Renderer/SRPBasicDrawers/Cube.hpp"
+#include "Abytek/Renderer/SRPBasicDrawers/StaticMesh.hpp"
+#include "Abytek/Renderer/SRPVisibilityBuffer.hpp"
+#include "Abytek/Renderer/SimplePrimitive/SRPVisibilityBufferPass.hpp"
+#include "Abytek/Renderer/SimplePrimitive/SRPColorPass.hpp"
+#include "Abytek/Renderer/StandardPrimitive/GeometryFactoryType_StaticMeshECMS.hpp"
 
 
 namespace Abytek
@@ -34,7 +35,7 @@ namespace Abytek
 
     void F_SRPModule::OnReflect()
     {
-        RegisterStaticType<F_SRPSubsystem>();
+        RegisterStaticType<F_SRPManager>();
         RegisterStaticType<F_SRPRenderPath>();
         RegisterStaticType<SRPBasicDrawers::F_CubeBinding>();
         RegisterStaticType<SRPBasicDrawers::F_CubePipeline>();
@@ -46,5 +47,6 @@ namespace Abytek
         RegisterStaticType<SRP::SimplePrimitive::VisibilityBufferPass::F_Pipeline>();
         RegisterStaticType<SRP::SimplePrimitive::ColorPass::F_Binding>();
         RegisterStaticType<SRP::SimplePrimitive::ColorPass::F_Pipeline>();
+        RegisterStaticType<F_SRPGeometryFactoryType_StaticMeshECMS>();
     }
 }

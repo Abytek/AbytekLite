@@ -11,7 +11,7 @@
 #include "Abytek/Renderer/RenderViewFamily.hpp"
 #include "Abytek/Renderer/RenderView.hpp"
 #include "Abytek/Renderer/WorldRenderResource.hpp"
-#include "Abytek/SRPBasicDrawers/StaticMesh.hpp"
+#include "Abytek/Renderer/SRPBasicDrawers/StaticMesh.hpp"
 #include "Abytek/UpdateBase/UpdateUtilities.hpp"
 
 

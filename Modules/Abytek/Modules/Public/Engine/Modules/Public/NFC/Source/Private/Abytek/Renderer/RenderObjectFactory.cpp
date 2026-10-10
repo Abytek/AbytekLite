@@ -19,4 +19,14 @@ namespace Abytek
     {
         return {};
     }
+
+    TS<A_RenderPrimitiveProcessor_Standard> A_RenderObjectFactory::CreatePrimitiveProcessor_Standard()
+    {
+        return {};
+    }
+
+    TS<A_RenderPrimitiveSet_Standard> A_RenderObjectFactory::CreatePrimitiveSet_Standard()
+    {
+        return {};
+    }
 }

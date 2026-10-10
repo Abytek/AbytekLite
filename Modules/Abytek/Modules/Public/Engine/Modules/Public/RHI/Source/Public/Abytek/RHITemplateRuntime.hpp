@@ -41,6 +41,7 @@ namespace Abytek
     private:
         TS<A_RHITemplate> _Template;
         F_AtomicFlag _IsActivated;
+        B8 _IsRelaxed = false;
         
     public:
         ABYTEK_FORCE_INLINE const auto& GetTemplate() const noexcept
@@ -60,10 +61,14 @@ namespace Abytek
             return _Template->GetHashCode();
         }
         TW_Valid<A_RHITemplateRuntimeDatabase> GetDatabase() const noexcept;
+        ABYTEK_FORCE_INLINE auto IsRelaxed() const noexcept
+        {
+            return _IsRelaxed;
+        }
         
     public:
         ABYTEK_RA_DECLARE_OBJECT(A_RHITemplateRuntime);
-        virtual void Release() override;
+        void Release() override;
 
     protected:
         virtual void Build(const F_RHITemplateRuntimeBuildParams& BuildParams);
@@ -73,6 +78,9 @@ namespace Abytek
         
     public:
         void FinalizeActivationAndUnlock();
+        
+    public:
+        void Relax();
 
     public:
         ABYTEK_FORCE_INLINE void WaitForActivation() const noexcept
